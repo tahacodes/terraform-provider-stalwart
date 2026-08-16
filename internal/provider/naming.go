@@ -38,3 +38,11 @@ func diagsError(diags diag.Diagnostics) error {
 
 	return errors.New(strings.Join(messages, "; "))
 }
+
+func objectFieldName(terraform string) string {
+	if terraform == "type" {
+		return "@type"
+	}
+
+	return jmapName(terraform)
+}

@@ -75,7 +75,7 @@ func toTerraform(ctx context.Context, t attr.Type, v any) (attr.Value, error) {
 		attrTypes := typed.AttributeTypes()
 		elements := make(map[string]attr.Value, len(attrTypes))
 		for name, attrType := range attrTypes {
-			converted, err := toTerraform(ctx, attrType, raw[jmapName(name)])
+			converted, err := toTerraform(ctx, attrType, raw[objectFieldName(name)])
 			if err != nil {
 				return nil, fmt.Errorf("attribute %q: %w", name, err)
 			}
@@ -195,7 +195,7 @@ func toJMAP(ctx context.Context, v attr.Value) (any, error) {
 			if converted == nil {
 				continue
 			}
-			out[jmapName(name)] = converted
+			out[objectFieldName(name)] = converted
 		}
 		return out, nil
 	}
