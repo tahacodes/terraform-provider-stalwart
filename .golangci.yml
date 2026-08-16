@@ -1,0 +1,19 @@
+version: 2
+
+run:
+  timeout: 5m
+
+linters:
+  enable:
+    - errcheck
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    - misspell
+    - unconvert
+    - copyloopvar
+
+issues:
+  max-per-linter: 0
+  max-same-issues: 0

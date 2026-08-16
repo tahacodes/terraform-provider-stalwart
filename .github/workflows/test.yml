@@ -1,0 +1,68 @@
+name: test
+
+on:
+  pull_request:
+    paths-ignore:
+      - "README.md"
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - "README.md"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - run: go mod download
+      - run: go build -v ./...
+      - name: Run linters
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - run: make docs
+      - name: Fail when docs are out of date
+        run: |
+          git diff --compact-summary --exit-code -- docs || \
+            (echo "Documentation is stale. Run 'make docs' and commit the result."; exit 1)
+
+  test:
+    runs-on: ubuntu-latest
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        terraform:
+          - "1.9.*"
+          - "1.10.*"
+          - "1.11.*"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ matrix.terraform }}
+          terraform_wrapper: false
+      - run: go mod download
+      - run: go test -v -cover ./...
+        timeout-minutes: 10
