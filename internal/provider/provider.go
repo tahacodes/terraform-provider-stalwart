@@ -138,7 +138,12 @@ func (p *stalwartProvider) Resources(_ context.Context) []func() resource.Resour
 }
 
 func (p *stalwartProvider) DataSources(_ context.Context) []func() datasource.DataSource {
-	return nil
+	dataSources := make([]func() datasource.DataSource, 0, len(generatedDataSources))
+	for _, descriptor := range generatedDataSources {
+		dataSources = append(dataSources, newGenericDataSource(descriptor))
+	}
+
+	return dataSources
 }
 
 func stringOrEnv(v types.String, key string) string {

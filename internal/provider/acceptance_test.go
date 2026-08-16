@@ -326,6 +326,51 @@ resource "stalwart_memory_lookup_key" "test" {
 	})
 }
 
+func TestAccDataSources(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: protoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+resource "stalwart_domain" "test" {
+  name = "acctest-data.com"
+
+  dkim_management = {
+    type = "Manual"
+  }
+}
+
+resource "stalwart_role" "test" {
+  description = "data source lookup target"
+}
+
+data "stalwart_http" "current" {}
+
+data "stalwart_domain" "by_name" {
+  name = stalwart_domain.test.name
+}
+
+data "stalwart_role" "by_id" {
+  id = stalwart_role.test.id
+}
+
+data "stalwart_domains" "all" {
+  depends_on = [stalwart_domain.test]
+}
+`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("data.stalwart_http.current", "id", "singleton"),
+					resource.TestCheckResourceAttrSet("data.stalwart_http.current", "redirect_root"),
+					resource.TestCheckResourceAttrPair("data.stalwart_domain.by_name", "id", "stalwart_domain.test", "id"),
+					resource.TestCheckResourceAttrPair("data.stalwart_role.by_id", "description", "stalwart_role.test", "description"),
+					resource.TestCheckTypeSetElemAttrPair("data.stalwart_domains.all", "ids.*", "stalwart_domain.test", "id"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccDomainWithUnions(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
