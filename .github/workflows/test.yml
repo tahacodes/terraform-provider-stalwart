@@ -53,6 +53,7 @@ jobs:
           - "1.9.*"
           - "1.10.*"
           - "1.11.*"
+          - "1.15.*"
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-go@v7
