@@ -93,6 +93,9 @@ func setToTerraform(ctx context.Context, elemType attr.Type, v any) (attr.Value,
 	if !ok {
 		return collectionToTerraform(ctx, elemType, v, true)
 	}
+	if len(membership) == 0 {
+		return types.SetNull(elemType), nil
+	}
 
 	members := make([]string, 0, len(membership))
 	for key, present := range membership {

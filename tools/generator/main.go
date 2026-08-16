@@ -61,7 +61,7 @@ type target struct {
 }
 
 var targets = []target{
-	{Name: "role", JMAPType: "x:Role", FieldKey: "x:Role", Required: []string{"name"}},
+	{Name: "role", JMAPType: "x:Role", FieldKey: "x:Role", Required: []string{"description"}},
 	{Name: "domain", JMAPType: "x:Domain", FieldKey: "x:Domain", Required: []string{"name"}},
 	{Name: "mailing_list", JMAPType: "x:MailingList", FieldKey: "x:MailingList", Required: []string{"name", "emailAddress"}},
 	{Name: "tenant", JMAPType: "x:Tenant", FieldKey: "x:Tenant", Required: []string{"name"}},
@@ -184,7 +184,10 @@ func renderAttribute(p property, required bool, def any, indent string) (string,
 	case required:
 		fmt.Fprintf(&b, "%sRequired: true,\n", inner)
 	default:
-		fmt.Fprintf(&b, "%sOptional: true,\n", inner)
+		fmt.Fprintf(&b, "%sOptional: true,\n%sComputed: true,\n", inner, inner)
+		if modifier := keepStateModifier(kind); modifier != "" {
+			fmt.Fprintf(&b, "%s%s\n", inner, modifier)
+		}
 	}
 
 	if p.Update == "immutable" {
@@ -209,7 +212,7 @@ func renderAttribute(p property, required bool, def any, indent string) (string,
 	}
 
 	if literal := defaultLiteral(p, def); literal != "" {
-		fmt.Fprintf(&b, "%sComputed: true,\n%sDefault: %s,\n", inner, inner, literal)
+		fmt.Fprintf(&b, "%sDefault: %s,\n", inner, literal)
 	}
 
 	if nested := renderNested(p, inner); nested != "" {
@@ -449,4 +452,32 @@ func terraformName(jmap string) string {
 func fail(err error) {
 	fmt.Fprintln(os.Stderr, "generator:", err)
 	os.Exit(1)
+}
+
+func keepStateModifier(kind string) string {
+	switch kind {
+	case "schema.StringAttribute":
+		need("github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier")
+		return "PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()},"
+	case "schema.BoolAttribute":
+		need("github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier")
+		return "PlanModifiers: []planmodifier.Bool{boolplanmodifier.UseStateForUnknown()},"
+	case "schema.Int64Attribute":
+		need("github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier")
+		return "PlanModifiers: []planmodifier.Int64{int64planmodifier.UseStateForUnknown()},"
+	case "schema.SetAttribute":
+		need("github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier")
+		return "PlanModifiers: []planmodifier.Set{setplanmodifier.UseStateForUnknown()},"
+	case "schema.MapAttribute":
+		need("github.com/hashicorp/terraform-plugin-framework/resource/schema/mapplanmodifier")
+		return "PlanModifiers: []planmodifier.Map{mapplanmodifier.UseStateForUnknown()},"
+	case "schema.SingleNestedAttribute":
+		need("github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier")
+		return "PlanModifiers: []planmodifier.Object{objectplanmodifier.UseStateForUnknown()},"
+	case "schema.ListNestedAttribute":
+		need("github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier")
+		return "PlanModifiers: []planmodifier.List{listplanmodifier.UseStateForUnknown()},"
+	}
+
+	return ""
 }

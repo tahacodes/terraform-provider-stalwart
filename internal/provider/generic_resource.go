@@ -186,7 +186,7 @@ func (r *genericResource) payload(ctx context.Context, plan types.Object, clearO
 
 		if value.IsNull() {
 			if clearOmitted {
-				out[jmapName(name)] = nil
+				out[jmapName(name)] = emptyValue(value)
 			}
 			continue
 		}
@@ -257,4 +257,15 @@ func (r *genericResource) serverOwned(name string) bool {
 	}
 
 	return attribute.IsComputed() && !attribute.IsOptional()
+}
+
+func emptyValue(value attr.Value) any {
+	switch value.(type) {
+	case types.Set, types.Map:
+		return map[string]any{}
+	case types.List:
+		return []any{}
+	}
+
+	return nil
 }
