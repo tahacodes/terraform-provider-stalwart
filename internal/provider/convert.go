@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"sort"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -45,7 +46,7 @@ func toTerraform(ctx context.Context, t attr.Type, v any) (attr.Value, error) {
 		return types.Float64Value(f), nil
 
 	case basetypes.SetType:
-		return collectionToTerraform(ctx, typed.ElemType, v, true)
+		return setToTerraform(ctx, typed.ElemType, v)
 
 	case basetypes.ListType:
 		return collectionToTerraform(ctx, typed.ElemType, v, false)
@@ -85,6 +86,35 @@ func toTerraform(ctx context.Context, t attr.Type, v any) (attr.Value, error) {
 	}
 
 	return nil, fmt.Errorf("unsupported attribute type %s", t.String())
+}
+
+func setToTerraform(ctx context.Context, elemType attr.Type, v any) (attr.Value, error) {
+	membership, ok := v.(map[string]any)
+	if !ok {
+		return collectionToTerraform(ctx, elemType, v, true)
+	}
+
+	members := make([]string, 0, len(membership))
+	for key, present := range membership {
+		if enabled, ok := present.(bool); ok && !enabled {
+			continue
+		}
+		members = append(members, key)
+	}
+	sort.Strings(members)
+
+	elements := make([]attr.Value, 0, len(members))
+	for _, member := range members {
+		converted, err := toTerraform(ctx, elemType, member)
+		if err != nil {
+			return nil, err
+		}
+		elements = append(elements, converted)
+	}
+
+	value, diags := types.SetValue(elemType, elements)
+
+	return value, diagsError(diags)
 }
 
 func collectionToTerraform(ctx context.Context, elemType attr.Type, v any, isSet bool) (attr.Value, error) {
@@ -127,7 +157,20 @@ func toJMAP(ctx context.Context, v attr.Value) (any, error) {
 		return typed.ValueFloat64(), nil
 
 	case basetypes.SetValue:
-		return elementsToJMAP(ctx, typed.Elements())
+		membership := make(map[string]any, len(typed.Elements()))
+		for _, item := range typed.Elements() {
+			converted, err := toJMAP(ctx, item)
+			if err != nil {
+				return nil, err
+			}
+			key, ok := converted.(string)
+			if !ok {
+				return nil, fmt.Errorf("set members must be strings, got %T", converted)
+			}
+			membership[key] = true
+		}
+		return membership, nil
+
 	case basetypes.ListValue:
 		return elementsToJMAP(ctx, typed.Elements())
 
