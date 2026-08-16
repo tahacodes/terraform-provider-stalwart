@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 )
@@ -132,10 +133,7 @@ func (c *Client) discover(ctx context.Context) error {
 		return fmt.Errorf("decoding JMAP session: %w", err)
 	}
 
-	c.apiURL = s.APIURL
-	if c.apiURL == "" {
-		c.apiURL = c.endpoint + "/jmap"
-	}
+	c.apiURL = c.endpoint + apiPath(s.APIURL)
 
 	for _, id := range s.PrimaryAccounts {
 		c.accountID = id
@@ -372,4 +370,16 @@ func truncate(b []byte) string {
 	}
 
 	return string(b)
+}
+
+func apiPath(advertised string) string {
+	if advertised == "" {
+		return "/jmap"
+	}
+
+	if parsed, err := url.Parse(advertised); err == nil && parsed.Path != "" {
+		return "/" + strings.Trim(parsed.Path, "/")
+	}
+
+	return "/" + strings.Trim(advertised, "/")
 }
