@@ -3,12 +3,12 @@
 page_title: "stalwart_domain Resource - stalwart"
 subcategory: ""
 description: |-
-  Manages a Stalwart domain (the x:Domain object).
+  Defines an email domain and its DNS, DKIM, and TLS certificate settings.
 ---
 
 # stalwart_domain (Resource)
 
-Manages a Stalwart domain (the `x:Domain` object).
+Defines an email domain and its DNS, DKIM, and TLS certificate settings.
 
 ## Example Usage
 
@@ -42,12 +42,12 @@ resource "stalwart_domain" "example" {
 - `catch_all_address` (String) Catch-all email address that receives messages addressed to unknown local recipients
 - `certificate_management` (Attributes) Whether TLS certificates for this domain are managed manually or automatically by an ACME provider (see [below for nested schema](#nestedatt--certificate_management))
 - `description` (String) Description of the domain
-- `directory_id` (String) Identifier for the directory where accounts for this domain are stored, or null to use the internal directory
+- `directory_id` (String) Identifier for the directory where accounts for this domain are stored, or null to use the internal directory Requires an Enterprise license.
 - `dkim_management` (Attributes) Whether DKIM keys for this domain are managed manually or automatically by the server (see [below for nested schema](#nestedatt--dkim_management))
 - `dns_management` (Attributes) Whether DNS records for this domain are managed manually or automatically by a DNS provider (see [below for nested schema](#nestedatt--dns_management))
 - `is_enabled` (Boolean) Whether this domain is enabled
-- `logo` (String) URL or base64-encoded image representing the domain
-- `member_tenant_id` (String) Identifier for the tenant this domain belongs to
+- `logo` (String) URL or base64-encoded image representing the domain Requires an Enterprise license.
+- `member_tenant_id` (String) Identifier for the tenant this domain belongs to Requires an Enterprise license.
 - `report_address_uri` (String) Email address to receive DMARC, TLS-RPT and CAA reports for this domain, or null to not receive reports
 - `sub_addressing` (Attributes) Whether sub-addressing (plus addressing) is enabled for the domain (see [below for nested schema](#nestedatt--sub_addressing))
 
@@ -115,6 +115,26 @@ Optional:
 Required:
 
 - `type` (String) Variant discriminator.
+
+Optional:
+
+- `custom_rule` (Attributes) Expression that defines custom sub-addressing rules for the domain (see [below for nested schema](#nestedatt--sub_addressing--custom_rule))
+
+<a id="nestedatt--sub_addressing--custom_rule"></a>
+### Nested Schema for `sub_addressing.custom_rule`
+
+Optional:
+
+- `else` (String) Else condition
+- `match` (Attributes List) List of conditions and their corresponding results (see [below for nested schema](#nestedatt--sub_addressing--custom_rule--match))
+
+<a id="nestedatt--sub_addressing--custom_rule--match"></a>
+### Nested Schema for `sub_addressing.custom_rule.match`
+
+Optional:
+
+- `if` (String) If condition
+- `then` (String) Then clause
 
 ## Import
 

@@ -3,12 +3,12 @@
 page_title: "stalwart_http Resource - stalwart"
 subcategory: ""
 description: |-
-  Manages the Stalwart HTTP server settings (the x:Http singleton object). This object always exists, so creating the resource adopts the existing settings rather than provisioning anything new, and destroying it removes the resource from state without changing the server.
+  Configures HTTP server settings including rate limiting, CORS, and security headers. This singleton object always exists: creating the resource adopts the current server settings and destroying it only removes the resource from state.
 ---
 
 # stalwart_http (Resource)
 
-Manages the Stalwart HTTP server settings (the `x:Http` singleton object). This object always exists, so creating the resource adopts the existing settings rather than provisioning anything new, and destroying it removes the resource from state without changing the server.
+Configures HTTP server settings including rate limiting, CORS, and security headers. This singleton object always exists: creating the resource adopts the current server settings and destroying it only removes the resource from state.
 
 ## Example Usage
 
@@ -30,15 +30,53 @@ resource "stalwart_http" "this" {
 
 ### Optional
 
-- `enable_hsts` (Boolean) Enable HTTP Strict Transport Security.
-- `redirect_root` (String) URL to redirect to when a client requests the root path. When unset the server returns 404.
-- `response_headers` (Map of String) Additional headers to include in HTTP responses.
-- `use_permissive_cors` (Boolean) Allow all origins in the CORS policy for the HTTP server. Required when a browser-based client is served from a different origin than the server.
-- `use_x_forwarded` (Boolean) Use the `Forwarded` or `X-Forwarded-For` header to determine the client IP address.
+- `allowed_endpoints` (Attributes) An expression that determines whether access to an endpoint is allowed. The expression should an HTTP status code (200, 403, etc.) (see [below for nested schema](#nestedatt--allowed_endpoints))
+- `enable_hsts` (Boolean) Specifies whether to enable HTTP Strict Transport Security for the HTTP server.
+- `rate_limit_anonymous` (Attributes) Specifies the request rate limit for unauthenticated users (see [below for nested schema](#nestedatt--rate_limit_anonymous))
+- `rate_limit_authenticated` (Attributes) Specifies the request rate limit for authenticated users (see [below for nested schema](#nestedatt--rate_limit_authenticated))
+- `redirect_root` (String) The URL to redirect users to when they access the root path of the HTTP server. If not set, the server will return a 404 Not Found response.
+- `response_headers` (Map of String) Additional headers to include in HTTP responses
+- `use_permissive_cors` (Boolean) Specifies whether to allow all origins in the CORS policy for the HTTP server
+- `use_x_forwarded` (Boolean) Specifies whether to use the Forwarded or X-Forwarded-For header to determine the client's IP address
 
 ### Read-Only
 
-- `id` (String) Always `singleton`.
+- `id` (String) Server-assigned identifier.
+
+<a id="nestedatt--allowed_endpoints"></a>
+### Nested Schema for `allowed_endpoints`
+
+Optional:
+
+- `else` (String) Else condition
+- `match` (Attributes List) List of conditions and their corresponding results (see [below for nested schema](#nestedatt--allowed_endpoints--match))
+
+<a id="nestedatt--allowed_endpoints--match"></a>
+### Nested Schema for `allowed_endpoints.match`
+
+Optional:
+
+- `if` (String) If condition
+- `then` (String) Then clause
+
+
+
+<a id="nestedatt--rate_limit_anonymous"></a>
+### Nested Schema for `rate_limit_anonymous`
+
+Optional:
+
+- `count` (Number) Count
+- `period` (Number) Period
+
+
+<a id="nestedatt--rate_limit_authenticated"></a>
+### Nested Schema for `rate_limit_authenticated`
+
+Optional:
+
+- `count` (Number) Count
+- `period` (Number) Period
 
 ## Import
 

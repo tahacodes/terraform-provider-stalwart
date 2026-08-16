@@ -3,12 +3,12 @@
 page_title: "stalwart_group Resource - stalwart"
 subcategory: ""
 description: |-
-  Manages a Stalwart group (the x:Account object).
+  Defines a user or group account for authentication and email access. Manages the Group account variant.
 ---
 
 # stalwart_group (Resource)
 
-Manages a Stalwart group (the `x:Account` object).
+Defines a user or group account for authentication and email access. Manages the Group account variant.
 
 ## Example Usage
 
@@ -26,13 +26,13 @@ resource "stalwart_group" "admins" {
 
 ### Required
 
+- `domain_id` (String) Identifier for the domain this group belongs to. This is used to determine the email address of the group, which is formed as name@domain.
 - `name` (String) Name of the group, typically an email address local part.
 
 ### Optional
 
 - `aliases` (Attributes List) List of email aliases for the group (see [below for nested schema](#nestedatt--aliases))
 - `description` (String) Description of the group
-- `domain_id` (String) Identifier for the domain this group belongs to. This is used to determine the email address of the group, which is formed as name@domain.
 - `locale` (String) Preferred locale for the group
 - `member_tenant_id` (String) Identifier for the tenant this group belongs to
 - `permissions` (Attributes) Permissions assigned to this group (see [below for nested schema](#nestedatt--permissions))

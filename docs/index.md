@@ -33,6 +33,7 @@ provider "stalwart" {
 
 ### Optional
 
+- `auto_reload` (Boolean) Reload the server configuration after applying changes to settings resources, so changes take effect immediately. Directory-backed resources such as users, domains and roles never need a reload. Defaults to `true`.
 - `endpoint` (String) Base URL of the Stalwart server, for example `https://mail.example.com`. Falls back to the `STALWART_URL` environment variable.
 - `insecure` (Boolean) Skip TLS certificate verification. Defaults to `false`.
 - `password` (String, Sensitive) Password for basic authentication. Falls back to the `STALWART_PASSWORD` environment variable.

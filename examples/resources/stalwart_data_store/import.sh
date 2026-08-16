@@ -1,0 +1,1 @@
+terraform import stalwart_data_store.postgres singleton

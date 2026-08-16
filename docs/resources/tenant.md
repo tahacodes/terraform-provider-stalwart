@@ -3,12 +3,12 @@
 page_title: "stalwart_tenant Resource - stalwart"
 subcategory: ""
 description: |-
-  Manages a Stalwart tenant (the x:Tenant object).
+  Defines a tenant for multi-tenant environments with isolated resources and quotas. Requires an Enterprise license.
 ---
 
 # stalwart_tenant (Resource)
 
-Manages a Stalwart tenant (the `x:Tenant` object).
+Defines a tenant for multi-tenant environments with isolated resources and quotas. Requires an Enterprise license.
 
 ## Example Usage
 

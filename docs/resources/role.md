@@ -3,12 +3,12 @@
 page_title: "stalwart_role Resource - stalwart"
 subcategory: ""
 description: |-
-  Manages a Stalwart role (the x:Role object).
+  Defines a named set of permissions that can be assigned to accounts, groups, or tenants.
 ---
 
 # stalwart_role (Resource)
 
-Manages a Stalwart role (the `x:Role` object).
+Defines a named set of permissions that can be assigned to accounts, groups, or tenants.
 
 ## Example Usage
 

@@ -3,12 +3,12 @@
 page_title: "stalwart_mailing_list Resource - stalwart"
 subcategory: ""
 description: |-
-  Manages a Stalwart mailing list (the x:MailingList object).
+  Defines a mailing list that distributes messages to a group of recipients.
 ---
 
 # stalwart_mailing_list (Resource)
 
-Manages a Stalwart mailing list (the `x:MailingList` object).
+Defines a mailing list that distributes messages to a group of recipients.
 
 ## Example Usage
 
@@ -26,13 +26,13 @@ resource "stalwart_mailing_list" "announce" {
 
 ### Required
 
+- `domain_id` (String) Identifier for the domain this mailing list belongs to. This is used to determine the email address of the mailing list, which is formed as name@domain.
 - `name` (String) Name of the mailing list, typically an email address local part.
 
 ### Optional
 
 - `aliases` (Attributes List) List of email aliases for the mailing list (see [below for nested schema](#nestedatt--aliases))
 - `description` (String) Description of the mailing list
-- `domain_id` (String) Identifier for the domain this mailing list belongs to. This is used to determine the email address of the mailing list, which is formed as name@domain.
 - `member_tenant_id` (String) Identifier for the tenant this mailing list belongs to
 - `recipients` (Set of String) List of email addresses that are members of the mailing list
 

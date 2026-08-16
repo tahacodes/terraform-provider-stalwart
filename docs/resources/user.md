@@ -3,12 +3,12 @@
 page_title: "stalwart_user Resource - stalwart"
 subcategory: ""
 description: |-
-  Manages a Stalwart user (the x:Account object).
+  Defines a user or group account for authentication and email access. Manages the User account variant.
 ---
 
 # stalwart_user (Resource)
 
-Manages a Stalwart user (the `x:Account` object).
+Defines a user or group account for authentication and email access. Manages the User account variant.
 
 ## Example Usage
 
@@ -26,13 +26,14 @@ resource "stalwart_user" "alice" {
 
 ### Required
 
+- `domain_id` (String) Identifier for the domain this account belongs to. This is used to determine the email address of the account, which is formed as name@domain.
 - `name` (String) Name of the account, typically an email address local part.
 
 ### Optional
 
 - `aliases` (Attributes List) List of email aliases for the account (see [below for nested schema](#nestedatt--aliases))
+- `credentials` (Attributes List) List of credential objects representing authentication methods for the account (see [below for nested schema](#nestedatt--credentials))
 - `description` (String) Description of the account
-- `domain_id` (String) Identifier for the domain this account belongs to. This is used to determine the email address of the account, which is formed as name@domain.
 - `encryption_at_rest` (Attributes) Encryption-at-rest settings for the account (see [below for nested schema](#nestedatt--encryption_at_rest))
 - `locale` (String) Preferred locale for the account
 - `member_group_ids` (Set of String) List of groups that this account is a member of
@@ -58,6 +59,40 @@ Optional:
 - `domain_id` (String) Identifier for the domain of the email alias (the part after the @ symbol).
 - `enabled` (Boolean) Whether this email alias is enabled
 - `name` (String) The local part of the email alias (the part before the @ symbol)
+
+
+<a id="nestedatt--credentials"></a>
+### Nested Schema for `credentials`
+
+Required:
+
+- `type` (String) Variant discriminator.
+
+Optional:
+
+- `allowed_ips` (Set of String) List of allowed IP addresses or CIDR ranges for this credential
+- `description` (String) Description of the credential
+- `expires_at` (String) Expiration date of the credential
+- `otp_auth` (String) OTP authentication URI for the account
+- `permissions` (Attributes) List of permissions assigned to this credential (see [below for nested schema](#nestedatt--credentials--permissions))
+- `secret` (String, Sensitive) Secret value of the account
+
+Read-Only:
+
+- `created_at` (String) Creation date of the credential
+- `credential_id` (String) Unique identifier for the credential
+
+<a id="nestedatt--credentials--permissions"></a>
+### Nested Schema for `credentials.permissions`
+
+Required:
+
+- `type` (String) Variant discriminator.
+
+Optional:
+
+- `permissions` (Set of String) List of permissions to assign.
+
 
 
 <a id="nestedatt--encryption_at_rest"></a>
