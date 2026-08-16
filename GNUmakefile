@@ -16,6 +16,7 @@ testacc:
 	TF_ACC=1 go test -v -cover -timeout=120m ./...
 
 lint:
+	golangci-lint config verify
 	golangci-lint run
 
 fmt:
