@@ -46,3 +46,25 @@ func objectFieldName(terraform string) string {
 
 	return jmapName(terraform)
 }
+
+func rootFieldName(terraform string) string {
+	if renamed, ok := rootAttributeRenames[terraform]; ok {
+		return renamed
+	}
+
+	return objectFieldName(terraform)
+}
+
+var rootAttributeRenames = map[string]string{
+	"connection_strategy": "connection",
+	"count_value":         "count",
+}
+
+const (
+	writeOnlySuffix        = "_wo"
+	writeOnlyVersionSuffix = "_wo_version"
+)
+
+func writeOnlyBookkeeping(name string) bool {
+	return strings.HasSuffix(name, writeOnlySuffix) || strings.HasSuffix(name, writeOnlyVersionSuffix)
+}

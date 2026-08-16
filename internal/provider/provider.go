@@ -21,11 +21,12 @@ type stalwartProvider struct {
 }
 
 type providerModel struct {
-	Endpoint types.String `tfsdk:"endpoint"`
-	Username types.String `tfsdk:"username"`
-	Password types.String `tfsdk:"password"`
-	Token    types.String `tfsdk:"token"`
-	Insecure types.Bool   `tfsdk:"insecure"`
+	Endpoint   types.String `tfsdk:"endpoint"`
+	Username   types.String `tfsdk:"username"`
+	Password   types.String `tfsdk:"password"`
+	Token      types.String `tfsdk:"token"`
+	Insecure   types.Bool   `tfsdk:"insecure"`
+	AutoReload types.Bool   `tfsdk:"auto_reload"`
 }
 
 func New(version string) func() provider.Provider {
@@ -65,6 +66,10 @@ func (p *stalwartProvider) Schema(_ context.Context, _ provider.SchemaRequest, r
 				MarkdownDescription: "Skip TLS certificate verification. Defaults to `false`.",
 				Optional:            true,
 			},
+			"auto_reload": schema.BoolAttribute{
+				MarkdownDescription: "Reload the server configuration after applying changes to settings resources, so changes take effect immediately. Directory-backed resources such as users, domains and roles never need a reload. Defaults to `true`.",
+				Optional:            true,
+			},
 		},
 	}
 }
@@ -101,12 +106,18 @@ func (p *stalwartProvider) Configure(ctx context.Context, req provider.Configure
 		return
 	}
 
+	autoReload := true
+	if !config.AutoReload.IsNull() {
+		autoReload = config.AutoReload.ValueBool()
+	}
+
 	c, err := client.New(ctx, client.Config{
-		Endpoint: endpoint,
-		Username: username,
-		Password: password,
-		Token:    token,
-		Insecure: config.Insecure.ValueBool(),
+		Endpoint:   endpoint,
+		Username:   username,
+		Password:   password,
+		Token:      token,
+		Insecure:   config.Insecure.ValueBool(),
+		AutoReload: autoReload,
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("Unable to connect to Stalwart", err.Error())
@@ -118,10 +129,7 @@ func (p *stalwartProvider) Configure(ctx context.Context, req provider.Configure
 }
 
 func (p *stalwartProvider) Resources(_ context.Context) []func() resource.Resource {
-	resources := []func() resource.Resource{
-		NewHTTPResource,
-	}
-
+	resources := make([]func() resource.Resource, 0, len(generatedResources))
 	for _, descriptor := range generatedResources {
 		resources = append(resources, newGenericResource(descriptor))
 	}

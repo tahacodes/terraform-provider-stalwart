@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"sort"
+	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -49,7 +50,7 @@ func toTerraform(ctx context.Context, t attr.Type, v any) (attr.Value, error) {
 		return setToTerraform(ctx, typed.ElemType, v)
 
 	case basetypes.ListType:
-		return collectionToTerraform(ctx, typed.ElemType, v, false)
+		return listToTerraform(ctx, typed.ElemType, v)
 
 	case basetypes.MapType:
 		raw, ok := v.(map[string]any)
@@ -144,6 +145,41 @@ func collectionToTerraform(ctx context.Context, elemType attr.Type, v any, isSet
 	return value, diagsError(diags)
 }
 
+func listToTerraform(ctx context.Context, elemType attr.Type, v any) (attr.Value, error) {
+	indexed, ok := v.(map[string]any)
+	if !ok {
+		return collectionToTerraform(ctx, elemType, v, false)
+	}
+	if len(indexed) == 0 {
+		return types.ListNull(elemType), nil
+	}
+
+	keys := make([]int, 0, len(indexed))
+	byIndex := make(map[int]any, len(indexed))
+	for key, item := range indexed {
+		index, err := strconv.Atoi(key)
+		if err != nil {
+			return nil, fmt.Errorf("list index %q is not a number", key)
+		}
+		keys = append(keys, index)
+		byIndex[index] = item
+	}
+	sort.Ints(keys)
+
+	elements := make([]attr.Value, 0, len(keys))
+	for _, index := range keys {
+		converted, err := toTerraform(ctx, elemType, byIndex[index])
+		if err != nil {
+			return nil, fmt.Errorf("index %d: %w", index, err)
+		}
+		elements = append(elements, converted)
+	}
+
+	value, diags := types.ListValue(elemType, elements)
+
+	return value, diagsError(diags)
+}
+
 func toJMAP(ctx context.Context, v attr.Value) (any, error) {
 	if v == nil || v.IsNull() || v.IsUnknown() {
 		return nil, nil
@@ -175,7 +211,15 @@ func toJMAP(ctx context.Context, v attr.Value) (any, error) {
 		return membership, nil
 
 	case basetypes.ListValue:
-		return elementsToJMAP(ctx, typed.Elements())
+		out := make(map[string]any, len(typed.Elements()))
+		for i, item := range typed.Elements() {
+			converted, err := toJMAP(ctx, item)
+			if err != nil {
+				return nil, err
+			}
+			out[strconv.Itoa(i)] = converted
+		}
+		return out, nil
 
 	case basetypes.MapValue:
 		out := make(map[string]any, len(typed.Elements()))
@@ -206,17 +250,129 @@ func toJMAP(ctx context.Context, v attr.Value) (any, error) {
 	return nil, fmt.Errorf("unsupported value type %T", v)
 }
 
-func elementsToJMAP(ctx context.Context, elements []attr.Value) (any, error) {
-	out := make([]any, 0, len(elements))
-	for _, item := range elements {
-		converted, err := toJMAP(ctx, item)
-		if err != nil {
-			return nil, err
-		}
-		out = append(out, converted)
+const maskedSecret = "****"
+
+func fillUnknowns(plan, fresh attr.Value) attr.Value {
+	if plan == nil || plan.IsUnknown() {
+		return fresh
+	}
+	if plan.IsNull() || fresh == nil || fresh.IsNull() {
+		return plan
 	}
 
-	return out, nil
+	switch planTyped := plan.(type) {
+	case basetypes.ObjectValue:
+		freshTyped, ok := fresh.(basetypes.ObjectValue)
+		if !ok {
+			return plan
+		}
+		attrTypes := planTyped.AttributeTypes(context.Background())
+		elements := make(map[string]attr.Value, len(attrTypes))
+		for name, item := range planTyped.Attributes() {
+			elements[name] = fillUnknowns(item, freshTyped.Attributes()[name])
+		}
+		merged, diags := types.ObjectValue(attrTypes, elements)
+		if diags.HasError() {
+			return plan
+		}
+		return merged
+
+	case basetypes.ListValue:
+		freshTyped, ok := fresh.(basetypes.ListValue)
+		if !ok || len(freshTyped.Elements()) != len(planTyped.Elements()) {
+			return plan
+		}
+		elements := make([]attr.Value, 0, len(planTyped.Elements()))
+		for i, item := range planTyped.Elements() {
+			elements = append(elements, fillUnknowns(item, freshTyped.Elements()[i]))
+		}
+		merged, diags := types.ListValue(planTyped.ElementType(context.Background()), elements)
+		if diags.HasError() {
+			return plan
+		}
+		return merged
+
+	case basetypes.MapValue:
+		freshTyped, ok := fresh.(basetypes.MapValue)
+		if !ok {
+			return plan
+		}
+		elements := make(map[string]attr.Value, len(planTyped.Elements()))
+		for key, item := range planTyped.Elements() {
+			elements[key] = fillUnknowns(item, freshTyped.Elements()[key])
+		}
+		merged, diags := types.MapValue(planTyped.ElementType(context.Background()), elements)
+		if diags.HasError() {
+			return plan
+		}
+		return merged
+	}
+
+	return plan
+}
+
+func preserveMasked(reference, fresh attr.Value) attr.Value {
+	if reference == nil || reference.IsNull() || reference.IsUnknown() || fresh == nil {
+		return fresh
+	}
+
+	switch freshTyped := fresh.(type) {
+	case basetypes.StringValue:
+		if freshTyped.ValueString() != maskedSecret {
+			return fresh
+		}
+		if referenceTyped, ok := reference.(basetypes.StringValue); ok {
+			return referenceTyped
+		}
+
+	case basetypes.ObjectValue:
+		referenceTyped, ok := reference.(basetypes.ObjectValue)
+		if !ok {
+			return fresh
+		}
+		attrTypes := freshTyped.AttributeTypes(context.Background())
+		elements := make(map[string]attr.Value, len(attrTypes))
+		for name, item := range freshTyped.Attributes() {
+			elements[name] = preserveMasked(referenceTyped.Attributes()[name], item)
+		}
+		merged, diags := types.ObjectValue(attrTypes, elements)
+		if diags.HasError() {
+			return fresh
+		}
+		return merged
+
+	case basetypes.ListValue:
+		referenceTyped, ok := reference.(basetypes.ListValue)
+		if !ok || len(referenceTyped.Elements()) != len(freshTyped.Elements()) {
+			return fresh
+		}
+		elements := make([]attr.Value, 0, len(freshTyped.Elements()))
+		for i, item := range freshTyped.Elements() {
+			elements = append(elements, preserveMasked(referenceTyped.Elements()[i], item))
+		}
+		merged, diags := types.ListValue(freshTyped.ElementType(context.Background()), elements)
+		if diags.HasError() {
+			return fresh
+		}
+		return merged
+
+	case basetypes.MapValue:
+		referenceTyped, ok := reference.(basetypes.MapValue)
+		if !ok {
+			return fresh
+		}
+		elements := make(map[string]attr.Value, len(freshTyped.Elements()))
+		for key, item := range freshTyped.Elements() {
+			elements[key] = preserveMasked(referenceTyped.Elements()[key], item)
+		}
+		merged, diags := types.MapValue(freshTyped.ElementType(context.Background()), elements)
+		if diags.HasError() {
+			return fresh
+		}
+		return merged
+	}
+
+	return fresh
 }
 
 func nullOf(t attr.Type) (attr.Value, error) {
