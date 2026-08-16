@@ -1,4 +1,5 @@
 OWNER ?=
+STALWART_VERSION ?= v0.16.17
 BINARY := terraform-provider-stalwart
 
 default: build
@@ -22,6 +23,9 @@ lint:
 fmt:
 	gofmt -s -w -e .
 
+generate:
+	go run ./tools/generator schema/$(STALWART_VERSION).json internal/provider/generated.go
+
 docs:
 	go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs generate --provider-name stalwart
 
@@ -39,4 +43,4 @@ rename:
 	go mod tidy
 	@echo "module path now targets $(OWNER)"
 
-.PHONY: build install test testacc lint fmt docs schema rename
+.PHONY: build install test testacc lint fmt generate docs schema rename
