@@ -181,6 +181,9 @@ func renderAttribute(p property, required bool, def any, indent string) (string,
 	switch {
 	case p.Update == "serverSet":
 		fmt.Fprintf(&b, "%sComputed: true,\n", inner)
+		if modifier := keepStateModifier(kind); modifier != "" {
+			fmt.Fprintf(&b, "%s%s\n", inner, modifier)
+		}
 	case required:
 		fmt.Fprintf(&b, "%sRequired: true,\n", inner)
 	default:

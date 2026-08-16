@@ -13,6 +13,9 @@ install:
 test:
 	go test -v -cover -timeout=120s ./...
 
+acceptance-server:
+	./scripts/acceptance-server.sh
+
 testacc:
 	TF_ACC=1 go test -v -cover -timeout=120m ./...
 
@@ -43,4 +46,4 @@ rename:
 	go mod tidy
 	@echo "module path now targets $(OWNER)"
 
-.PHONY: build install test testacc lint fmt generate docs schema rename
+.PHONY: build install test acceptance-server testacc lint fmt generate docs schema rename

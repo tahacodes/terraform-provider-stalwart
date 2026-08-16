@@ -122,6 +122,7 @@ var generatedResources = []resourceDescriptor{
 				"created_at": schema.StringAttribute{
 					MarkdownDescription: "Creation date of the domain",
 					Computed:            true,
+					PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 				},
 				"description": schema.StringAttribute{
 					MarkdownDescription: "Description of the domain",
@@ -214,6 +215,7 @@ var generatedResources = []resourceDescriptor{
 				"dns_zone_file": schema.StringAttribute{
 					MarkdownDescription: "Current DNS zone data for the domain",
 					Computed:            true,
+					PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 				},
 				"is_enabled": schema.BoolAttribute{
 					MarkdownDescription: "Whether this domain is enabled",
@@ -321,6 +323,7 @@ var generatedResources = []resourceDescriptor{
 				"email_address": schema.StringAttribute{
 					MarkdownDescription: "The email address of the mailing list, formed as name@domain.",
 					Computed:            true,
+					PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 				},
 				"member_tenant_id": schema.StringAttribute{
 					MarkdownDescription: "Identifier for the tenant this mailing list belongs to",
@@ -356,6 +359,7 @@ var generatedResources = []resourceDescriptor{
 				"created_at": schema.StringAttribute{
 					MarkdownDescription: "Creation date of the tenant",
 					Computed:            true,
+					PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 				},
 				"logo": schema.StringAttribute{
 					MarkdownDescription: "URL or base64-encoded image representing the tenant",
@@ -424,6 +428,7 @@ var generatedResources = []resourceDescriptor{
 				"used_disk_quota": schema.Int64Attribute{
 					MarkdownDescription: "Amount of disk space currently used by this tenant (bytes)",
 					Computed:            true,
+					PlanModifiers:       []planmodifier.Int64{int64planmodifier.UseStateForUnknown()},
 				},
 			},
 		},
@@ -477,6 +482,7 @@ var generatedResources = []resourceDescriptor{
 				"created_at": schema.StringAttribute{
 					MarkdownDescription: "Creation date of the account",
 					Computed:            true,
+					PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 				},
 				"description": schema.StringAttribute{
 					MarkdownDescription: "Description of the account",
@@ -493,6 +499,7 @@ var generatedResources = []resourceDescriptor{
 				"email_address": schema.StringAttribute{
 					MarkdownDescription: "Email address for the user account, formed as name@domain.",
 					Computed:            true,
+					PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 				},
 				"encryption_at_rest": schema.SingleNestedAttribute{
 					MarkdownDescription: "Encryption-at-rest settings for the account",
@@ -613,6 +620,7 @@ var generatedResources = []resourceDescriptor{
 				"used_disk_quota": schema.Int64Attribute{
 					MarkdownDescription: "Amount of disk space currently used by this account (bytes)",
 					Computed:            true,
+					PlanModifiers:       []planmodifier.Int64{int64planmodifier.UseStateForUnknown()},
 				},
 			},
 		},
@@ -666,6 +674,7 @@ var generatedResources = []resourceDescriptor{
 				"created_at": schema.StringAttribute{
 					MarkdownDescription: "Creation date of the account",
 					Computed:            true,
+					PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 				},
 				"description": schema.StringAttribute{
 					MarkdownDescription: "Description of the group",
@@ -682,6 +691,7 @@ var generatedResources = []resourceDescriptor{
 				"email_address": schema.StringAttribute{
 					MarkdownDescription: "Email address of the group, formed as name@domain.",
 					Computed:            true,
+					PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 				},
 				"locale": schema.StringAttribute{
 					MarkdownDescription: "Preferred locale for the group",
@@ -764,6 +774,7 @@ var generatedResources = []resourceDescriptor{
 				"used_disk_quota": schema.Int64Attribute{
 					MarkdownDescription: "Amount of disk space currently used by this account (bytes)",
 					Computed:            true,
+					PlanModifiers:       []planmodifier.Int64{int64planmodifier.UseStateForUnknown()},
 				},
 			},
 		},
