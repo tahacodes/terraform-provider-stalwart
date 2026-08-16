@@ -70,7 +70,7 @@ func (r *genericResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	object, err := r.payload(ctx, plan)
+	object, err := r.payload(ctx, plan, false)
 	if err != nil {
 		resp.Diagnostics.AddError("Unable to build request", err.Error())
 		return
@@ -134,7 +134,7 @@ func (r *genericResource) Update(ctx context.Context, req resource.UpdateRequest
 	}
 
 	id := attributeString(current, "id")
-	patch, err := r.payload(ctx, plan)
+	patch, err := r.payload(ctx, plan, true)
 	if err != nil {
 		resp.Diagnostics.AddError("Unable to build request", err.Error())
 		return
@@ -176,19 +176,24 @@ func (r *genericResource) ImportState(ctx context.Context, req resource.ImportSt
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func (r *genericResource) payload(ctx context.Context, plan types.Object) (map[string]any, error) {
+func (r *genericResource) payload(ctx context.Context, plan types.Object, clearOmitted bool) (map[string]any, error) {
 	out := make(map[string]any)
 
 	for name, value := range plan.Attributes() {
-		if name == "id" {
+		if name == "id" || r.serverOwned(name) || value.IsUnknown() {
 			continue
 		}
+
+		if value.IsNull() {
+			if clearOmitted {
+				out[jmapName(name)] = nil
+			}
+			continue
+		}
+
 		converted, err := toJMAP(ctx, value)
 		if err != nil {
 			return nil, fmt.Errorf("attribute %q: %w", name, err)
-		}
-		if converted == nil {
-			continue
 		}
 		out[jmapName(name)] = converted
 	}
@@ -243,4 +248,13 @@ func attributeString(object types.Object, name string) string {
 	}
 
 	return s.ValueString()
+}
+
+func (r *genericResource) serverOwned(name string) bool {
+	attribute, ok := r.descriptor.Schema.Attributes[name]
+	if !ok {
+		return false
+	}
+
+	return attribute.IsComputed() && !attribute.IsOptional()
 }
