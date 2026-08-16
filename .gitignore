@@ -27,3 +27,4 @@ website/node_modules
 website/vendor
 .envrc
 terraform-provider-stalwart
+generator
