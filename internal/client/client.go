@@ -10,28 +10,33 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"sync"
 	"time"
 )
 
 const CoreCapability = "urn:ietf:params:jmap:core"
 
 type Config struct {
-	Endpoint string
-	Username string
-	Password string
-	Token    string
-	Insecure bool
-	Timeout  time.Duration
+	Endpoint   string
+	Username   string
+	Password   string
+	Token      string
+	Insecure   bool
+	AutoReload bool
+	Timeout    time.Duration
 }
 
 type Client struct {
-	http      *http.Client
-	endpoint  string
-	apiURL    string
-	accountID string
-	username  string
-	password  string
-	token     string
+	http        *http.Client
+	endpoint    string
+	apiURL      string
+	accountID   string
+	username    string
+	password    string
+	token       string
+	autoReload  bool
+	reloadMutex sync.Mutex
+	lastReload  map[string]time.Time
 }
 
 type MethodCall struct {
@@ -89,11 +94,13 @@ func New(ctx context.Context, cfg Config) (*Client, error) {
 	}
 
 	c := &Client{
-		http:     &http.Client{Timeout: timeout, Transport: transport},
-		endpoint: strings.TrimRight(cfg.Endpoint, "/"),
-		username: cfg.Username,
-		password: cfg.Password,
-		token:    cfg.Token,
+		http:       &http.Client{Timeout: timeout, Transport: transport},
+		endpoint:   strings.TrimRight(cfg.Endpoint, "/"),
+		username:   cfg.Username,
+		password:   cfg.Password,
+		token:      cfg.Token,
+		autoReload: cfg.AutoReload,
+		lastReload: map[string]time.Time{},
 	}
 
 	if err := c.discover(ctx); err != nil {
@@ -326,6 +333,29 @@ func (c *Client) set(ctx context.Context, objectType string, args map[string]any
 	}
 
 	return responses[0].Args, nil
+}
+
+func (c *Client) Reload(ctx context.Context, action string) error {
+	if !c.autoReload || action == "" {
+		return nil
+	}
+
+	requested := time.Now()
+
+	c.reloadMutex.Lock()
+	defer c.reloadMutex.Unlock()
+
+	if c.lastReload[action].After(requested) {
+		return nil
+	}
+
+	started := time.Now()
+	if _, err := c.Create(ctx, "x:Action", map[string]any{"@type": action}); err != nil {
+		return err
+	}
+	c.lastReload[action] = started
+
+	return nil
 }
 
 func methodError(m MethodCall) error {
