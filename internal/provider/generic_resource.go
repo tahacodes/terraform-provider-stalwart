@@ -194,7 +194,7 @@ func (r *genericResource) payload(ctx context.Context, plan types.Object) (map[s
 	}
 
 	if r.descriptor.Variant != "" {
-		out["_type"] = r.descriptor.Variant
+		out["@type"] = r.descriptor.Variant
 	}
 
 	return out, nil
