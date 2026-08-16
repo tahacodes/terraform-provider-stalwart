@@ -118,9 +118,15 @@ func (p *stalwartProvider) Configure(ctx context.Context, req provider.Configure
 }
 
 func (p *stalwartProvider) Resources(_ context.Context) []func() resource.Resource {
-	return []func() resource.Resource{
+	resources := []func() resource.Resource{
 		NewHTTPResource,
 	}
+
+	for _, descriptor := range generatedResources {
+		resources = append(resources, newGenericResource(descriptor))
+	}
+
+	return resources
 }
 
 func (p *stalwartProvider) DataSources(_ context.Context) []func() datasource.DataSource {
