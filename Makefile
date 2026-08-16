@@ -27,7 +27,7 @@ fmt:
 	gofmt -s -w -e .
 
 generate:
-	go run ./tools/generator schema/$(STALWART_VERSION).json internal/provider/generated.go
+	go run ./tools/generator schema/$(STALWART_VERSION).json internal/provider/generated.go internal/provider/generated_datasources.go
 
 docs:
 	go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs generate --provider-name stalwart
