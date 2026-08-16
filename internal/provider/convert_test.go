@@ -350,3 +350,84 @@ func TestPayloadMergesWriteOnlySecrets(t *testing.T) {
 		t.Fatalf("write-only attribute name leaked to the wire: %v", payload)
 	}
 }
+
+func TestNestedServerSetAttributesAreNotSent(t *testing.T) {
+	t.Parallel()
+
+	credential := rschema.NestedAttributeObject{Attributes: map[string]rschema.Attribute{
+		"type":          rschema.StringAttribute{Required: true},
+		"secret":        rschema.StringAttribute{Optional: true, Computed: true, Sensitive: true},
+		"credential_id": rschema.StringAttribute{Computed: true},
+		"created_at":    rschema.StringAttribute{Computed: true},
+	}}
+
+	r := &genericResource{descriptor: resourceDescriptor{
+		Name:     "user",
+		JMAPType: "x:Account",
+		Schema: rschema.Schema{Attributes: map[string]rschema.Attribute{
+			"id":          rschema.StringAttribute{Computed: true},
+			"name":        rschema.StringAttribute{Required: true},
+			"credentials": rschema.ListNestedAttribute{Optional: true, Computed: true, NestedObject: credential},
+		}},
+	}}
+
+	credentialType := types.ObjectType{AttrTypes: map[string]attr.Type{
+		"type":          types.StringType,
+		"secret":        types.StringType,
+		"credential_id": types.StringType,
+		"created_at":    types.StringType,
+	}}
+
+	entry, diags := types.ObjectValue(credentialType.AttrTypes, map[string]attr.Value{
+		"type":          types.StringValue("Password"),
+		"secret":        types.StringValue("$6$hash"),
+		"credential_id": types.StringValue("i3xq0zs3ktaa"),
+		"created_at":    types.StringValue("2026-08-17T00:00:00Z"),
+	})
+	if diags.HasError() {
+		t.Fatalf("unexpected diagnostics: %v", diags)
+	}
+
+	credentials, diags := types.ListValue(credentialType, []attr.Value{entry})
+	if diags.HasError() {
+		t.Fatalf("unexpected diagnostics: %v", diags)
+	}
+
+	attrTypes := map[string]attr.Type{
+		"id":          types.StringType,
+		"name":        types.StringType,
+		"credentials": types.ListType{ElemType: credentialType},
+	}
+	plan, diags := types.ObjectValue(attrTypes, map[string]attr.Value{
+		"id":          types.StringValue("c"),
+		"name":        types.StringValue("noreply"),
+		"credentials": credentials,
+	})
+	if diags.HasError() {
+		t.Fatalf("unexpected diagnostics: %v", diags)
+	}
+
+	payload, err := r.payload(context.Background(), plan, plan, true)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	list, ok := payload["credentials"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected credentials on the wire, got %T", payload["credentials"])
+	}
+	first, ok := list["0"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected an indexed credential, got %v", list)
+	}
+
+	if _, present := first["credentialId"]; present {
+		t.Fatalf("server-set credentialId leaked to the wire: %v", first)
+	}
+	if _, present := first["createdAt"]; present {
+		t.Fatalf("server-set createdAt leaked to the wire: %v", first)
+	}
+	if first["@type"] != "Password" || first["secret"] != "$6$hash" {
+		t.Fatalf("writable credential fields lost: %v", first)
+	}
+}

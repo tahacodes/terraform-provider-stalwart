@@ -229,7 +229,8 @@ func (r *genericResource) payload(ctx context.Context, plan, config types.Object
 			continue
 		}
 
-		converted, err := toJMAP(ctx, value)
+		attribute, declared := r.descriptor.Schema.Attributes[name]
+		converted, err := encodeChild(ctx, attribute, declared, value)
 		if err != nil {
 			return nil, fmt.Errorf("attribute %q: %w", name, err)
 		}
