@@ -89,6 +89,7 @@ var generatedResources = []resourceDescriptor{
 		Name:         "acme_provider",
 		JMAPType:     "x:AcmeProvider",
 		ReloadAction: "ReloadSettings",
+		Immutable:    []string{"directory", "eabHmacKey", "eabKeyId"},
 		Schema: schema.Schema{
 			MarkdownDescription: "Defines an ACME provider for automatic TLS certificate management.",
 			Attributes: map[string]schema.Attribute{
@@ -500,6 +501,7 @@ var generatedResources = []resourceDescriptor{
 		Name:         "allowed_ip",
 		JMAPType:     "x:AllowedIp",
 		ReloadAction: "ReloadBlockedIps",
+		Immutable:    []string{"address", "createdAt"},
 		Schema: schema.Schema{
 			MarkdownDescription: "Defines an allowed IP address or network range.",
 			Attributes: map[string]schema.Attribute{
@@ -1809,6 +1811,7 @@ var generatedResources = []resourceDescriptor{
 		Name:         "blocked_ip",
 		JMAPType:     "x:BlockedIp",
 		ReloadAction: "ReloadBlockedIps",
+		Immutable:    []string{"address"},
 		Schema: schema.Schema{
 			MarkdownDescription: "Defines a blocked IP address or network range.",
 			Attributes: map[string]schema.Attribute{
@@ -2306,6 +2309,7 @@ var generatedResources = []resourceDescriptor{
 		Name:         "cluster_role",
 		JMAPType:     "x:ClusterRole",
 		ReloadAction: "ReloadSettings",
+		Immutable:    []string{"name"},
 		Schema: schema.Schema{
 			MarkdownDescription: "Defines a cluster node role with enabled tasks and listeners.",
 			Attributes: map[string]schema.Attribute{
@@ -12379,6 +12383,7 @@ var generatedResources = []resourceDescriptor{
 		Name:         "event_tracing_level",
 		JMAPType:     "x:EventTracingLevel",
 		ReloadAction: "ReloadSettings",
+		Immutable:    []string{"event"},
 		Schema: schema.Schema{
 			MarkdownDescription: "Defines a custom logging level override for a specific event type.",
 			Attributes: map[string]schema.Attribute{
@@ -12822,6 +12827,7 @@ var generatedResources = []resourceDescriptor{
 		Name:         "http_lookup",
 		JMAPType:     "x:HttpLookup",
 		ReloadAction: "ReloadSettings",
+		Immutable:    []string{"namespace"},
 		Schema: schema.Schema{
 			MarkdownDescription: "Defines an HTTP-based lookup list.",
 			Attributes: map[string]schema.Attribute{
@@ -13686,8 +13692,9 @@ var generatedResources = []resourceDescriptor{
 		},
 	},
 	{
-		Name:     "masked_email",
-		JMAPType: "x:MaskedEmail",
+		Name:      "masked_email",
+		JMAPType:  "x:MaskedEmail",
+		Immutable: []string{"accountId", "emailDomain", "emailPrefix", "expiresAt"},
 		Schema: schema.Schema{
 			MarkdownDescription: "Defines a masked email address for privacy protection. Requires an Enterprise license.",
 			Attributes: map[string]schema.Attribute{
@@ -14266,6 +14273,7 @@ var generatedResources = []resourceDescriptor{
 		Name:         "mta_connection_strategy",
 		JMAPType:     "x:MtaConnectionStrategy",
 		ReloadAction: "ReloadSettings",
+		Immutable:    []string{"name"},
 		Schema: schema.Schema{
 			MarkdownDescription: "Defines a connection strategy for outbound message delivery.",
 			Attributes: map[string]schema.Attribute{
@@ -14356,6 +14364,7 @@ var generatedResources = []resourceDescriptor{
 		Name:         "mta_delivery_schedule",
 		JMAPType:     "x:MtaDeliverySchedule",
 		ReloadAction: "ReloadSettings",
+		Immutable:    []string{"name"},
 		Schema: schema.Schema{
 			MarkdownDescription: "Defines retry and notification intervals for message delivery.",
 			Attributes: map[string]schema.Attribute{
@@ -15146,6 +15155,7 @@ var generatedResources = []resourceDescriptor{
 		Name:         "mta_inbound_throttle",
 		JMAPType:     "x:MtaInboundThrottle",
 		ReloadAction: "ReloadSettings",
+		Immutable:    []string{"description"},
 		Schema: schema.Schema{
 			MarkdownDescription: "Defines an inbound rate limit rule for SMTP connections.",
 			Attributes: map[string]schema.Attribute{
@@ -15611,6 +15621,7 @@ var generatedResources = []resourceDescriptor{
 		Name:         "mta_queue_quota",
 		JMAPType:     "x:MtaQueueQuota",
 		ReloadAction: "ReloadSettings",
+		Immutable:    []string{"description"},
 		Schema: schema.Schema{
 			MarkdownDescription: "Defines a quota rule for message queues.",
 			Attributes: map[string]schema.Attribute{
@@ -15693,6 +15704,7 @@ var generatedResources = []resourceDescriptor{
 		JMAPType:     "x:MtaRoute",
 		Variant:      "Local",
 		ReloadAction: "ReloadSettings",
+		Immutable:    []string{"name"},
 		Schema: schema.Schema{
 			MarkdownDescription: "Defines a routing rule for outbound message delivery. Manages the Local Delivery variant.",
 			Attributes: map[string]schema.Attribute{
@@ -15720,6 +15732,7 @@ var generatedResources = []resourceDescriptor{
 		JMAPType:     "x:MtaRoute",
 		Variant:      "Mx",
 		ReloadAction: "ReloadSettings",
+		Immutable:    []string{"name"},
 		Schema: schema.Schema{
 			MarkdownDescription: "Defines a routing rule for outbound message delivery. Manages the Remote Delivery (MX) variant.",
 			Attributes: map[string]schema.Attribute{
@@ -15766,6 +15779,7 @@ var generatedResources = []resourceDescriptor{
 		JMAPType:     "x:MtaRoute",
 		Variant:      "Relay",
 		ReloadAction: "ReloadSettings",
+		Immutable:    []string{"name"},
 		Schema: schema.Schema{
 			MarkdownDescription: "Defines a routing rule for outbound message delivery. Manages the Relay Host variant.",
 			Attributes: map[string]schema.Attribute{
@@ -17113,6 +17127,7 @@ var generatedResources = []resourceDescriptor{
 		Name:         "mta_tls_strategy",
 		JMAPType:     "x:MtaTlsStrategy",
 		ReloadAction: "ReloadSettings",
+		Immutable:    []string{"name"},
 		Schema: schema.Schema{
 			MarkdownDescription: "Defines a TLS security strategy for outbound connections.",
 			Attributes: map[string]schema.Attribute{
@@ -17178,6 +17193,7 @@ var generatedResources = []resourceDescriptor{
 		Name:         "mta_virtual_queue",
 		JMAPType:     "x:MtaVirtualQueue",
 		ReloadAction: "ReloadSettings",
+		Immutable:    []string{"name"},
 		Schema: schema.Schema{
 			MarkdownDescription: "Defines a virtual queue for organizing outbound message delivery.",
 			Attributes: map[string]schema.Attribute{
@@ -17210,6 +17226,7 @@ var generatedResources = []resourceDescriptor{
 		Name:         "network_listener",
 		JMAPType:     "x:NetworkListener",
 		ReloadAction: "ReloadSettings",
+		Immutable:    []string{"name"},
 		Schema: schema.Schema{
 			MarkdownDescription: "Defines a network listener for accepting incoming connections.",
 			Attributes: map[string]schema.Attribute{
@@ -17562,6 +17579,7 @@ var generatedResources = []resourceDescriptor{
 		Name:         "public_key",
 		JMAPType:     "x:PublicKey",
 		ReloadAction: "ReloadSettings",
+		Immutable:    []string{"accountId"},
 		Schema: schema.Schema{
 			MarkdownDescription: "Defines a public key for email encryption (OpenPGP or S/MIME).",
 			Attributes: map[string]schema.Attribute{
@@ -19245,6 +19263,7 @@ var generatedResources = []resourceDescriptor{
 		JMAPType:     "x:SpamDnsblServer",
 		Variant:      "Any",
 		ReloadAction: "ReloadSettings",
+		Immutable:    []string{"name"},
 		Schema: schema.Schema{
 			MarkdownDescription: "Defines a DNSBL server used for spam filtering lookups. Manages the Any variant.",
 			Attributes: map[string]schema.Attribute{
@@ -19348,6 +19367,7 @@ var generatedResources = []resourceDescriptor{
 		JMAPType:     "x:SpamDnsblServer",
 		Variant:      "Body",
 		ReloadAction: "ReloadSettings",
+		Immutable:    []string{"name"},
 		Schema: schema.Schema{
 			MarkdownDescription: "Defines a DNSBL server used for spam filtering lookups. Manages the Body variant.",
 			Attributes: map[string]schema.Attribute{
@@ -19451,6 +19471,7 @@ var generatedResources = []resourceDescriptor{
 		JMAPType:     "x:SpamDnsblServer",
 		Variant:      "Domain",
 		ReloadAction: "ReloadSettings",
+		Immutable:    []string{"name"},
 		Schema: schema.Schema{
 			MarkdownDescription: "Defines a DNSBL server used for spam filtering lookups. Manages the Domain variant.",
 			Attributes: map[string]schema.Attribute{
@@ -19554,6 +19575,7 @@ var generatedResources = []resourceDescriptor{
 		JMAPType:     "x:SpamDnsblServer",
 		Variant:      "Email",
 		ReloadAction: "ReloadSettings",
+		Immutable:    []string{"name"},
 		Schema: schema.Schema{
 			MarkdownDescription: "Defines a DNSBL server used for spam filtering lookups. Manages the E-mail variant.",
 			Attributes: map[string]schema.Attribute{
@@ -19657,6 +19679,7 @@ var generatedResources = []resourceDescriptor{
 		JMAPType:     "x:SpamDnsblServer",
 		Variant:      "Header",
 		ReloadAction: "ReloadSettings",
+		Immutable:    []string{"name"},
 		Schema: schema.Schema{
 			MarkdownDescription: "Defines a DNSBL server used for spam filtering lookups. Manages the Header variant.",
 			Attributes: map[string]schema.Attribute{
@@ -19760,6 +19783,7 @@ var generatedResources = []resourceDescriptor{
 		JMAPType:     "x:SpamDnsblServer",
 		Variant:      "Ip",
 		ReloadAction: "ReloadSettings",
+		Immutable:    []string{"name"},
 		Schema: schema.Schema{
 			MarkdownDescription: "Defines a DNSBL server used for spam filtering lookups. Manages the IP variant.",
 			Attributes: map[string]schema.Attribute{
@@ -19863,6 +19887,7 @@ var generatedResources = []resourceDescriptor{
 		JMAPType:     "x:SpamDnsblServer",
 		Variant:      "Url",
 		ReloadAction: "ReloadSettings",
+		Immutable:    []string{"name"},
 		Schema: schema.Schema{
 			MarkdownDescription: "Defines a DNSBL server used for spam filtering lookups. Manages the URL variant.",
 			Attributes: map[string]schema.Attribute{
@@ -20005,6 +20030,7 @@ var generatedResources = []resourceDescriptor{
 		Name:         "spam_file_extension",
 		JMAPType:     "x:SpamFileExtension",
 		ReloadAction: "ReloadSettings",
+		Immutable:    []string{"extension"},
 		Schema: schema.Schema{
 			MarkdownDescription: "Defines a file extension classification rule for spam filtering.",
 			Attributes: map[string]schema.Attribute{
@@ -20186,6 +20212,7 @@ var generatedResources = []resourceDescriptor{
 		JMAPType:     "x:SpamRule",
 		Variant:      "Any",
 		ReloadAction: "ReloadSettings",
+		Immutable:    []string{"name"},
 		Schema: schema.Schema{
 			MarkdownDescription: "Defines a spam filter rule for message classification. Manages the Any variant.",
 			Attributes: map[string]schema.Attribute{
@@ -20259,6 +20286,7 @@ var generatedResources = []resourceDescriptor{
 		JMAPType:     "x:SpamRule",
 		Variant:      "Body",
 		ReloadAction: "ReloadSettings",
+		Immutable:    []string{"name"},
 		Schema: schema.Schema{
 			MarkdownDescription: "Defines a spam filter rule for message classification. Manages the Body variant.",
 			Attributes: map[string]schema.Attribute{
@@ -20332,6 +20360,7 @@ var generatedResources = []resourceDescriptor{
 		JMAPType:     "x:SpamRule",
 		Variant:      "Domain",
 		ReloadAction: "ReloadSettings",
+		Immutable:    []string{"name"},
 		Schema: schema.Schema{
 			MarkdownDescription: "Defines a spam filter rule for message classification. Manages the Domain variant.",
 			Attributes: map[string]schema.Attribute{
@@ -20405,6 +20434,7 @@ var generatedResources = []resourceDescriptor{
 		JMAPType:     "x:SpamRule",
 		Variant:      "Email",
 		ReloadAction: "ReloadSettings",
+		Immutable:    []string{"name"},
 		Schema: schema.Schema{
 			MarkdownDescription: "Defines a spam filter rule for message classification. Manages the E-mail variant.",
 			Attributes: map[string]schema.Attribute{
@@ -20478,6 +20508,7 @@ var generatedResources = []resourceDescriptor{
 		JMAPType:     "x:SpamRule",
 		Variant:      "Header",
 		ReloadAction: "ReloadSettings",
+		Immutable:    []string{"name"},
 		Schema: schema.Schema{
 			MarkdownDescription: "Defines a spam filter rule for message classification. Manages the Header variant.",
 			Attributes: map[string]schema.Attribute{
@@ -20551,6 +20582,7 @@ var generatedResources = []resourceDescriptor{
 		JMAPType:     "x:SpamRule",
 		Variant:      "Ip",
 		ReloadAction: "ReloadSettings",
+		Immutable:    []string{"name"},
 		Schema: schema.Schema{
 			MarkdownDescription: "Defines a spam filter rule for message classification. Manages the IP variant.",
 			Attributes: map[string]schema.Attribute{
@@ -20624,6 +20656,7 @@ var generatedResources = []resourceDescriptor{
 		JMAPType:     "x:SpamRule",
 		Variant:      "Url",
 		ReloadAction: "ReloadSettings",
+		Immutable:    []string{"name"},
 		Schema: schema.Schema{
 			MarkdownDescription: "Defines a spam filter rule for message classification. Manages the URL variant.",
 			Attributes: map[string]schema.Attribute{
@@ -21022,6 +21055,7 @@ var generatedResources = []resourceDescriptor{
 		Name:         "store_lookup",
 		JMAPType:     "x:StoreLookup",
 		ReloadAction: "ReloadSettings",
+		Immutable:    []string{"namespace"},
 		Schema: schema.Schema{
 			MarkdownDescription: "Defines an external store used for lookups.",
 			Attributes: map[string]schema.Attribute{

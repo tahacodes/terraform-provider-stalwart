@@ -20,6 +20,7 @@ type resourceDescriptor struct {
 	Variant      string
 	Singleton    bool
 	ReloadAction string
+	Immutable    []string
 	Schema       schema.Schema
 }
 
@@ -158,6 +159,10 @@ func (r *genericResource) Update(ctx context.Context, req resource.UpdateRequest
 	if err != nil {
 		resp.Diagnostics.AddError("Unable to build request", err.Error())
 		return
+	}
+
+	for _, field := range r.descriptor.Immutable {
+		delete(patch, field)
 	}
 
 	if err := r.client.Update(ctx, r.descriptor.JMAPType, id, patch); err != nil {
