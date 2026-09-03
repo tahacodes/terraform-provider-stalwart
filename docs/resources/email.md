@@ -18,7 +18,6 @@ Configures email message limits, encryption, compression, and default folder set
 ### Optional
 
 - `compression_algorithm` (String) Algorithm to use to compress e-mail data
-- `default_folders` (Map of String) Default special-use folders to create for new users
 - `encrypt_at_rest` (Boolean) Allow users to configure encryption at rest for their data
 - `encrypt_on_append` (Boolean) Encrypt messages that are manually appended by the user using JMAP or IMAP
 - `max_attachment_size` (Number) Specifies the maximum size for an email attachment

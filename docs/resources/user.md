@@ -39,7 +39,7 @@ resource "stalwart_user" "alice" {
 - `member_group_ids` (Set of String) List of groups that this account is a member of
 - `member_tenant_id` (String) Identifier for the tenant this account belongs to
 - `permissions` (Attributes) Permissions assigned to this account (see [below for nested schema](#nestedatt--permissions))
-- `quotas` (Map of String) Quotas for different object types within this account
+- `quotas` (Map of Number) Quotas for different object types within this account
 - `roles` (Attributes) Roles assigned to this user account (see [below for nested schema](#nestedatt--roles))
 - `time_zone` (String) Preferred time zone for the account
 

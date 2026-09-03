@@ -10077,11 +10077,6 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Algorithm to use to compress e-mail data",
 					Computed:            true,
 				},
-				"default_folders": schema.MapAttribute{
-					MarkdownDescription: "Default special-use folders to create for new users",
-					Computed:            true,
-					ElementType:         types.StringType,
-				},
 				"encrypt_at_rest": schema.BoolAttribute{
 					MarkdownDescription: "Allow users to configure encryption at rest for their data",
 					Computed:            true,
@@ -10348,7 +10343,7 @@ var generatedDataSources = []dataSourceDescriptor{
 				"quotas": schema.MapAttribute{
 					MarkdownDescription: "Quotas for different object types within this group",
 					Computed:            true,
-					ElementType:         types.StringType,
+					ElementType:         types.Int64Type,
 				},
 				"roles": schema.SingleNestedAttribute{
 					MarkdownDescription: "Roles assigned to this group",
@@ -14458,11 +14453,6 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Local port on which the message was received",
 					Computed:            true,
 				},
-				"recipients": schema.MapAttribute{
-					MarkdownDescription: "List of envelope recipients and their delivery status",
-					Computed:            true,
-					ElementType:         types.StringType,
-				},
 				"return_path": schema.StringAttribute{
 					MarkdownDescription: "Envelope sender address (MAIL FROM)",
 					Computed:            true,
@@ -17633,11 +17623,6 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 					ElementType:         types.StringType,
 				},
-				"services": schema.MapAttribute{
-					MarkdownDescription: "List of services to advertise in DNS and auto configuration services",
-					Computed:            true,
-					ElementType:         types.StringType,
-				},
 				"thread_pool_size": schema.Int64Attribute{
 					MarkdownDescription: "The number of threads in the global thread pool for CPU intensive tasks. Defaults to the number of CPU cores",
 					Computed:            true,
@@ -17954,7 +17939,7 @@ var generatedDataSources = []dataSourceDescriptor{
 				"quotas": schema.MapAttribute{
 					MarkdownDescription: "Quotas for different object types within this tenant",
 					Computed:            true,
-					ElementType:         types.StringType,
+					ElementType:         types.Int64Type,
 				},
 				"roles": schema.SingleNestedAttribute{
 					MarkdownDescription: "Roles assigned to this tenant",
@@ -19252,7 +19237,7 @@ var generatedDataSources = []dataSourceDescriptor{
 				"quotas": schema.MapAttribute{
 					MarkdownDescription: "Quotas for different object types within this account",
 					Computed:            true,
-					ElementType:         types.StringType,
+					ElementType:         types.Int64Type,
 				},
 				"roles": schema.SingleNestedAttribute{
 					MarkdownDescription: "Roles assigned to this user account",

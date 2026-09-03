@@ -25,7 +25,7 @@ Defines a tenant for multi-tenant environments with isolated resources and quota
 - `created_at` (String) Creation date of the tenant
 - `logo` (String) URL or base64-encoded image representing the tenant
 - `permissions` (Attributes) Permissions assigned to this tenant (see [below for nested schema](#nestedatt--permissions))
-- `quotas` (Map of String) Quotas for different object types within this tenant
+- `quotas` (Map of Number) Quotas for different object types within this tenant
 - `roles` (Attributes) Roles assigned to this tenant (see [below for nested schema](#nestedatt--roles))
 - `used_disk_quota` (Number) Amount of disk space currently used by this tenant (bytes)
 

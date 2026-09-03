@@ -30,6 +30,5 @@ Represents a queued email message pending delivery.
 - `priority` (Number) Message priority (lower values = higher priority)
 - `received_from_ip` (String) IP address of the client that submitted the message
 - `received_via_port` (Number) Local port on which the message was received
-- `recipients` (Map of String) List of envelope recipients and their delivery status
 - `return_path` (String) Envelope sender address (MAIL FROM)
 - `size` (Number) Size of the message in bytes

@@ -30,7 +30,7 @@ resource "stalwart_tenant" "acme" {
 
 - `logo` (String) URL or base64-encoded image representing the tenant
 - `permissions` (Attributes) Permissions assigned to this tenant (see [below for nested schema](#nestedatt--permissions))
-- `quotas` (Map of String) Quotas for different object types within this tenant
+- `quotas` (Map of Number) Quotas for different object types within this tenant
 - `roles` (Attributes) Roles assigned to this tenant (see [below for nested schema](#nestedatt--roles))
 
 ### Read-Only

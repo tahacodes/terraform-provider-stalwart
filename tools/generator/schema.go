@@ -12,6 +12,8 @@ type propertyType struct {
 	ObjectName string        `json:"objectName"`
 	EnumName   string        `json:"enumName"`
 	Class      *propertyType `json:"class"`
+	KeyClass   *propertyType `json:"keyClass"`
+	ValueClass *propertyType `json:"valueClass"`
 }
 
 type property struct {

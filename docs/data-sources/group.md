@@ -30,7 +30,7 @@ Defines a user or group account for authentication and email access. Reads the G
 - `locale` (String) Preferred locale for the group
 - `member_tenant_id` (String) Identifier for the tenant this group belongs to
 - `permissions` (Attributes) Permissions assigned to this group (see [below for nested schema](#nestedatt--permissions))
-- `quotas` (Map of String) Quotas for different object types within this group
+- `quotas` (Map of Number) Quotas for different object types within this group
 - `roles` (Attributes) Roles assigned to this group (see [below for nested schema](#nestedatt--roles))
 - `time_zone` (String) Preferred time zone for the account
 - `used_disk_quota` (Number) Amount of disk space currently used by this account (bytes)

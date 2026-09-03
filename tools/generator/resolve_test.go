@@ -100,3 +100,50 @@ func TestMergePrefersStructuredKindOnConflict(t *testing.T) {
 		t.Fatal("expected conflict to be reported")
 	}
 }
+
+func TestResolveMapOfObjectsIsDropped(t *testing.T) {
+	t.Parallel()
+
+	r := &resolver{file: testFile()}
+	node := r.resolveType("test", propertyType{
+		Type:       "map",
+		KeyClass:   &propertyType{Type: "enum", EnumName: "ServiceProtocol"},
+		ValueClass: &propertyType{Type: "object", ObjectName: "x:Service"},
+	})
+
+	if node != nil {
+		t.Fatalf("expected map of objects to be dropped, got %+v", node)
+	}
+	if len(r.skipped) == 0 {
+		t.Fatal("expected drop to be reported")
+	}
+}
+
+func TestResolveMapUsesValueClassKind(t *testing.T) {
+	t.Parallel()
+
+	r := &resolver{file: testFile()}
+	node := r.resolveType("test", propertyType{
+		Type:       "map",
+		KeyClass:   &propertyType{Type: "enum", EnumName: "QuotaType"},
+		ValueClass: &propertyType{Type: "number"},
+	})
+
+	if node == nil || node.Kind != "map" {
+		t.Fatalf("expected map node, got %+v", node)
+	}
+	if node.ElemKind != "int" {
+		t.Fatalf("expected int elements, got %q", node.ElemKind)
+	}
+}
+
+func TestResolveMapWithoutValueClassIsStrings(t *testing.T) {
+	t.Parallel()
+
+	r := &resolver{file: testFile()}
+	node := r.resolveType("test", propertyType{Type: "map"})
+
+	if node == nil || node.Kind != "map" || node.ElemKind != "string" {
+		t.Fatalf("expected map of strings, got %+v", node)
+	}
+}

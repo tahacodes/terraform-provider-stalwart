@@ -12211,13 +12211,6 @@ var generatedResources = []resourceDescriptor{
 					PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 					Validators:          []validator.String{stringvalidator.OneOf("lz4", "none")},
 				},
-				"default_folders": schema.MapAttribute{
-					MarkdownDescription: "Default special-use folders to create for new users",
-					Optional:            true,
-					Computed:            true,
-					PlanModifiers:       []planmodifier.Map{mapplanmodifier.UseStateForUnknown()},
-					ElementType:         types.StringType,
-				},
 				"encrypt_at_rest": schema.BoolAttribute{
 					MarkdownDescription: "Allow users to configure encryption at rest for their data",
 					Optional:            true,
@@ -12560,7 +12553,7 @@ var generatedResources = []resourceDescriptor{
 					Optional:            true,
 					Computed:            true,
 					PlanModifiers:       []planmodifier.Map{mapplanmodifier.UseStateForUnknown()},
-					ElementType:         types.StringType,
+					ElementType:         types.Int64Type,
 				},
 				"roles": schema.SingleNestedAttribute{
 					MarkdownDescription: "Roles assigned to this group",
@@ -21622,13 +21615,6 @@ var generatedResources = []resourceDescriptor{
 					PlanModifiers:       []planmodifier.Set{setplanmodifier.UseStateForUnknown()},
 					ElementType:         types.StringType,
 				},
-				"services": schema.MapAttribute{
-					MarkdownDescription: "List of services to advertise in DNS and auto configuration services",
-					Optional:            true,
-					Computed:            true,
-					PlanModifiers:       []planmodifier.Map{mapplanmodifier.UseStateForUnknown()},
-					ElementType:         types.StringType,
-				},
 				"thread_pool_size": schema.Int64Attribute{
 					MarkdownDescription: "The number of threads in the global thread pool for CPU intensive tasks. Defaults to the number of CPU cores",
 					Optional:            true,
@@ -21769,7 +21755,7 @@ var generatedResources = []resourceDescriptor{
 					Optional:            true,
 					Computed:            true,
 					PlanModifiers:       []planmodifier.Map{mapplanmodifier.UseStateForUnknown()},
-					ElementType:         types.StringType,
+					ElementType:         types.Int64Type,
 				},
 				"roles": schema.SingleNestedAttribute{
 					MarkdownDescription: "Roles assigned to this tenant",
@@ -23105,7 +23091,7 @@ var generatedResources = []resourceDescriptor{
 					Optional:            true,
 					Computed:            true,
 					PlanModifiers:       []planmodifier.Map{mapplanmodifier.UseStateForUnknown()},
-					ElementType:         types.StringType,
+					ElementType:         types.Int64Type,
 				},
 				"roles": schema.SingleNestedAttribute{
 					MarkdownDescription: "Roles assigned to this user account",

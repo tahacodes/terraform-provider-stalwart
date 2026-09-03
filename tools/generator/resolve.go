@@ -107,12 +107,12 @@ func (r *resolver) resolveType(context string, t propertyType) *attrNode {
 
 	case "map":
 		elem := "string"
-		if t.Class != nil {
-			if !scalar(t.Class.Type) {
+		if t.ValueClass != nil {
+			if !scalar(t.ValueClass.Type) {
 				r.note(context, "map of non-scalar values")
 				return nil
 			}
-			elem = scalarKind(*t.Class)
+			elem = scalarKind(*t.ValueClass)
 		}
 		return &attrNode{Kind: "map", ElemKind: elem}
 

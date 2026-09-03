@@ -36,7 +36,7 @@ resource "stalwart_group" "admins" {
 - `locale` (String) Preferred locale for the group
 - `member_tenant_id` (String) Identifier for the tenant this group belongs to
 - `permissions` (Attributes) Permissions assigned to this group (see [below for nested schema](#nestedatt--permissions))
-- `quotas` (Map of String) Quotas for different object types within this group
+- `quotas` (Map of Number) Quotas for different object types within this group
 - `roles` (Attributes) Roles assigned to this group (see [below for nested schema](#nestedatt--roles))
 - `time_zone` (String) Preferred time zone for the account
 

@@ -25,7 +25,6 @@ Configures core server settings including hostname, thread pool, and network ser
 - `max_connections` (Number) The maximum number of concurrent connections the server will accept
 - `provider_info` (Map of String) Information about the provider to advertise in auto configuration services.
 - `proxy_trusted_networks` (Set of String) Enable proxy protocol for connections from these networks
-- `services` (Map of String) List of services to advertise in DNS and auto configuration services
 - `thread_pool_size` (Number) The number of threads in the global thread pool for CPU intensive tasks. Defaults to the number of CPU cores
 
 <a id="nestedatt--mail_exchangers"></a>
