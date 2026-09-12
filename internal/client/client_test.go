@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"sync/atomic"
@@ -126,5 +127,52 @@ func TestReloadCoalescesConcurrentRequests(t *testing.T) {
 	}
 	if actions.Load() != 1 {
 		t.Fatalf("expected reload to run, got %d actions", actions.Load())
+	}
+}
+
+func conflictServer(t *testing.T) *httptest.Server {
+	t.Helper()
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/jmap/session", func(w http.ResponseWriter, _ *http.Request) {
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"apiUrl":          "/jmap",
+			"primaryAccounts": map[string]string{"urn:ietf:params:jmap:core": "a"},
+		})
+	})
+	mux.HandleFunc("/jmap", func(w http.ResponseWriter, _ *http.Request) {
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"methodResponses": []any{
+				[]any{"x:Account/set", map[string]any{
+					"notCreated": map[string]any{"new": map[string]any{
+						"type":       "primaryKeyViolation",
+						"properties": []string{"email"},
+						"objectId":   map[string]any{"id": "o", "object": "Account"},
+					}},
+				}, "c0"},
+			},
+		})
+	})
+
+	server := httptest.NewServer(mux)
+	t.Cleanup(server.Close)
+
+	return server
+}
+
+func TestCreateReturnsConflictError(t *testing.T) {
+	c := newTestClient(t, conflictServer(t), false)
+
+	_, err := c.Create(context.Background(), "x:Account", map[string]any{"name": "user"})
+
+	var conflict *ConflictError
+	if !errors.As(err, &conflict) {
+		t.Fatalf("expected ConflictError, got %v", err)
+	}
+	if conflict.ID != "o" {
+		t.Fatalf("expected conflicting id %q, got %q", "o", conflict.ID)
+	}
+	if len(conflict.Properties) != 1 || conflict.Properties[0] != "email" {
+		t.Fatalf("expected properties [email], got %v", conflict.Properties)
 	}
 }

@@ -2,10 +2,12 @@ package provider
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -91,15 +93,9 @@ func (r *genericResource) Create(ctx context.Context, req resource.CreateRequest
 			return
 		}
 	} else {
-		created, err := r.client.Create(ctx, r.descriptor.JMAPType, object)
+		id, err = r.createOrAdopt(ctx, plan, config, object, &resp.Diagnostics)
 		if err != nil {
 			resp.Diagnostics.AddError("Unable to create "+r.descriptor.Name, err.Error())
-			return
-		}
-
-		id, _ = created["id"].(string)
-		if id == "" {
-			resp.Diagnostics.AddError("Unable to create "+r.descriptor.Name, "server returned no id")
 			return
 		}
 	}
@@ -155,14 +151,10 @@ func (r *genericResource) Update(ctx context.Context, req resource.UpdateRequest
 	}
 
 	id := attributeString(current, "id")
-	patch, err := r.payload(ctx, plan, config, true)
+	patch, err := r.updatePayload(ctx, plan, config)
 	if err != nil {
 		resp.Diagnostics.AddError("Unable to build request", err.Error())
 		return
-	}
-
-	for _, field := range r.descriptor.Immutable {
-		delete(patch, field)
 	}
 
 	if err := r.client.Update(ctx, r.descriptor.JMAPType, id, patch); err != nil {
@@ -217,6 +209,51 @@ func (r *genericResource) ImportState(ctx context.Context, req resource.ImportSt
 	}
 
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+func (r *genericResource) createOrAdopt(ctx context.Context, plan, config types.Object, object map[string]any, diags *diag.Diagnostics) (string, error) {
+	created, err := r.client.Create(ctx, r.descriptor.JMAPType, object)
+	if err == nil {
+		id, _ := created["id"].(string)
+		if id == "" {
+			return "", fmt.Errorf("server returned no id")
+		}
+		return id, nil
+	}
+
+	var conflict *client.ConflictError
+	if !errors.As(err, &conflict) {
+		return "", err
+	}
+
+	patch, err := r.updatePayload(ctx, plan, config)
+	if err != nil {
+		return "", err
+	}
+
+	if err := r.client.Update(ctx, r.descriptor.JMAPType, conflict.ID, patch); err != nil {
+		return "", fmt.Errorf("adopting existing object %q: %w", conflict.ID, err)
+	}
+
+	diags.AddWarning(
+		"Adopted existing "+r.descriptor.Name,
+		fmt.Sprintf("Object %q already existed on the server with the same %s and was updated to match the configuration.", conflict.ID, strings.Join(conflict.Properties, ", ")),
+	)
+
+	return conflict.ID, nil
+}
+
+func (r *genericResource) updatePayload(ctx context.Context, plan, config types.Object) (map[string]any, error) {
+	patch, err := r.payload(ctx, plan, config, true)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, field := range r.descriptor.Immutable {
+		delete(patch, field)
+	}
+
+	return patch, nil
 }
 
 func (r *genericResource) payload(ctx context.Context, plan, config types.Object, clearOmitted bool) (map[string]any, error) {

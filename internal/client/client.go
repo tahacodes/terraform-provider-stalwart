@@ -264,6 +264,9 @@ func (c *Client) Create(ctx context.Context, objectType string, object map[strin
 
 	if notCreated, ok := result["notCreated"].(map[string]any); ok {
 		if detail, exists := notCreated[ref]; exists {
+			if conflict := conflictError(objectType, detail); conflict != nil {
+				return nil, conflict
+			}
 			return nil, fmt.Errorf("%s not created: %s", objectType, encode(detail))
 		}
 	}
@@ -356,6 +359,43 @@ func (c *Client) Reload(ctx context.Context, action string) error {
 	c.lastReload[action] = started
 
 	return nil
+}
+
+type ConflictError struct {
+	ObjectType string
+	ID         string
+	Properties []string
+}
+
+func (e *ConflictError) Error() string {
+	return fmt.Sprintf("%s not created: object %q already owns %s", e.ObjectType, e.ID, strings.Join(e.Properties, ", "))
+}
+
+func conflictError(objectType string, detail any) *ConflictError {
+	fields, ok := detail.(map[string]any)
+	if !ok || fields["type"] != "primaryKeyViolation" {
+		return nil
+	}
+
+	objectID, ok := fields["objectId"].(map[string]any)
+	if !ok {
+		return nil
+	}
+	id, ok := objectID["id"].(string)
+	if !ok || id == "" {
+		return nil
+	}
+
+	properties := []string{}
+	if raw, ok := fields["properties"].([]any); ok {
+		for _, v := range raw {
+			if s, ok := v.(string); ok {
+				properties = append(properties, s)
+			}
+		}
+	}
+
+	return &ConflictError{ObjectType: objectType, ID: id, Properties: properties}
 }
 
 func methodError(m MethodCall) error {

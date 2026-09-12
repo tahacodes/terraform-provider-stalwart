@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -10,6 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+
+	"github.com/tahacodes/terraform-provider-stalwart/internal/client"
 )
 
 var protoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
@@ -400,4 +403,80 @@ resource "stalwart_domain" "test" {
 			},
 		},
 	})
+}
+
+func TestAccUserAdoptsExistingAccount(t *testing.T) {
+	var existingID string
+
+	domainConfig := `
+resource "stalwart_domain" "test" {
+  name = "acctest-adopt.com"
+
+  dkim_management = {
+    type = "Manual"
+  }
+}
+`
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: protoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: domainConfig,
+				Check: func(s *terraform.State) error {
+					domainID := s.RootModule().Resources["stalwart_domain.test"].Primary.ID
+					id, err := createAccountOutsideTerraform(t, domainID)
+					if err != nil {
+						return err
+					}
+					existingID = id
+					return nil
+				},
+			},
+			{
+				Config: domainConfig + `
+resource "stalwart_user" "test" {
+  name        = "acctest-adopted"
+  domain_id   = stalwart_domain.test.id
+  description = "Managed by Terraform"
+}
+`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPtr("stalwart_user.test", "id", &existingID),
+					resource.TestCheckResourceAttr("stalwart_user.test", "email_address", "acctest-adopted@acctest-adopt.com"),
+					resource.TestCheckResourceAttr("stalwart_user.test", "description", "Managed by Terraform"),
+				),
+			},
+		},
+	})
+}
+
+func createAccountOutsideTerraform(t *testing.T, domainID string) (string, error) {
+	t.Helper()
+
+	c, err := client.New(context.Background(), client.Config{
+		Endpoint: os.Getenv("STALWART_URL"),
+		Username: os.Getenv("STALWART_USER"),
+		Password: os.Getenv("STALWART_PASSWORD"),
+	})
+	if err != nil {
+		return "", err
+	}
+
+	created, err := c.Create(context.Background(), "x:Account", map[string]any{
+		"@type":       "User",
+		"name":        "acctest-adopted",
+		"domainId":    domainID,
+		"description": "Created outside Terraform",
+	})
+	if err != nil {
+		return "", err
+	}
+
+	id, _ := created["id"].(string)
+	if id == "" {
+		return "", fmt.Errorf("server returned no id")
+	}
+
+	return id, nil
 }
