@@ -22,11 +22,11 @@ Defines a routing rule for outbound message delivery. Reads the Relay Host varia
 
 ### Read-Only
 
-- `address` (String) The address of the remote SMTP server, which can be an IP address or a domain name
 - `allow_invalid_certs` (Boolean) Whether to allow connections to servers with invalid TLS certificates
 - `auth_secret` (Attributes) The secret to use when authenticating with the remote server (see [below for nested schema](#nestedatt--auth_secret))
 - `auth_username` (String) The username to use when authenticating with the remote server
 - `description` (String) A short description of the route, which can be used to identify it in the list of routes
+- `host` (String) Hostname or IP address of the remote SMTP server
 - `implicit_tls` (Boolean) Whether to use TLS encryption for all connections to the remote server
 - `port` (Number) The port number of the remote server, which is typically 25 for SMTP and 11200 for LMTP
 - `protocol` (String) The protocol to use when delivering messages to the remote server, which can be either SMTP or LMTP

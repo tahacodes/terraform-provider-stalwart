@@ -20,8 +20,11 @@ Configures address book and contact storage settings. This singleton object alwa
 - `default_display_name` (String) Specifies the default display name for a contact when it is created
 - `default_href_name` (String) Specifies the default href name for a contact when it is created
 - `max_address_books` (Number) The default maximum number of address books a user can create
+- `max_address_books_per_card` (Number) Maximum number of address books a single contact card can belong to
 - `max_contacts` (Number) The default maximum number of contact cards a user can create
+- `max_media_size` (Number) Maximum total size of the media (photos, logos, sounds and keys) embedded in a single contact card
 - `max_v_card_size` (Number) Specifies the maximum size of a vCard file that can be uploaded to the server
+- `v_card_version` (String) vCard version used when serializing contact cards for clients that do not request a specific version
 
 ### Read-Only
 

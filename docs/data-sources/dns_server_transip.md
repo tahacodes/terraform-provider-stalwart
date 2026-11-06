@@ -22,8 +22,8 @@ Defines a DNS server for automatic record management. Reads the TransIP variant.
 ### Read-Only
 
 - `description` (String) Short description of this DNS server
-- `member_tenant_id` (String) Identifier for the tenant this DNS server belongs to
-- `polling_interval` (Number) How often to check for DNS records to propagate
+- `member_tenant_id` (String) Identifier for the tenant this DNS server belongs to Requires an Enterprise license.
+- `poll_interval` (Number) How often to check for DNS records to propagate
 - `private_key_pem` (Attributes) TransIP private key in PEM format (see [below for nested schema](#nestedatt--private_key_pem))
 - `propagation_delay` (Number) Initial delay before first propagation check (useful for slow providers)
 - `propagation_timeout` (Number) How long to wait for DNS records to propagate

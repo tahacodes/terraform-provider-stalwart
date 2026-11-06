@@ -17,11 +17,14 @@ Defines a Milter filter endpoint for message processing.
 
 ### Required
 
-- `hostname` (String) Hostname or IP address of the server where the Milter filter is running
+- `host` (String) Hostname or IP address of the server where the Milter filter is running
 
 ### Optional
 
 - `allow_invalid_certs` (Boolean) Whether Stalwart should connect to a Milter filter server that has an invalid TLS certificate
+- `command_timeout` (Number) How long Stalwart will wait to send a command to the Milter server
+- `connect_timeout` (Number) Maximum amount of time that Stalwart will wait to establish a connection with this Milter server
+- `data_timeout` (Number) Maximum amount of time Stalwart will wait for a response from the Milter server
 - `enable` (Attributes) Expression that determines whether to enable this milter (see [below for nested schema](#nestedatt--enable))
 - `flags_action` (Number) Optional flags to set on the Milter connection. See the Milter protocol documentation for details on available flags.
 - `flags_protocol` (Number) Optional protocol flags to set on the Milter connection. See the Milter protocol documentation for details on available protocol flags.
@@ -30,9 +33,6 @@ Defines a Milter filter endpoint for message processing.
 - `protocol_version` (String) Version of the Milter protocol that Stalwart should use when communicating with the Milter server
 - `stages` (Set of String) Which SMTP stages to run the milter on
 - `temp_fail_on_error` (Boolean) Whether to respond with a temporary failure (typically a 4xx SMTP status code) when Stalwart encounters an error while communicating with this Milter server
-- `timeout_command` (Number) How long Stalwart will wait to send a command to the Milter server
-- `timeout_connect` (Number) Maximum amount of time that Stalwart will wait to establish a connection with this Milter server
-- `timeout_data` (Number) Maximum amount of time Stalwart will wait for a response from the Milter server
 - `use_tls` (Boolean) Whether to use Transport Layer Security (TLS) for the connection between Stalwart and the Milter filter
 
 ### Read-Only

@@ -25,9 +25,9 @@ Defines a DNS server for automatic record management. Reads the OVH variant.
 - `application_secret` (Attributes) The application secret used to authenticate with the OVH DNS server (see [below for nested schema](#nestedatt--application_secret))
 - `consumer_key` (Attributes) The consumer key used to authenticate with the OVH DNS server (see [below for nested schema](#nestedatt--consumer_key))
 - `description` (String) Short description of this DNS server
-- `member_tenant_id` (String) Identifier for the tenant this DNS server belongs to
+- `member_tenant_id` (String) Identifier for the tenant this DNS server belongs to Requires an Enterprise license.
 - `ovh_endpoint` (String) Which OVH endpoint to use
-- `polling_interval` (Number) How often to check for DNS records to propagate
+- `poll_interval` (Number) How often to check for DNS records to propagate
 - `propagation_delay` (Number) Initial delay before first propagation check (useful for slow providers)
 - `propagation_timeout` (Number) How long to wait for DNS records to propagate
 - `timeout` (Number) Request timeout for the DNS server

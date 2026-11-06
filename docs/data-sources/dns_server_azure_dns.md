@@ -25,8 +25,8 @@ Defines a DNS server for automatic record management. Reads the Microsoft Azure 
 - `client_secret` (Attributes) Application client secret (see [below for nested schema](#nestedatt--client_secret))
 - `description` (String) Short description of this DNS server
 - `environment` (String) Azure cloud environment
-- `member_tenant_id` (String) Identifier for the tenant this DNS server belongs to
-- `polling_interval` (Number) How often to check for DNS records to propagate
+- `member_tenant_id` (String) Identifier for the tenant this DNS server belongs to Requires an Enterprise license.
+- `poll_interval` (Number) How often to check for DNS records to propagate
 - `propagation_delay` (Number) Initial delay before first propagation check (useful for slow providers)
 - `propagation_timeout` (Number) How long to wait for DNS records to propagate
 - `resource_group` (String) Resource group that contains the DNS zone

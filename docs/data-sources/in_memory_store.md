@@ -17,8 +17,10 @@ Configures the in-memory cache and lookup store. This singleton object always ex
 
 ### Read-Only
 
+- `allow_invalid_certs` (Boolean) Allow invalid TLS certificates when connecting to the Redis server
 - `auth_secret` (Attributes) Password to connect to the store (see [below for nested schema](#nestedatt--auth_secret))
 - `auth_username` (String) Username to connect to the store
+- `connect_timeout` (Number) Maximum time to wait for a new connection to the Redis server to be established
 - `id` (String) Always `singleton`.
 - `max_retries` (Number) Number of retries to connect to the Redis cluster
 - `max_retry_wait` (Number) Maximum time to wait between retries
@@ -33,7 +35,6 @@ Configures the in-memory cache and lookup store. This singleton object always ex
 - `sentinel_username` (String) Username to connect to the Sentinel nodes
 - `service_name` (String) Name of the monitored master (service) to query via the Sentinels
 - `stores` (Attributes List) Stores to use for sharding (see [below for nested schema](#nestedatt--stores))
-- `timeout` (Number) Connection timeout to the database
 - `type` (String) Variant discriminator.
 - `url` (String) URL of the Redis server
 - `urls` (Set of String) URL(s) of the Redis server(s)
@@ -65,8 +66,10 @@ Read-Only:
 
 Read-Only:
 
+- `allow_invalid_certs` (Boolean) Allow invalid TLS certificates when connecting to the Redis server
 - `auth_secret` (Attributes) Password to connect to the store (see [below for nested schema](#nestedatt--stores--auth_secret))
 - `auth_username` (String) Username to connect to the store
+- `connect_timeout` (Number) Maximum time to wait for a new connection to the Redis server to be established
 - `max_retries` (Number) Number of retries to connect to the Redis cluster
 - `max_retry_wait` (Number) Maximum time to wait between retries
 - `min_retry_wait` (Number) Minimum time to wait between retries
@@ -79,7 +82,6 @@ Read-Only:
 - `sentinel_secret` (Attributes) Password to connect to the Sentinel nodes (see [below for nested schema](#nestedatt--stores--sentinel_secret))
 - `sentinel_username` (String) Username to connect to the Sentinel nodes
 - `service_name` (String) Name of the monitored master (service) to query via the Sentinels
-- `timeout` (Number) Connection timeout to the database
 - `type` (String) Variant discriminator.
 - `url` (String) URL of the Redis server
 - `urls` (Set of String) URL(s) of the Redis server(s)

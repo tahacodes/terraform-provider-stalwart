@@ -17,16 +17,13 @@ Configures the OAuth and OpenID Connect provider settings. This singleton object
 
 ### Read-Only
 
-- `access_token_expiry` (Number) Expiration time of an OAuth access token
-- `anonymous_client_registration` (Boolean) Whether to allow OAuth clients to register without authentication
-- `auth_code_expiry` (Number) Expiration time of an authorization code issued by the authorization code flow
-- `auth_code_max_attempts` (Number) Number of failed login attempts before an authorization code is invalidated
+- `access_token_expiry` (Number) Expiration time of an OAuth access token. OAuth clients require at least 10 minutes and expect at least 1 hour.
+- `auth_code_expiry` (Number) Expiration time of an authorization code issued by the authorization code flow. OAuth clients require at least 10 minutes.
+- `client_metadata_documents` (String) Whether OAuth client ids that are HTTPS URLs of Client ID Metadata Documents published by third-party applications are accepted. Same domain accepts only documents hosted under the same registrable domain as this server. Third-party clients are always shown as unverified on the consent screen. Documents served by this server's own web applications are always accepted.
 - `encryption_key` (Attributes) Encryption key to use for OAuth (see [below for nested schema](#nestedatt--encryption_key))
 - `id` (String) Always `singleton`.
 - `id_token_expiry` (Number) Expiration time of an OpenID Connect ID token
-- `refresh_token_expiry` (Number) Expiration time of an OAuth refresh token
-- `refresh_token_renewal` (Number) Remaining time in a refresh token before a new one is issued to the client
-- `require_client_registration` (Boolean) Whether to require OAuth client_ids to be registered before they can be used
+- `refresh_token_expiry` (Number) How long an OAuth application can stay unused before it is signed out. Each refresh issues a new refresh token valid for this long, so a grant ends only after this much inactivity. Values below 30 days do not follow the OAuth profile for open public clients and make mail applications ask users to sign in again more often.
 - `signature_algorithm` (String) JWT signature algorithm to use for OpenID Connect.
 - `signature_key` (Attributes) Contents of the private key PEM used to sign JWTs for OpenID Connect. (see [below for nested schema](#nestedatt--signature_key))
 - `user_code_expiry` (Number) Expiration time of a user code issued by the device authentication flow

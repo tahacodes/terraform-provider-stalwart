@@ -22,7 +22,7 @@ Defines a masked email address for privacy protection. Requires an Enterprise li
 - `description` (String) Description of the masked email address
 - `email_domain` (String) This is only used on create and otherwise ignored; if supplied, the server-assigned email will end with the given domain.
 - `email_prefix` (String) This is only used on create and otherwise ignored; if supplied, the server-assigned email will start with the given prefix. The string MUST be <= 64 characters in length and MUST only contain characters a-z, 0-9 and _ (underscore).
-- `enabled` (Boolean) Whether this masked email address is enabled
+- `enable` (Boolean) Whether this masked email address is enabled
 - `expires_at` (String) Expiration date of the email address
 - `for_domain` (String) The domain name of the site this address was created for, e.g. "https://example.com". This is intended to be added automatically by password managers.
 - `url` (String) A URL pointing back to the integrator's use of this email address, e.g. a custom-uri to open "ACME Password Manager" at the appropriate entry.

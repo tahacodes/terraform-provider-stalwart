@@ -24,6 +24,7 @@ Configures message processing rules for the SMTP DATA stage. This singleton obje
 - `add_received_header` (Attributes) Whether to add a Received header to the message (see [below for nested schema](#nestedatt--add_received_header))
 - `add_received_spf_header` (Attributes) Whether to add a Received-SPF header to the message (see [below for nested schema](#nestedatt--add_received_spf_header))
 - `add_return_path_header` (Attributes) Whether to add a Return-Path header to the message (see [below for nested schema](#nestedatt--add_return_path_header))
+- `dkim_sign_domain` (Attributes) Domain to use for DKIM signing (see [below for nested schema](#nestedatt--dkim_sign_domain))
 - `enable_spam_filter` (Attributes) Whether to enable the spam filter for incoming messages (see [below for nested schema](#nestedatt--enable_spam_filter))
 - `id` (String) Always `singleton`.
 - `max_message_size` (Attributes) Maximum size of a message in bytes (see [below for nested schema](#nestedatt--max_message_size))
@@ -131,6 +132,24 @@ Read-Only:
 
 <a id="nestedatt--add_return_path_header--match"></a>
 ### Nested Schema for `add_return_path_header.match`
+
+Read-Only:
+
+- `if` (String) If condition
+- `then` (String) Then clause
+
+
+
+<a id="nestedatt--dkim_sign_domain"></a>
+### Nested Schema for `dkim_sign_domain`
+
+Read-Only:
+
+- `else` (String) Else condition
+- `match` (Attributes List) List of conditions and their corresponding results (see [below for nested schema](#nestedatt--dkim_sign_domain--match))
+
+<a id="nestedatt--dkim_sign_domain--match"></a>
+### Nested Schema for `dkim_sign_domain.match`
 
 Read-Only:
 

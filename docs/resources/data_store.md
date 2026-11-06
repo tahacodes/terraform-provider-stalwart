@@ -39,23 +39,25 @@ resource "stalwart_data_store" "postgres" {
 - `allow_invalid_certs` (Boolean) Allow invalid TLS certificates when connecting to the store
 - `auth_secret` (Attributes) Password to connect to the store (see [below for nested schema](#nestedatt--auth_secret))
 - `auth_username` (String) Username to connect to the store
-- `blob_size` (Number) Minimum size of a blob to store in the blob store, smaller blobs are stored in the metadata store
-- `buffer_size` (Number) Size of the write buffer in bytes, used to batch writes to the store
+- `blob_size` (Number) Minimum size of a blob to write to a separate RocksDB blob file; smaller blobs are stored inline in the LSM tree. Only applies when RocksDB is also the blob store
+- `buffer_size` (Number) Total amount of memory shared by the write buffers (memtables) of every column family. Higher values batch more writes in memory before they are flushed to disk
+- `cache_size` (Number) Total amount of memory shared by the block caches of every column family, used to cache data blocks, indexes and bloom filters read from disk. When unset, one eighth of the memory available to the server (the lower of physical memory and the container memory limit), between 256 MiB and 8 GiB; on hosts with less than 1 GiB, a quarter of the memory; 256 MiB when the memory cannot be determined
 - `cluster_file` (String) Path to the cluster file for the FoundationDB cluster
+- `connect_timeout` (Number) Maximum time to wait for a connection to the database server to be established
 - `database` (String) Name of the database
 - `datacenter_id` (String) Data center ID (optional)
 - `host` (String) Hostname of the database server
+- `idle_timeout` (Number) Time an idle connection may stay open before the server closes it (sets the MySQL wait_timeout session variable)
 - `machine_id` (String) Machine ID in the FoundationDB cluster (optional)
 - `max_allowed_packet` (Number) Maximum size of a packet in bytes
 - `options` (String) Additional connection options
 - `path` (String) Path to the RocksDB data directory
-- `pool_max_connections` (Number) Maximum number of connections to the store
+- `pool_max_connections` (Number) Maximum number of connections to the store. When unset, the number of worker threads, between 4 and 16.
 - `pool_min_connections` (Number) Minimum number of connections to the store
 - `pool_recycling_method` (String) Method to use when recycling connections in the pool
 - `pool_workers` (Number) Number of worker threads to use for the store, defaults to the number of cores
 - `port` (Number) Port of the database server
 - `read_replicas` (Attributes List) List of read replicas for the store Requires an Enterprise license. (see [below for nested schema](#nestedatt--read_replicas))
-- `timeout` (Number) Connection timeout to the database
 - `transaction_retry_delay` (Number) Transaction maximum retry delay
 - `transaction_retry_limit` (Number) Transaction retry limit
 - `transaction_timeout` (Number) Transaction timeout

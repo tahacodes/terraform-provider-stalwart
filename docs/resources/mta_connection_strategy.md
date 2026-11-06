@@ -27,18 +27,18 @@ Defines a connection strategy for outbound message delivery.
 - `ehlo_hostname` (String) Overrides the EHLO hostname that will be used when connecting using this strategy
 - `ehlo_timeout` (Number) Maximum time to wait for the EHLO command response
 - `greeting_timeout` (Number) Maximum time to wait for the SMTP greeting message
+- `local_ips` (Attributes List) List of local IPv4 and IPv6 addresses to use when delivering emails to remote SMTP servers (see [below for nested schema](#nestedatt--local_ips))
 - `mail_from_timeout` (Number) Maximum time to wait for the MAIL-FROM command response
 - `rcpt_to_timeout` (Number) Maximum time to wait for the RCPT-TO command response
-- `source_ips` (Attributes List) List of local IPv4 and IPv6 addresses to use when delivering emails to remote SMTP servers (see [below for nested schema](#nestedatt--source_ips))
 
 ### Read-Only
 
 - `id` (String) Server-assigned identifier.
 
-<a id="nestedatt--source_ips"></a>
-### Nested Schema for `source_ips`
+<a id="nestedatt--local_ips"></a>
+### Nested Schema for `local_ips`
 
 Optional:
 
 - `ehlo_hostname` (String) Overrides the EHLO hostname that will be used when connecting from this IP address
-- `source_ip` (String) Local IPv4 and IPv6 address to use when delivering emails to remote SMTP servers
+- `local_ip` (String) Local IPv4 and IPv6 address to use when delivering emails to remote SMTP servers

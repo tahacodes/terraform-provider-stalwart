@@ -34,8 +34,8 @@ Stores a DMARC aggregate report received from an external source.
 
 Read-Only:
 
-- `date_range_begin` (String) Start of the reporting period
 - `date_range_end` (String) End of the reporting period
+- `date_range_start` (String) Start of the reporting period
 - `email` (String) Contact email address of the reporting organization
 - `errors` (Set of String) Errors encountered during report generation
 - `extensions` (Attributes List) Custom vendor-specific extensions to the report (see [below for nested schema](#nestedatt--report--extensions))

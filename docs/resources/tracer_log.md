@@ -17,7 +17,7 @@ Defines a logging and tracing output method. Manages the Log file variant.
 
 ### Required
 
-- `path` (String) The path to the log file
+- `path` (String) Directory in which log files are written
 
 ### Optional
 
@@ -28,7 +28,7 @@ Defines a logging and tracing output method. Manages the Log file variant.
 - `level` (String) The logging level for this tracer
 - `lossy` (Boolean) Whether to drop log entries if there is backlog
 - `multiline` (Boolean) Whether to write log entries as a single line or multiline
-- `prefix` (String) The prefix for the log file
+- `prefix` (String) The prefix for the log file names. When rotation is enabled, the date is appended to it
 - `rotate` (String) The frequency to rotate the log file
 
 ### Read-Only

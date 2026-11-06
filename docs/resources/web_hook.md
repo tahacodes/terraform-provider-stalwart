@@ -21,18 +21,18 @@ Defines a webhook endpoint for event notifications.
 
 ### Optional
 
-- `allow_invalid_certs` (Boolean) Whether Stalwart should connect to a webhook endpoint that has an invalid TLS certificate
+- `allow_invalid_certs` (Boolean) Whether to allow invalid SSL certificates
 - `discard_after` (Number) The duration after which the webhook will be discarded if it cannot be delivered
-- `enable` (Boolean) Enable or disable the tracer
+- `enable` (Boolean) Enable or disable the webhook
 - `events` (Set of String) List of events to include or exclude based on filter mode
 - `events_policy` (String) How to interpret the events list
 - `http_auth` (Attributes) The type of HTTP authentication to use (see [below for nested schema](#nestedatt--http_auth))
 - `http_headers` (Map of String) Additional headers to include in HTTP requests
-- `level` (String) The logging level for this tracer
-- `lossy` (Boolean) Whether to drop log entries if there is backlog
+- `level` (String) The minimum level of the events sent to the webhook
+- `lossy` (Boolean) Whether to drop events if there is backlog
 - `signature_key` (Attributes) The HMAC key used to sign the webhook request body to prevent tampering (see [below for nested schema](#nestedatt--signature_key))
 - `throttle` (Number) The minimum amount of time that must pass between each request to the webhook endpoint
-- `timeout` (Number) Maximum amount of time that Stalwart will wait for a response from this webhook
+- `timeout` (Number) Timeout for HTTP requests
 
 ### Read-Only
 

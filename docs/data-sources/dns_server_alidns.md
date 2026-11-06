@@ -21,16 +21,16 @@ Defines a DNS server for automatic record management. Reads the Alibaba Cloud DN
 
 ### Read-Only
 
-- `access_key` (String) The Alibaba Cloud access key ID
+- `access_key_id` (String) The Alibaba Cloud access key ID
 - `description` (String) Short description of this DNS server
 - `line` (String) Optional ISP line identifier (used for split-resolution accounts)
-- `member_tenant_id` (String) Identifier for the tenant this DNS server belongs to
-- `polling_interval` (Number) How often to check for DNS records to propagate
+- `member_tenant_id` (String) Identifier for the tenant this DNS server belongs to Requires an Enterprise license.
+- `poll_interval` (Number) How often to check for DNS records to propagate
 - `propagation_delay` (Number) Initial delay before first propagation check (useful for slow providers)
 - `propagation_timeout` (Number) How long to wait for DNS records to propagate
 - `region` (String) Optional regional endpoint (defaults to the global endpoint)
 - `secret_key` (Attributes) The Alibaba Cloud access key secret (see [below for nested schema](#nestedatt--secret_key))
-- `security_token` (Attributes) Optional STS security token for temporary credentials (see [below for nested schema](#nestedatt--security_token))
+- `session_token` (Attributes) Optional STS security token for temporary credentials (see [below for nested schema](#nestedatt--session_token))
 - `timeout` (Number) Request timeout for the DNS server
 - `ttl` (Number) The TTL for new DNS record
 
@@ -45,8 +45,8 @@ Read-Only:
 - `variable_name` (String) Environment variable name to read the secret from
 
 
-<a id="nestedatt--security_token"></a>
-### Nested Schema for `security_token`
+<a id="nestedatt--session_token"></a>
+### Nested Schema for `session_token`
 
 Read-Only:
 

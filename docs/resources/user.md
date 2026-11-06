@@ -35,9 +35,10 @@ resource "stalwart_user" "alice" {
 - `credentials` (Attributes List) List of credential objects representing authentication methods for the account (see [below for nested schema](#nestedatt--credentials))
 - `description` (String) Description of the account
 - `encryption_at_rest` (Attributes) Encryption-at-rest settings for the account (see [below for nested schema](#nestedatt--encryption_at_rest))
+- `external_id` (String) Identifier assigned by an external provisioning client such as a SCIM identity provider Requires an Enterprise license.
 - `locale` (String) Preferred locale for the account
 - `member_group_ids` (Set of String) List of groups that this account is a member of
-- `member_tenant_id` (String) Identifier for the tenant this account belongs to
+- `member_tenant_id` (String) Identifier for the tenant this account belongs to Requires an Enterprise license.
 - `permissions` (Attributes) Permissions assigned to this account (see [below for nested schema](#nestedatt--permissions))
 - `quotas` (Map of Number) Quotas for different object types within this account
 - `roles` (Attributes) Roles assigned to this user account (see [below for nested schema](#nestedatt--roles))
@@ -57,7 +58,7 @@ Optional:
 
 - `description` (String) Description of the email alias
 - `domain_id` (String) Identifier for the domain of the email alias (the part after the @ symbol).
-- `enabled` (Boolean) Whether this email alias is enabled
+- `enable` (Boolean) Whether this email alias is enabled
 - `name` (String) The local part of the email alias (the part before the @ symbol)
 
 
@@ -73,7 +74,7 @@ Optional:
 - `allowed_ips` (Set of String) List of allowed IP addresses or CIDR ranges for this credential
 - `description` (String) Description of the credential
 - `expires_at` (String) Expiration date of the credential
-- `otp_auth` (String) OTP authentication URI for the account
+- `otp_url` (String) OTP authentication URI for the account
 - `permissions` (Attributes) List of permissions assigned to this credential (see [below for nested schema](#nestedatt--credentials--permissions))
 - `secret` (String, Sensitive) Secret value of the account
 
@@ -106,6 +107,7 @@ Optional:
 
 - `allow_spam_training` (Boolean) Whether to allow training the spam classifier with plaintext emails before encryption
 - `encrypt_on_append` (Boolean) Whether to encrypt emails when they are appended to mailboxes
+- `header_protection` (String) Whether message headers are also protected inside the encrypted part (Subject hiding is not available at rest)
 - `public_key` (String) Public key used for encrypting emails
 
 

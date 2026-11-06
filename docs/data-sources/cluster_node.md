@@ -3,12 +3,12 @@
 page_title: "stalwart_cluster_node Data Source - stalwart"
 subcategory: ""
 description: |-
-  Represents a node in the cluster
+  Represents a node in the cluster.
 ---
 
 # stalwart_cluster_node (Data Source)
 
-Represents a node in the cluster
+Represents a node in the cluster.
 
 
 

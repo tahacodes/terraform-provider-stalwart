@@ -27,8 +27,9 @@ Defines a user or group account for authentication and email access. Reads the G
 - `description` (String) Description of the group
 - `domain_id` (String) Identifier for the domain this group belongs to. This is used to determine the email address of the group, which is formed as name@domain.
 - `email_address` (String) Email address of the group, formed as name@domain.
+- `external_id` (String) Identifier assigned by an external provisioning client such as a SCIM identity provider Requires an Enterprise license.
 - `locale` (String) Preferred locale for the group
-- `member_tenant_id` (String) Identifier for the tenant this group belongs to
+- `member_tenant_id` (String) Identifier for the tenant this group belongs to Requires an Enterprise license.
 - `permissions` (Attributes) Permissions assigned to this group (see [below for nested schema](#nestedatt--permissions))
 - `quotas` (Map of Number) Quotas for different object types within this group
 - `roles` (Attributes) Roles assigned to this group (see [below for nested schema](#nestedatt--roles))
@@ -42,7 +43,7 @@ Read-Only:
 
 - `description` (String) Description of the email alias
 - `domain_id` (String) Identifier for the domain of the email alias (the part after the @ symbol).
-- `enabled` (Boolean) Whether this email alias is enabled
+- `enable` (Boolean) Whether this email alias is enabled
 - `name` (String) The local part of the email alias (the part before the @ symbol)
 
 

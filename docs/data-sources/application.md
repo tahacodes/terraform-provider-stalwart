@@ -21,9 +21,11 @@ Defines a web application served by the server.
 
 ### Read-Only
 
-- `auto_update_frequency` (Number) Frequency to check for application updates
+- `auto_update_interval` (Number) How long a downloaded application bundle is kept in the blob store. Once it expires, the bundle is downloaded again the next time the application is loaded
 - `description` (String) A short description of the web application
-- `enabled` (Boolean) Whether the application is enabled and should be served by the server
+- `enable` (Boolean) Whether the application is enabled and should be served by the server
+- `oauth_client_id` (String) Client identifier used when the domain is served by an external identity provider that does not support OAuth Client ID Metadata Documents. It must match a client registered with that provider. When the provider supports them, the application's metadata document URL is used instead.
+- `oauth_scopes` (Set of String) Additional OAuth scopes the application requests when signing in, appended to the ones it requests by default. Used with an external identity provider that releases a claim, such as the one named in the OIDC directory's username claim, only with a scope of its own.
 - `resource_url` (String) Override the URL to download application updates from.
 - `unpack_directory` (String) The local path to unpack the application bundle to. If left empty, the application will be unpacked to /tmp.
 - `url_prefix` (Set of String) The URL prefixes to serve the application on. For example, if set to "/admin", the application will be accessible at http://server/admin.

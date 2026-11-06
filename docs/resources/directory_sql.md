@@ -23,7 +23,7 @@ Defines an external directory for account authentication and lookups. Manages th
 
 - `column_class` (String) Column name for account type
 - `column_description` (String) Column name for account full name or description
-- `column_email` (String) Column name for e-mail address. Optional, you can use instead a query to obtain the account's addresses.
+- `column_email` (String) Column holding the account's primary e-mail address. When the column is missing from the result or does not hold an address, the login name is used as the address at sign-in, and recipient lookups find no aliases or groups.
 - `column_secret` (String) Column name for the account password.
 - `member_tenant_id` (String) Identifier for the tenant this directory belongs to Requires an Enterprise license.
 - `query_email_aliases` (String) Query to obtain the e-mail aliases of an account.
@@ -48,18 +48,19 @@ Optional:
 - `allow_invalid_certs` (Boolean) Allow invalid TLS certificates when connecting to the store
 - `auth_secret` (Attributes) Password to connect to the store (see [below for nested schema](#nestedatt--store--auth_secret))
 - `auth_username` (String) Username to connect to the store
+- `connect_timeout` (Number) Maximum time to wait for a connection to the database server to be established
 - `database` (String) Name of the database
 - `host` (String) Hostname of the database server
+- `idle_timeout` (Number) Time an idle connection may stay open before the server closes it (sets the MySQL wait_timeout session variable)
 - `max_allowed_packet` (Number) Maximum size of a packet in bytes
 - `options` (String) Additional connection options
 - `path` (String) Path to the SQLite data directory
-- `pool_max_connections` (Number) Maximum number of connections to the store
+- `pool_max_connections` (Number) Maximum number of connections to the store. When unset, 4 per CPU core, between 16 and 32.
 - `pool_min_connections` (Number) Minimum number of connections to the store
 - `pool_recycling_method` (String) Method to use when recycling connections in the pool
 - `pool_workers` (Number) Number of worker threads to use for the store, defaults to the number of cores
 - `port` (Number) Port of the database server
 - `read_replicas` (Attributes List) List of read replicas for the store Requires an Enterprise license. (see [below for nested schema](#nestedatt--store--read_replicas))
-- `timeout` (Number) Connection timeout to the database
 - `use_tls` (Boolean) Use TLS to connect to the store
 
 <a id="nestedatt--store--auth_secret"></a>

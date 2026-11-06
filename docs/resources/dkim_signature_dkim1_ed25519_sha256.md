@@ -38,7 +38,7 @@ Defines a DKIM signature used to sign outgoing email messages. Manages the DKIM1
 
 - `created_at` (String) Creation date of the DKIM signature
 - `id` (String) Server-assigned identifier.
-- `public_key` (String) PEM-encoded public key used to verify signatures, derived from the private key
+- `public_key` (String) Base64-encoded public key published in the p= tag of the DNS record, derived from the private key
 
 <a id="nestedatt--private_key"></a>
 ### Nested Schema for `private_key`

@@ -25,21 +25,23 @@ Configures the full-text search backend. This singleton object always exists: cr
 - `auth_secret` (Attributes) Password to connect to the store (see [below for nested schema](#nestedatt--auth_secret))
 - `auth_username` (String) Username to connect to the store
 - `cluster_file` (String) Path to the cluster file for the FoundationDB cluster
+- `connect_timeout` (Number) Maximum time to wait for a connection to the database server to be established
 - `database` (String) Name of the database
 - `datacenter_id` (String) Data center ID (optional)
-- `fail_on_timeout` (Boolean) Whether to fail the operation if the task does not complete within the polling retries
+- `fail_on_timeout` (Boolean) Whether to fail the operation if the task does not complete within the maximum number of polls
 - `host` (String) Hostname of the database server
 - `http_auth` (Attributes) The type of HTTP authentication to use (see [below for nested schema](#nestedatt--http_auth))
 - `http_headers` (Map of String) Additional headers to include in HTTP requests
+- `idle_timeout` (Number) Time an idle connection may stay open before the server closes it (sets the MySQL wait_timeout session variable)
 - `include_source` (Boolean) Whether to index the full source document
 - `machine_id` (String) Machine ID in the FoundationDB cluster (optional)
 - `max_allowed_packet` (Number) Maximum size of a packet in bytes
-- `max_retries` (Number) Number of times to poll for task status before giving up
+- `max_polls` (Number) Maximum number of task status polls before giving up
 - `num_replicas` (Number) Number of replicas for the index
 - `num_shards` (Number) Number of shards for the index
 - `options` (String) Additional connection options
 - `poll_interval` (Number) Interval between polling for task status
-- `pool_max_connections` (Number) Maximum number of connections to the store
+- `pool_max_connections` (Number) Maximum number of connections to the store. When unset, 4 per CPU core, between 16 and 32.
 - `pool_min_connections` (Number) Minimum number of connections to the store
 - `pool_recycling_method` (String) Method to use when recycling connections in the pool
 - `port` (Number) Port of the database server

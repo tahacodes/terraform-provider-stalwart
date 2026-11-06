@@ -18,9 +18,9 @@ Configures the DNS resolver used for domain lookups. This singleton object alway
 ### Read-Only
 
 - `attempts` (Number) Number of times a resolution request will be retried before it is considered failed
-- `concurrency` (Number) Number of concurrent resolution requests that can be made at the same time
 - `enable_edns` (Boolean) Whether to enable EDNS (Extension Mechanisms for DNS) support
 - `id` (String) Always `singleton`.
+- `max_concurrent_requests` (Number) Maximum number of name servers queried in parallel for each lookup (0 or 1 queries them one at a time)
 - `preserve_intermediates` (Boolean) Whether to preserve the intermediate name servers in the DNS resolution results
 - `servers` (Attributes List) List of custom DNS server URLs to use for resolution (see [below for nested schema](#nestedatt--servers))
 - `tcp_on_error` (Boolean) Whether to try using TCP for resolution requests if an error occurs during a UDP resolution request

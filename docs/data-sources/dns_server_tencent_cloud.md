@@ -21,13 +21,13 @@ Defines a DNS server for automatic record management. Reads the Tencent Cloud DN
 
 ### Read-Only
 
+- `access_key_id` (String) Tencent Cloud SecretId that identifies the API key
 - `description` (String) Short description of this DNS server
-- `member_tenant_id` (String) Identifier for the tenant this DNS server belongs to
-- `polling_interval` (Number) How often to check for DNS records to propagate
+- `member_tenant_id` (String) Identifier for the tenant this DNS server belongs to Requires an Enterprise license.
+- `poll_interval` (Number) How often to check for DNS records to propagate
 - `propagation_delay` (Number) Initial delay before first propagation check (useful for slow providers)
 - `propagation_timeout` (Number) How long to wait for DNS records to propagate
 - `region` (String) Optional regional endpoint
-- `secret_id` (String) Tencent Cloud secret ID
 - `secret_key` (Attributes) Tencent Cloud secret key (see [below for nested schema](#nestedatt--secret_key))
 - `session_token` (Attributes) Optional STS session token for temporary credentials (see [below for nested schema](#nestedatt--session_token))
 - `timeout` (Number) Request timeout for the DNS server

@@ -3,12 +3,12 @@
 page_title: "stalwart_role Data Source - stalwart"
 subcategory: ""
 description: |-
-  Defines a named set of permissions that can be assigned to accounts, groups, or tenants.
+  Defines a named set of permissions that can be assigned to accounts and groups.
 ---
 
 # stalwart_role (Data Source)
 
-Defines a named set of permissions that can be assigned to accounts, groups, or tenants.
+Defines a named set of permissions that can be assigned to accounts and groups.
 
 
 
@@ -24,5 +24,5 @@ Defines a named set of permissions that can be assigned to accounts, groups, or 
 - `description` (String) Description of the role
 - `disabled_permissions` (Set of String) List of permissions that are explicitly disabled, even if they would be inherited through other roles or groups. This takes precedence over enabled permissions.
 - `enabled_permissions` (Set of String) List of permissions that are explicitly enabled.
-- `member_tenant_id` (String) Identifier for the tenant this role belongs to
+- `member_tenant_id` (String) Identifier for the tenant this role belongs to Requires an Enterprise license.
 - `role_ids` (Set of String) List of roles this role extends

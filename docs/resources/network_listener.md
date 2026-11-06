@@ -31,7 +31,8 @@ resource "stalwart_network_listener" "submissions" {
 
 ### Optional
 
-- `max_connections` (Number) The maximum number of concurrent connections the listener will accept
+- `implicit_tls` (Boolean) Whether to use implicit TLS
+- `max_connections` (Number) The maximum number of concurrent connections this listener accepts, shared by all its bind addresses. If not set, the default from System Settings applies
 - `override_proxy_trusted_networks` (Set of String) Enable proxy protocol for connections from these networks
 - `protocol` (String) The protocol used by the listener
 - `socket_backlog` (Number) The maximum number of incoming connections that can be pending in the backlog queue
@@ -45,7 +46,6 @@ resource "stalwart_network_listener" "submissions" {
 - `tls_disable_cipher_suites` (Set of String) Which cipher suites to disable
 - `tls_disable_protocols` (Set of String) Which TLS protocols to disable
 - `tls_ignore_client_order` (Boolean) Whether to ignore the client's cipher order
-- `tls_implicit` (Boolean) Whether to use implicit TLS
 - `tls_timeout` (Number) TLS handshake timeout
 - `use_tls` (Boolean) Whether to enable TLS for this listener
 

@@ -21,13 +21,13 @@ Configures the spam classifier model, training parameters, and auto-learning set
 - `id` (String) Always `singleton`.
 - `learn_ham_from_card` (Boolean) Whether to automatically learn ham messages from senders in the user's address book.
 - `learn_ham_from_reply` (Boolean) Whether to automatically learn ham messages that are replies to messages sent by the recipient.
-- `learn_spam_from_rbl_hits` (Number) Number of DNSBL servers that list the sender to auto-learn as spam
+- `learn_spam_from_rbl_hits` (Number) Minimum number of distinct DNSBL tags (named with the `RBL_` prefix and scoring above 1.0) that a message classified as spam must receive to be auto-learned as spam. Set to 0 to disable
 - `learn_spam_from_traps` (Boolean) Train as spam messages sent to spam trap addresses
 - `min_ham_samples` (Number) Minimum number of ham samples required for training
 - `min_spam_samples` (Number) Minimum number of spam samples required for training
 - `model` (Attributes) The spam classifier model to use. (see [below for nested schema](#nestedatt--model))
 - `reservoir_capacity` (Number) The capacity of the training sample reservoir
-- `train_frequency` (Number) Frequency to train the spam classifier
+- `train_interval` (Number) How often to train the spam classifier
 
 <a id="nestedatt--model"></a>
 ### Nested Schema for `model`

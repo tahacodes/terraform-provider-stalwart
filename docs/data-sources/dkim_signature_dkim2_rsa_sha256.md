@@ -23,11 +23,12 @@ Defines a DKIM signature used to sign outgoing email messages. Reads the DKIM2 (
 
 - `created_at` (String) Creation date of the DKIM signature
 - `domain_id` (String) Identifier for the domain this DKIM signature is associated with
-- `flags` (Set of String) Policy flags added to the signature, requesting downstream handlers to honor delivery constraints or provide feedback
+- `flags` (Set of String) Flags added to the signature, such as a request for feedback about how the message is handled
+- `instance_hashes` (Set of String) Hash algorithms used for the header and body hashes of the Message-Instance header fields added when signing
 - `member_tenant_id` (String) Identifier for the tenant this DKIM signature belongs to Requires an Enterprise license.
 - `next_transition_at` (String) Date when this key will transition to the next rotation stage, or null if no transition is scheduled
 - `private_key` (Attributes) PEM-encoded private key used to sign outgoing messages (see [below for nested schema](#nestedatt--private_key))
-- `public_key` (String) PEM-encoded public key used to verify signatures, derived from the private key
+- `public_key` (String) Base64-encoded public key published in the p= tag of the DNS record, derived from the private key
 - `selector` (String) Selector used to locate the DKIM public key in DNS
 - `stage` (String) Current stage of the DKIM key in its rotation lifecycle
 

@@ -22,8 +22,8 @@ Configures calendar scheduling, iTIP messaging, and HTTP RSVP settings. This sin
 - `enable` (Boolean) Enables the scheduling features for calendar events, allowing users to send and receive invitations
 - `http_rsvp_enable` (Boolean) Enables the HTTP RSVP feature for calendar invitations, allowing users to respond via a web interface.
 - `http_rsvp_link_expiry` (Number) Sets the expiration duration for HTTP RSVP links, after which they will no longer be valid.
-- `http_rsvp_template` (String) Specifies the HTML template used for rendering HTTP RSVP confirmations. Requires an Enterprise license.
+- `http_rsvp_template` (String) Replaces the built-in HTTP RSVP page. The document is served verbatim and is responsible for calling the /api/calendar/rsvp endpoint itself. Requires an Enterprise license.
 - `http_rsvp_url` (String) Specifies a custom URL for the HTTP RSVP endpoint, where users can respond to calendar invitations.
 - `id` (String) Always `singleton`.
-- `itip_max_size` (Number) Sets the maximum iCalendar object size for incoming iTIP messages.
+- `max_itip_size` (Number) Sets the maximum iCalendar object size for incoming iTIP messages.
 - `max_recipients` (Number) Sets the maximum number of recipients for outbound iTIP messages.

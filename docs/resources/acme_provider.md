@@ -24,12 +24,12 @@ Defines an ACME provider for automatic TLS certificate management.
 > **NOTE**: [Write-only arguments](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments) are supported in Terraform 1.11 and later.
 
 - `challenge_type` (String) The ACME challenge type used to validate domain ownership
+- `description` (String) A name for this provider, used to identify it when selecting it for a domain
 - `directory` (String) The URL of the ACME directory endpoint
 - `eab_hmac_key` (String, Sensitive) The External Account Binding (EAB) HMAC key
 - `eab_hmac_key_wo` (String, Sensitive, [Write-only](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments)) Write-only variant of `eab_hmac_key`. The value is sent to the server but never stored in state. Set `eab_hmac_key_wo_version` and change it to roll the secret. Requires Terraform 1.11 or later.
 - `eab_hmac_key_wo_version` (Number) Version counter for `eab_hmac_key_wo`. Change this value to send the current `eab_hmac_key_wo` value to the server again.
 - `eab_key_id` (String) The External Account Binding (EAB) key ID
-- `max_retries` (Number) Maximum number of retry attempts for failed challenges
 - `member_tenant_id` (String) Identifier for the tenant this ACME provider belongs to Requires an Enterprise license.
 - `preferred_chain` (String) Preferred certificate chain to use when multiple chains are available
 - `renew_before` (String) How long before expiration the certificate should be renewed
@@ -37,7 +37,9 @@ Defines an ACME provider for automatic TLS certificate management.
 
 ### Read-Only
 
+- `account_hash_prefix` (String) The prefix for hashed account URIs advertised by the ACME server in its directory, used to build DNS-PERSIST-01 validation records.
 - `account_key` (String, Sensitive) The account key used to authenticate with the ACME provider.
 - `account_uri` (String) The account URI returned by the ACME server after registration. Used for CAA record accounturi binding.
-- `description` (String) Descriptive label for this provider, built from the directory URL and the contact address
+- `caa_identities` (Set of String) The CAA issuer domain names advertised by the ACME server in its directory, published in CAA issue records.
 - `id` (String) Server-assigned identifier.
+- `issuer_domain_names` (Set of String) The issuer domain names advertised by the ACME server in its directory for DNS-PERSIST-01 validation records.

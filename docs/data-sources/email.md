@@ -3,12 +3,12 @@
 page_title: "stalwart_email Data Source - stalwart"
 subcategory: ""
 description: |-
-  Configures email message limits, encryption, compression, and default folder settings. This singleton object always exists: creating the resource adopts the current server settings and destroying it only removes the resource from state.
+  Configures email message limits, compression, and default folder settings. This singleton object always exists: creating the resource adopts the current server settings and destroying it only removes the resource from state.
 ---
 
 # stalwart_email (Data Source)
 
-Configures email message limits, encryption, compression, and default folder settings. This singleton object always exists: creating the resource adopts the current server settings and destroying it only removes the resource from state.
+Configures email message limits, compression, and default folder settings. This singleton object always exists: creating the resource adopts the current server settings and destroying it only removes the resource from state.
 
 
 
@@ -17,15 +17,19 @@ Configures email message limits, encryption, compression, and default folder set
 
 ### Read-Only
 
-- `compression_algorithm` (String) Algorithm to use to compress e-mail data
-- `encrypt_at_rest` (Boolean) Allow users to configure encryption at rest for their data
-- `encrypt_on_append` (Boolean) Encrypt messages that are manually appended by the user using JMAP or IMAP
+- `blob_encryption_key` (String) Key used to encrypt new email and Sieve script blobs; when empty, they are stored unencrypted
+- `compression_algorithm` (String) Algorithm to use to compress email and Sieve script data
 - `id` (String) Always `singleton`.
 - `max_attachment_size` (Number) Specifies the maximum size for an email attachment
+- `max_flag_length` (Number) Maximum length in bytes of a single flag (keyword) name
+- `max_flags_per_email` (Number) Maximum number of flags (keywords) that can be set on a single email
+- `max_header_count` (Number) Maximum number of header fields in the header section of a message
+- `max_header_size` (Number) Maximum size in bytes of the header section of a message
 - `max_identities` (Number) The default maximum number of identities a user can create
 - `max_mailbox_depth` (Number) Restricts the maximum depth of nested mailboxes a user can create
 - `max_mailbox_name_length` (Number) Establishes the maximum length of a mailbox name
 - `max_mailboxes` (Number) The default maximum number of mailboxes a user can create
+- `max_mailboxes_per_email` (Number) Maximum number of mailboxes a single email can belong to
 - `max_masked_addresses` (Number) The default maximum number of masked email addresses a user can create Requires an Enterprise license.
 - `max_message_size` (Number) Determines the maximum size for an email message
 - `max_messages` (Number) The default maximum number of emails a user can create

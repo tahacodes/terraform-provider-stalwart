@@ -37,6 +37,10 @@ var generatedDataSources = []dataSourceDescriptor{
 							MarkdownDescription: "Whether to encrypt emails when they are appended to mailboxes",
 							Computed:            true,
 						},
+						"header_protection": schema.StringAttribute{
+							MarkdownDescription: "Whether message headers are also protected inside the encrypted part (Subject hiding is not available at rest)",
+							Computed:            true,
+						},
 						"public_key": schema.StringAttribute{
 							MarkdownDescription: "Public key used for encrypting emails",
 							Computed:            true,
@@ -79,6 +83,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Identifier of the object.",
 					Required:            true,
 				},
+				"account_hash_prefix": schema.StringAttribute{
+					MarkdownDescription: "The prefix for hashed account URIs advertised by the ACME server in its directory, used to build DNS-PERSIST-01 validation records.",
+					Computed:            true,
+				},
 				"account_key": schema.StringAttribute{
 					MarkdownDescription: "The account key used to authenticate with the ACME provider.",
 					Computed:            true,
@@ -87,6 +95,11 @@ var generatedDataSources = []dataSourceDescriptor{
 				"account_uri": schema.StringAttribute{
 					MarkdownDescription: "The account URI returned by the ACME server after registration. Used for CAA record accounturi binding.",
 					Computed:            true,
+				},
+				"caa_identities": schema.SetAttribute{
+					MarkdownDescription: "The CAA issuer domain names advertised by the ACME server in its directory, published in CAA issue records.",
+					Computed:            true,
+					ElementType:         types.StringType,
 				},
 				"challenge_type": schema.StringAttribute{
 					MarkdownDescription: "The ACME challenge type used to validate domain ownership",
@@ -98,7 +111,7 @@ var generatedDataSources = []dataSourceDescriptor{
 					ElementType:         types.StringType,
 				},
 				"description": schema.StringAttribute{
-					MarkdownDescription: "Descriptive label for this provider, built from the directory URL and the contact address",
+					MarkdownDescription: "A name for this provider, used to identify it when selecting it for a domain",
 					Computed:            true,
 				},
 				"directory": schema.StringAttribute{
@@ -114,9 +127,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "The External Account Binding (EAB) key ID",
 					Computed:            true,
 				},
-				"max_retries": schema.Int64Attribute{
-					MarkdownDescription: "Maximum number of retry attempts for failed challenges",
+				"issuer_domain_names": schema.SetAttribute{
+					MarkdownDescription: "The issuer domain names advertised by the ACME server in its directory for DNS-PERSIST-01 validation records.",
 					Computed:            true,
+					ElementType:         types.StringType,
 				},
 				"member_tenant_id": schema.StringAttribute{
 					MarkdownDescription: "Identifier for the tenant this ACME provider belongs to Requires an Enterprise license.",
@@ -175,23 +189,36 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "The default maximum number of address books a user can create",
 					Computed:            true,
 				},
+				"max_address_books_per_card": schema.Int64Attribute{
+					MarkdownDescription: "Maximum number of address books a single contact card can belong to",
+					Computed:            true,
+				},
 				"max_contacts": schema.Int64Attribute{
 					MarkdownDescription: "The default maximum number of contact cards a user can create",
+					Computed:            true,
+				},
+				"max_media_size": schema.Int64Attribute{
+					MarkdownDescription: "Maximum total size of the media (photos, logos, sounds and keys) embedded in a single contact card",
 					Computed:            true,
 				},
 				"max_v_card_size": schema.Int64Attribute{
 					MarkdownDescription: "Specifies the maximum size of a vCard file that can be uploaded to the server",
 					Computed:            true,
 				},
+				"v_card_version": schema.StringAttribute{
+					MarkdownDescription: "vCard version used when serializing contact cards for clients that do not request a specific version",
+					Computed:            true,
+				},
 			},
 		},
 	},
 	{
-		Name:     "ai_model",
+		Name:     "ai_model_anthropic",
 		JMAPType: "x:AiModel",
+		Variant:  "Anthropic",
 		HasName:  true,
 		Schema: schema.Schema{
-			MarkdownDescription: "Defines an AI model endpoint for LLM-based features. Requires an Enterprise license.",
+			MarkdownDescription: "Defines an AI model endpoint used by AI-assisted features such as the spam classifier and the Sieve llm_prompt function. Reads the Anthropic variant. Requires an Enterprise license.",
 			Attributes: map[string]schema.Attribute{
 				"id": schema.StringAttribute{
 					MarkdownDescription: "Identifier of the object. Set either `id` or `name`.",
@@ -199,97 +226,486 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"allow_invalid_certs": schema.BoolAttribute{
-					MarkdownDescription: "Whether Stalwart should connect to an endpoint that has an invalid TLS certificate",
+					MarkdownDescription: "Whether to accept invalid TLS certificates from the endpoint",
 					Computed:            true,
 				},
-				"http_auth": schema.SingleNestedAttribute{
-					MarkdownDescription: "The type of HTTP authentication to use",
+				"api_key": schema.SingleNestedAttribute{
+					MarkdownDescription: "API key sent to the provider using its native authentication header",
 					Computed:            true,
 					Attributes: map[string]schema.Attribute{
 						"type": schema.StringAttribute{
 							MarkdownDescription: "Variant discriminator.",
 							Computed:            true,
 						},
-						"bearer_token": schema.SingleNestedAttribute{
-							MarkdownDescription: "Bearer token for HTTP Bearer Authentication",
+						"file_path": schema.StringAttribute{
+							MarkdownDescription: "File path to read the secret from",
 							Computed:            true,
-							Attributes: map[string]schema.Attribute{
-								"type": schema.StringAttribute{
-									MarkdownDescription: "Variant discriminator.",
-									Computed:            true,
-								},
-								"file_path": schema.StringAttribute{
-									MarkdownDescription: "File path to read the secret from",
-									Computed:            true,
-								},
-								"secret": schema.StringAttribute{
-									MarkdownDescription: "Password or secret value",
-									Computed:            true,
-									Sensitive:           true,
-								},
-								"variable_name": schema.StringAttribute{
-									MarkdownDescription: "Environment variable name to read the secret from",
-									Computed:            true,
-								},
-							},
 						},
-						"secret": schema.SingleNestedAttribute{
-							MarkdownDescription: "Password for HTTP Basic Authentication",
+						"secret": schema.StringAttribute{
+							MarkdownDescription: "Password or secret value",
 							Computed:            true,
-							Attributes: map[string]schema.Attribute{
-								"type": schema.StringAttribute{
-									MarkdownDescription: "Variant discriminator.",
-									Computed:            true,
-								},
-								"file_path": schema.StringAttribute{
-									MarkdownDescription: "File path to read the secret from",
-									Computed:            true,
-								},
-								"secret": schema.StringAttribute{
-									MarkdownDescription: "Password or secret value",
-									Computed:            true,
-									Sensitive:           true,
-								},
-								"variable_name": schema.StringAttribute{
-									MarkdownDescription: "Environment variable name to read the secret from",
-									Computed:            true,
-								},
-							},
+							Sensitive:           true,
 						},
-						"username": schema.StringAttribute{
-							MarkdownDescription: "Username for HTTP Basic Authentication",
+						"variable_name": schema.StringAttribute{
+							MarkdownDescription: "Environment variable name to read the secret from",
+							Computed:            true,
+						},
+					},
+				},
+				"extra_parameters": schema.StringAttribute{
+					MarkdownDescription: "JSON object whose members are merged into every request body",
+					Computed:            true,
+				},
+				"http_headers": schema.MapAttribute{
+					MarkdownDescription: "Additional headers to include in requests to the provider",
+					Computed:            true,
+					ElementType:         types.StringType,
+				},
+				"max_concurrent_requests": schema.Int64Attribute{
+					MarkdownDescription: "Maximum number of requests sent to this model at the same time",
+					Computed:            true,
+				},
+				"max_output_tokens": schema.Int64Attribute{
+					MarkdownDescription: "Maximum number of tokens the model may generate, including reasoning tokens. The spam classifier uses its own smaller limit.",
+					Computed:            true,
+				},
+				"model": schema.StringAttribute{
+					MarkdownDescription: "Model identifier sent to the provider",
+					Computed:            true,
+				},
+				"name": schema.StringAttribute{
+					MarkdownDescription: "Short name used to reference this model",
+					Optional:            true,
+					Computed:            true,
+				},
+				"rate_limit": schema.SingleNestedAttribute{
+					MarkdownDescription: "Maximum number of requests sent to this model within the rate period, spaced evenly. When empty, no rate limit is applied.",
+					Computed:            true,
+					Attributes: map[string]schema.Attribute{
+						"count": schema.Int64Attribute{
+							MarkdownDescription: "Count",
+							Computed:            true,
+						},
+						"period": schema.Int64Attribute{
+							MarkdownDescription: "Period",
+							Computed:            true,
+						},
+					},
+				},
+				"reasoning": schema.StringAttribute{
+					MarkdownDescription: "Reasoning effort requested from the model",
+					Computed:            true,
+				},
+				"temperature": schema.Float64Attribute{
+					MarkdownDescription: "Sampling temperature. When empty, the parameter is omitted and the provider default is used.",
+					Computed:            true,
+				},
+				"timeout": schema.Int64Attribute{
+					MarkdownDescription: "Maximum time to wait for a single response from the endpoint",
+					Computed:            true,
+				},
+				"url": schema.StringAttribute{
+					MarkdownDescription: "Base URL of the provider API. When empty, the provider's default URL is used.",
+					Computed:            true,
+				},
+			},
+		},
+	},
+	{
+		Name:     "ai_model_gemini",
+		JMAPType: "x:AiModel",
+		Variant:  "Gemini",
+		HasName:  true,
+		Schema: schema.Schema{
+			MarkdownDescription: "Defines an AI model endpoint used by AI-assisted features such as the spam classifier and the Sieve llm_prompt function. Reads the Google Gemini variant. Requires an Enterprise license.",
+			Attributes: map[string]schema.Attribute{
+				"id": schema.StringAttribute{
+					MarkdownDescription: "Identifier of the object. Set either `id` or `name`.",
+					Optional:            true,
+					Computed:            true,
+				},
+				"allow_invalid_certs": schema.BoolAttribute{
+					MarkdownDescription: "Whether to accept invalid TLS certificates from the endpoint",
+					Computed:            true,
+				},
+				"api_key": schema.SingleNestedAttribute{
+					MarkdownDescription: "API key sent to the provider using its native authentication header",
+					Computed:            true,
+					Attributes: map[string]schema.Attribute{
+						"type": schema.StringAttribute{
+							MarkdownDescription: "Variant discriminator.",
+							Computed:            true,
+						},
+						"file_path": schema.StringAttribute{
+							MarkdownDescription: "File path to read the secret from",
+							Computed:            true,
+						},
+						"secret": schema.StringAttribute{
+							MarkdownDescription: "Password or secret value",
+							Computed:            true,
+							Sensitive:           true,
+						},
+						"variable_name": schema.StringAttribute{
+							MarkdownDescription: "Environment variable name to read the secret from",
+							Computed:            true,
+						},
+					},
+				},
+				"extra_parameters": schema.StringAttribute{
+					MarkdownDescription: "JSON object whose members are merged into every request body",
+					Computed:            true,
+				},
+				"http_headers": schema.MapAttribute{
+					MarkdownDescription: "Additional headers to include in requests to the provider",
+					Computed:            true,
+					ElementType:         types.StringType,
+				},
+				"logprobs": schema.BoolAttribute{
+					MarkdownDescription: "Whether to request token log probabilities and use them as the classifier confidence",
+					Computed:            true,
+				},
+				"max_concurrent_requests": schema.Int64Attribute{
+					MarkdownDescription: "Maximum number of requests sent to this model at the same time",
+					Computed:            true,
+				},
+				"max_output_tokens": schema.Int64Attribute{
+					MarkdownDescription: "Maximum number of tokens the model may generate, including reasoning tokens. The spam classifier uses its own smaller limit.",
+					Computed:            true,
+				},
+				"model": schema.StringAttribute{
+					MarkdownDescription: "Model identifier sent to the provider",
+					Computed:            true,
+				},
+				"name": schema.StringAttribute{
+					MarkdownDescription: "Short name used to reference this model",
+					Optional:            true,
+					Computed:            true,
+				},
+				"rate_limit": schema.SingleNestedAttribute{
+					MarkdownDescription: "Maximum number of requests sent to this model within the rate period, spaced evenly. When empty, no rate limit is applied.",
+					Computed:            true,
+					Attributes: map[string]schema.Attribute{
+						"count": schema.Int64Attribute{
+							MarkdownDescription: "Count",
+							Computed:            true,
+						},
+						"period": schema.Int64Attribute{
+							MarkdownDescription: "Period",
+							Computed:            true,
+						},
+					},
+				},
+				"reasoning": schema.StringAttribute{
+					MarkdownDescription: "Reasoning effort requested from the model",
+					Computed:            true,
+				},
+				"temperature": schema.Float64Attribute{
+					MarkdownDescription: "Sampling temperature. When empty, the parameter is omitted and the provider default is used.",
+					Computed:            true,
+				},
+				"timeout": schema.Int64Attribute{
+					MarkdownDescription: "Maximum time to wait for a single response from the endpoint",
+					Computed:            true,
+				},
+				"url": schema.StringAttribute{
+					MarkdownDescription: "Base URL of the provider API. When empty, the provider's default URL is used.",
+					Computed:            true,
+				},
+			},
+		},
+	},
+	{
+		Name:     "ai_model_ollama",
+		JMAPType: "x:AiModel",
+		Variant:  "Ollama",
+		HasName:  true,
+		Schema: schema.Schema{
+			MarkdownDescription: "Defines an AI model endpoint used by AI-assisted features such as the spam classifier and the Sieve llm_prompt function. Reads the Ollama variant. Requires an Enterprise license.",
+			Attributes: map[string]schema.Attribute{
+				"id": schema.StringAttribute{
+					MarkdownDescription: "Identifier of the object. Set either `id` or `name`.",
+					Optional:            true,
+					Computed:            true,
+				},
+				"allow_invalid_certs": schema.BoolAttribute{
+					MarkdownDescription: "Whether to accept invalid TLS certificates from the endpoint",
+					Computed:            true,
+				},
+				"api_key": schema.SingleNestedAttribute{
+					MarkdownDescription: "API key sent to the provider using its native authentication header",
+					Computed:            true,
+					Attributes: map[string]schema.Attribute{
+						"type": schema.StringAttribute{
+							MarkdownDescription: "Variant discriminator.",
+							Computed:            true,
+						},
+						"file_path": schema.StringAttribute{
+							MarkdownDescription: "File path to read the secret from",
+							Computed:            true,
+						},
+						"secret": schema.StringAttribute{
+							MarkdownDescription: "Password or secret value",
+							Computed:            true,
+							Sensitive:           true,
+						},
+						"variable_name": schema.StringAttribute{
+							MarkdownDescription: "Environment variable name to read the secret from",
+							Computed:            true,
+						},
+					},
+				},
+				"extra_parameters": schema.StringAttribute{
+					MarkdownDescription: "JSON object whose members are merged into every request body",
+					Computed:            true,
+				},
+				"http_headers": schema.MapAttribute{
+					MarkdownDescription: "Additional headers to include in requests to the provider",
+					Computed:            true,
+					ElementType:         types.StringType,
+				},
+				"keep_alive": schema.Int64Attribute{
+					MarkdownDescription: "How long Ollama keeps the model loaded after a request. When empty, the server default is used.",
+					Computed:            true,
+				},
+				"logprobs": schema.BoolAttribute{
+					MarkdownDescription: "Whether to request token log probabilities and use them as the classifier confidence",
+					Computed:            true,
+				},
+				"max_concurrent_requests": schema.Int64Attribute{
+					MarkdownDescription: "Maximum number of requests sent to this model at the same time",
+					Computed:            true,
+				},
+				"max_output_tokens": schema.Int64Attribute{
+					MarkdownDescription: "Maximum number of tokens the model may generate, including reasoning tokens. The spam classifier uses its own smaller limit.",
+					Computed:            true,
+				},
+				"model": schema.StringAttribute{
+					MarkdownDescription: "Model identifier sent to the provider",
+					Computed:            true,
+				},
+				"name": schema.StringAttribute{
+					MarkdownDescription: "Short name used to reference this model",
+					Optional:            true,
+					Computed:            true,
+				},
+				"rate_limit": schema.SingleNestedAttribute{
+					MarkdownDescription: "Maximum number of requests sent to this model within the rate period, spaced evenly. When empty, no rate limit is applied.",
+					Computed:            true,
+					Attributes: map[string]schema.Attribute{
+						"count": schema.Int64Attribute{
+							MarkdownDescription: "Count",
+							Computed:            true,
+						},
+						"period": schema.Int64Attribute{
+							MarkdownDescription: "Period",
+							Computed:            true,
+						},
+					},
+				},
+				"reasoning": schema.StringAttribute{
+					MarkdownDescription: "Reasoning effort requested from the model",
+					Computed:            true,
+				},
+				"temperature": schema.Float64Attribute{
+					MarkdownDescription: "Sampling temperature. When empty, the parameter is omitted and the provider default is used.",
+					Computed:            true,
+				},
+				"timeout": schema.Int64Attribute{
+					MarkdownDescription: "Maximum time to wait for a single response from the endpoint",
+					Computed:            true,
+				},
+				"url": schema.StringAttribute{
+					MarkdownDescription: "Base URL of the provider API. When empty, the provider's default URL is used.",
+					Computed:            true,
+				},
+			},
+		},
+	},
+	{
+		Name:     "ai_model_open_ai",
+		JMAPType: "x:AiModel",
+		Variant:  "OpenAi",
+		HasName:  true,
+		Schema: schema.Schema{
+			MarkdownDescription: "Defines an AI model endpoint used by AI-assisted features such as the spam classifier and the Sieve llm_prompt function. Reads the OpenAI compatible variant. Requires an Enterprise license.",
+			Attributes: map[string]schema.Attribute{
+				"id": schema.StringAttribute{
+					MarkdownDescription: "Identifier of the object. Set either `id` or `name`.",
+					Optional:            true,
+					Computed:            true,
+				},
+				"allow_invalid_certs": schema.BoolAttribute{
+					MarkdownDescription: "Whether to accept invalid TLS certificates from the endpoint",
+					Computed:            true,
+				},
+				"api_key": schema.SingleNestedAttribute{
+					MarkdownDescription: "API key sent to the provider using its native authentication header",
+					Computed:            true,
+					Attributes: map[string]schema.Attribute{
+						"type": schema.StringAttribute{
+							MarkdownDescription: "Variant discriminator.",
+							Computed:            true,
+						},
+						"file_path": schema.StringAttribute{
+							MarkdownDescription: "File path to read the secret from",
+							Computed:            true,
+						},
+						"secret": schema.StringAttribute{
+							MarkdownDescription: "Password or secret value",
+							Computed:            true,
+							Sensitive:           true,
+						},
+						"variable_name": schema.StringAttribute{
+							MarkdownDescription: "Environment variable name to read the secret from",
+							Computed:            true,
+						},
+					},
+				},
+				"extra_parameters": schema.StringAttribute{
+					MarkdownDescription: "JSON object whose members are merged into every request body",
+					Computed:            true,
+				},
+				"http_headers": schema.MapAttribute{
+					MarkdownDescription: "Additional headers to include in requests to the provider",
+					Computed:            true,
+					ElementType:         types.StringType,
+				},
+				"logprobs": schema.BoolAttribute{
+					MarkdownDescription: "Whether to request token log probabilities and use them as the classifier confidence",
+					Computed:            true,
+				},
+				"max_concurrent_requests": schema.Int64Attribute{
+					MarkdownDescription: "Maximum number of requests sent to this model at the same time",
+					Computed:            true,
+				},
+				"max_output_tokens": schema.Int64Attribute{
+					MarkdownDescription: "Maximum number of tokens the model may generate, including reasoning tokens. The spam classifier uses its own smaller limit.",
+					Computed:            true,
+				},
+				"model": schema.StringAttribute{
+					MarkdownDescription: "Model identifier sent to the provider",
+					Computed:            true,
+				},
+				"name": schema.StringAttribute{
+					MarkdownDescription: "Short name used to reference this model",
+					Optional:            true,
+					Computed:            true,
+				},
+				"profile": schema.StringAttribute{
+					MarkdownDescription: "Server profile, which selects the token limit parameter, the structured output format and the authentication header",
+					Computed:            true,
+				},
+				"rate_limit": schema.SingleNestedAttribute{
+					MarkdownDescription: "Maximum number of requests sent to this model within the rate period, spaced evenly. When empty, no rate limit is applied.",
+					Computed:            true,
+					Attributes: map[string]schema.Attribute{
+						"count": schema.Int64Attribute{
+							MarkdownDescription: "Count",
+							Computed:            true,
+						},
+						"period": schema.Int64Attribute{
+							MarkdownDescription: "Period",
+							Computed:            true,
+						},
+					},
+				},
+				"reasoning": schema.StringAttribute{
+					MarkdownDescription: "Reasoning effort requested from the model",
+					Computed:            true,
+				},
+				"temperature": schema.Float64Attribute{
+					MarkdownDescription: "Sampling temperature. When empty, the parameter is omitted and the provider default is used.",
+					Computed:            true,
+				},
+				"timeout": schema.Int64Attribute{
+					MarkdownDescription: "Maximum time to wait for a single response from the endpoint",
+					Computed:            true,
+				},
+				"url": schema.StringAttribute{
+					MarkdownDescription: "Base URL of the provider API. When empty, the provider's default URL is used.",
+					Computed:            true,
+				},
+			},
+		},
+	},
+	{
+		Name:     "ai_model_type_safe",
+		JMAPType: "x:AiModel",
+		Variant:  "TypeSafe",
+		HasName:  true,
+		Schema: schema.Schema{
+			MarkdownDescription: "Defines an AI model endpoint used by AI-assisted features such as the spam classifier and the Sieve llm_prompt function. Reads the TypeSafe variant. Requires an Enterprise license.",
+			Attributes: map[string]schema.Attribute{
+				"id": schema.StringAttribute{
+					MarkdownDescription: "Identifier of the object. Set either `id` or `name`.",
+					Optional:            true,
+					Computed:            true,
+				},
+				"allow_invalid_certs": schema.BoolAttribute{
+					MarkdownDescription: "Whether to accept invalid TLS certificates from the endpoint",
+					Computed:            true,
+				},
+				"api_key": schema.SingleNestedAttribute{
+					MarkdownDescription: "API key sent to the provider using its native authentication header",
+					Computed:            true,
+					Attributes: map[string]schema.Attribute{
+						"type": schema.StringAttribute{
+							MarkdownDescription: "Variant discriminator.",
+							Computed:            true,
+						},
+						"file_path": schema.StringAttribute{
+							MarkdownDescription: "File path to read the secret from",
+							Computed:            true,
+						},
+						"secret": schema.StringAttribute{
+							MarkdownDescription: "Password or secret value",
+							Computed:            true,
+							Sensitive:           true,
+						},
+						"variable_name": schema.StringAttribute{
+							MarkdownDescription: "Environment variable name to read the secret from",
 							Computed:            true,
 						},
 					},
 				},
 				"http_headers": schema.MapAttribute{
-					MarkdownDescription: "Additional headers to include in HTTP requests",
+					MarkdownDescription: "Additional headers to include in requests to the provider",
 					Computed:            true,
 					ElementType:         types.StringType,
 				},
-				"model": schema.StringAttribute{
-					MarkdownDescription: "The name of the AI model to use.",
+				"max_concurrent_requests": schema.Int64Attribute{
+					MarkdownDescription: "Maximum number of requests sent to this model at the same time",
 					Computed:            true,
 				},
-				"model_type": schema.StringAttribute{
-					MarkdownDescription: "API type",
+				"model": schema.StringAttribute{
+					MarkdownDescription: "Model identifier sent to the provider",
 					Computed:            true,
 				},
 				"name": schema.StringAttribute{
-					MarkdownDescription: "Short name for the AI Model",
+					MarkdownDescription: "Short name used to reference this model",
 					Optional:            true,
 					Computed:            true,
 				},
-				"temperature": schema.Float64Attribute{
-					MarkdownDescription: "The temperature of the AI model, which controls the randomness of the output. A higher temperature will produce more random output.",
+				"rate_limit": schema.SingleNestedAttribute{
+					MarkdownDescription: "Maximum number of requests sent to this model within the rate period, spaced evenly. When empty, no rate limit is applied.",
 					Computed:            true,
+					Attributes: map[string]schema.Attribute{
+						"count": schema.Int64Attribute{
+							MarkdownDescription: "Count",
+							Computed:            true,
+						},
+						"period": schema.Int64Attribute{
+							MarkdownDescription: "Period",
+							Computed:            true,
+						},
+					},
 				},
 				"timeout": schema.Int64Attribute{
-					MarkdownDescription: "Maximum amount of time that Stalwart will wait for a response from this endpoint",
+					MarkdownDescription: "Maximum time to wait for a single response from the endpoint",
 					Computed:            true,
 				},
 				"url": schema.StringAttribute{
-					MarkdownDescription: "URL of the OpenAI compatible endpoint",
+					MarkdownDescription: "Base URL of the provider API. When empty, the provider's default URL is used.",
 					Computed:            true,
 				},
 			},
@@ -597,17 +1013,26 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Identifier of the object.",
 					Required:            true,
 				},
-				"auto_update_frequency": schema.Int64Attribute{
-					MarkdownDescription: "Frequency to check for application updates",
+				"auto_update_interval": schema.Int64Attribute{
+					MarkdownDescription: "How long a downloaded application bundle is kept in the blob store. Once it expires, the bundle is downloaded again the next time the application is loaded",
 					Computed:            true,
 				},
 				"description": schema.StringAttribute{
 					MarkdownDescription: "A short description of the web application",
 					Computed:            true,
 				},
-				"enabled": schema.BoolAttribute{
+				"enable": schema.BoolAttribute{
 					MarkdownDescription: "Whether the application is enabled and should be served by the server",
 					Computed:            true,
+				},
+				"oauth_client_id": schema.StringAttribute{
+					MarkdownDescription: "Client identifier used when the domain is served by an external identity provider that does not support OAuth Client ID Metadata Documents. It must match a client registered with that provider. When the provider supports them, the application's metadata document URL is used instead.",
+					Computed:            true,
+				},
+				"oauth_scopes": schema.SetAttribute{
+					MarkdownDescription: "Additional OAuth scopes the application requests when signing in, appended to the ones it requests by default. Used with an external identity provider that releases a claim, such as the one named in the OIDC directory's username claim, only with a scope of its own.",
+					Computed:            true,
+					ElementType:         types.StringType,
 				},
 				"resource_url": schema.StringAttribute{
 					MarkdownDescription: "Override the URL to download application updates from.",
@@ -672,7 +1097,7 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Identifier of the archived blob",
 					Computed:            true,
 				},
-				"content": schema.StringAttribute{
+				"contents": schema.StringAttribute{
 					MarkdownDescription: "Content of the archived sieve script",
 					Computed:            true,
 				},
@@ -916,14 +1341,14 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Variant discriminator.",
 					Computed:            true,
 				},
+				"allow_invalid_certs": schema.BoolAttribute{
+					MarkdownDescription: "Whether to allow invalid SSL certificates",
+					Computed:            true,
+				},
 				"asn_urls": schema.SetAttribute{
 					MarkdownDescription: "URLs to fetch CSV file containing the IP to ASN mappings.",
 					Computed:            true,
 					ElementType:         types.StringType,
-				},
-				"expires": schema.Int64Attribute{
-					MarkdownDescription: "How often to refresh the ASN/Geo data.",
-					Computed:            true,
 				},
 				"geo_urls": schema.SetAttribute{
 					MarkdownDescription: "URLs to fetch CSV file containing the IP to country code mappings.",
@@ -1011,6 +1436,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Maximum size of the ASN/Geo data file.",
 					Computed:            true,
 				},
+				"refresh_interval": schema.Int64Attribute{
+					MarkdownDescription: "How often to refresh the ASN/Geo data.",
+					Computed:            true,
+				},
 				"separator": schema.StringAttribute{
 					MarkdownDescription: "The separator character used in the DNS TXT record.",
 					Computed:            true,
@@ -1073,24 +1502,24 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "The default maximum number of app passwords a user can create",
 					Computed:            true,
 				},
+				"max_password_length": schema.Int64Attribute{
+					MarkdownDescription: "Maximum length for user passwords in the internal directory.",
+					Computed:            true,
+				},
+				"min_password_length": schema.Int64Attribute{
+					MarkdownDescription: "Minimum length for user passwords in the internal directory.",
+					Computed:            true,
+				},
+				"min_password_strength": schema.StringAttribute{
+					MarkdownDescription: "Minimum strength for user passwords in the internal directory, calculated using the zxcvbn algorithm.",
+					Computed:            true,
+				},
 				"password_default_expiry": schema.Int64Attribute{
 					MarkdownDescription: "Default expiration time for user passwords in the internal directory, after which the user will be required to change their password.",
 					Computed:            true,
 				},
 				"password_hash_algorithm": schema.StringAttribute{
 					MarkdownDescription: "Password hashing algorithm to use for storing user passwords in the internal directory.",
-					Computed:            true,
-				},
-				"password_max_length": schema.Int64Attribute{
-					MarkdownDescription: "Maximum length for user passwords in the internal directory.",
-					Computed:            true,
-				},
-				"password_min_length": schema.Int64Attribute{
-					MarkdownDescription: "Minimum length for user passwords in the internal directory.",
-					Computed:            true,
-				},
-				"password_min_strength": schema.StringAttribute{
-					MarkdownDescription: "Minimum strength for user passwords in the internal directory, calculated using the zxcvbn algorithm.",
 					Computed:            true,
 				},
 			},
@@ -1111,8 +1540,8 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Variant discriminator.",
 					Computed:            true,
 				},
-				"access_key": schema.SingleNestedAttribute{
-					MarkdownDescription: "Identifies the S3 account",
+				"access_key_id": schema.SingleNestedAttribute{
+					MarkdownDescription: "Access key ID that identifies the S3 account",
 					Computed:            true,
 					Attributes: map[string]schema.Attribute{
 						"type": schema.StringAttribute{
@@ -1122,11 +1551,6 @@ var generatedDataSources = []dataSourceDescriptor{
 						"file_path": schema.StringAttribute{
 							MarkdownDescription: "File path to read the secret from",
 							Computed:            true,
-						},
-						"secret": schema.StringAttribute{
-							MarkdownDescription: "Password or secret value",
-							Computed:            true,
-							Sensitive:           true,
 						},
 						"value": schema.StringAttribute{
 							MarkdownDescription: "Value",
@@ -1141,6 +1565,97 @@ var generatedDataSources = []dataSourceDescriptor{
 				"allow_invalid_certs": schema.BoolAttribute{
 					MarkdownDescription: "Allow invalid TLS certificates when connecting to the S3 service",
 					Computed:            true,
+				},
+				"auth": schema.SingleNestedAttribute{
+					MarkdownDescription: "Authentication method used to access the Storage Account",
+					Computed:            true,
+					Attributes: map[string]schema.Attribute{
+						"type": schema.StringAttribute{
+							MarkdownDescription: "Variant discriminator.",
+							Computed:            true,
+						},
+						"account_key": schema.SingleNestedAttribute{
+							MarkdownDescription: "The shared key of the Azure Storage Account",
+							Computed:            true,
+							Attributes: map[string]schema.Attribute{
+								"type": schema.StringAttribute{
+									MarkdownDescription: "Variant discriminator.",
+									Computed:            true,
+								},
+								"file_path": schema.StringAttribute{
+									MarkdownDescription: "File path to read the secret from",
+									Computed:            true,
+								},
+								"secret": schema.StringAttribute{
+									MarkdownDescription: "Password or secret value",
+									Computed:            true,
+									Sensitive:           true,
+								},
+								"variable_name": schema.StringAttribute{
+									MarkdownDescription: "Environment variable name to read the secret from",
+									Computed:            true,
+								},
+							},
+						},
+						"client_id": schema.StringAttribute{
+							MarkdownDescription: "Application (client) ID of the service principal",
+							Computed:            true,
+						},
+						"client_secret": schema.SingleNestedAttribute{
+							MarkdownDescription: "Application client secret",
+							Computed:            true,
+							Attributes: map[string]schema.Attribute{
+								"type": schema.StringAttribute{
+									MarkdownDescription: "Variant discriminator.",
+									Computed:            true,
+								},
+								"file_path": schema.StringAttribute{
+									MarkdownDescription: "File path to read the secret from",
+									Computed:            true,
+								},
+								"secret": schema.StringAttribute{
+									MarkdownDescription: "Password or secret value",
+									Computed:            true,
+									Sensitive:           true,
+								},
+								"variable_name": schema.StringAttribute{
+									MarkdownDescription: "Environment variable name to read the secret from",
+									Computed:            true,
+								},
+							},
+						},
+						"sas_token": schema.SingleNestedAttribute{
+							MarkdownDescription: "SAS token granting read, write and delete permissions on the container. The leading '?' is optional",
+							Computed:            true,
+							Attributes: map[string]schema.Attribute{
+								"type": schema.StringAttribute{
+									MarkdownDescription: "Variant discriminator.",
+									Computed:            true,
+								},
+								"file_path": schema.StringAttribute{
+									MarkdownDescription: "File path to read the secret from",
+									Computed:            true,
+								},
+								"secret": schema.StringAttribute{
+									MarkdownDescription: "Password or secret value",
+									Computed:            true,
+									Sensitive:           true,
+								},
+								"variable_name": schema.StringAttribute{
+									MarkdownDescription: "Environment variable name to read the secret from",
+									Computed:            true,
+								},
+							},
+						},
+						"tenant_id": schema.StringAttribute{
+							MarkdownDescription: "Microsoft Entra ID tenant ID",
+							Computed:            true,
+						},
+						"token_file": schema.StringAttribute{
+							MarkdownDescription: "Path to the federated token file. When empty, the AZURE_FEDERATED_TOKEN_FILE environment variable is used",
+							Computed:            true,
+						},
+					},
 				},
 				"auth_secret": schema.SingleNestedAttribute{
 					MarkdownDescription: "Password to connect to the store",
@@ -1177,6 +1692,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Path to the cluster file for the FoundationDB cluster",
 					Computed:            true,
 				},
+				"connect_timeout": schema.Int64Attribute{
+					MarkdownDescription: "Maximum time to wait for a connection to the database server to be established",
+					Computed:            true,
+				},
 				"container": schema.StringAttribute{
 					MarkdownDescription: "The name of the container in the Storage Account",
 					Computed:            true,
@@ -1193,8 +1712,16 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Maximum depth of nested directories",
 					Computed:            true,
 				},
+				"environment": schema.StringAttribute{
+					MarkdownDescription: "Azure cloud environment, used to derive the default blob service URL and the Microsoft Entra ID authority",
+					Computed:            true,
+				},
 				"host": schema.StringAttribute{
 					MarkdownDescription: "Hostname of the database server",
+					Computed:            true,
+				},
+				"idle_timeout": schema.Int64Attribute{
+					MarkdownDescription: "Time an idle connection may stay open before the server closes it (sets the MySQL wait_timeout session variable)",
 					Computed:            true,
 				},
 				"key_prefix": schema.StringAttribute{
@@ -1222,7 +1749,7 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"pool_max_connections": schema.Int64Attribute{
-					MarkdownDescription: "Maximum number of connections to the store",
+					MarkdownDescription: "Maximum number of connections to the store. When unset, 4 per CPU core, between 16 and 32.",
 					Computed:            true,
 				},
 				"pool_min_connections": schema.Int64Attribute{
@@ -1300,64 +1827,18 @@ var generatedDataSources = []dataSourceDescriptor{
 							MarkdownDescription: "Variant discriminator.",
 							Computed:            true,
 						},
-						"custom_endpoint": schema.StringAttribute{
-							MarkdownDescription: "Endpoint URL",
-							Computed:            true,
-						},
-						"custom_region": schema.StringAttribute{
+						"region": schema.StringAttribute{
 							MarkdownDescription: "Region name",
 							Computed:            true,
 						},
-					},
-				},
-				"sas_token": schema.SingleNestedAttribute{
-					MarkdownDescription: "SAS Token, when not using accessKey based authentication",
-					Computed:            true,
-					Attributes: map[string]schema.Attribute{
-						"type": schema.StringAttribute{
-							MarkdownDescription: "Variant discriminator.",
-							Computed:            true,
-						},
-						"file_path": schema.StringAttribute{
-							MarkdownDescription: "File path to read the secret from",
-							Computed:            true,
-						},
-						"secret": schema.StringAttribute{
-							MarkdownDescription: "Password or secret value",
-							Computed:            true,
-							Sensitive:           true,
-						},
-						"variable_name": schema.StringAttribute{
-							MarkdownDescription: "Environment variable name to read the secret from",
+						"url": schema.StringAttribute{
+							MarkdownDescription: "Endpoint URL",
 							Computed:            true,
 						},
 					},
 				},
 				"secret_key": schema.SingleNestedAttribute{
-					MarkdownDescription: "The secret key for the S3 account",
-					Computed:            true,
-					Attributes: map[string]schema.Attribute{
-						"type": schema.StringAttribute{
-							MarkdownDescription: "Variant discriminator.",
-							Computed:            true,
-						},
-						"file_path": schema.StringAttribute{
-							MarkdownDescription: "File path to read the secret from",
-							Computed:            true,
-						},
-						"secret": schema.StringAttribute{
-							MarkdownDescription: "Password or secret value",
-							Computed:            true,
-							Sensitive:           true,
-						},
-						"variable_name": schema.StringAttribute{
-							MarkdownDescription: "Environment variable name to read the secret from",
-							Computed:            true,
-						},
-					},
-				},
-				"security_token": schema.SingleNestedAttribute{
-					MarkdownDescription: "Security token for temporary credentials",
+					MarkdownDescription: "The secret access key for the S3 account",
 					Computed:            true,
 					Attributes: map[string]schema.Attribute{
 						"type": schema.StringAttribute{
@@ -1380,7 +1861,7 @@ var generatedDataSources = []dataSourceDescriptor{
 					},
 				},
 				"session_token": schema.SingleNestedAttribute{
-					MarkdownDescription: "Temporary session token for the S3 account",
+					MarkdownDescription: "Session token for temporary credentials, sent as the x-amz-security-token header",
 					Computed:            true,
 					Attributes: map[string]schema.Attribute{
 						"type": schema.StringAttribute{
@@ -1415,8 +1896,8 @@ var generatedDataSources = []dataSourceDescriptor{
 								MarkdownDescription: "Variant discriminator.",
 								Computed:            true,
 							},
-							"access_key": schema.SingleNestedAttribute{
-								MarkdownDescription: "Identifies the S3 account",
+							"access_key_id": schema.SingleNestedAttribute{
+								MarkdownDescription: "Access key ID that identifies the S3 account",
 								Computed:            true,
 								Attributes: map[string]schema.Attribute{
 									"type": schema.StringAttribute{
@@ -1426,11 +1907,6 @@ var generatedDataSources = []dataSourceDescriptor{
 									"file_path": schema.StringAttribute{
 										MarkdownDescription: "File path to read the secret from",
 										Computed:            true,
-									},
-									"secret": schema.StringAttribute{
-										MarkdownDescription: "Password or secret value",
-										Computed:            true,
-										Sensitive:           true,
 									},
 									"value": schema.StringAttribute{
 										MarkdownDescription: "Value",
@@ -1445,6 +1921,97 @@ var generatedDataSources = []dataSourceDescriptor{
 							"allow_invalid_certs": schema.BoolAttribute{
 								MarkdownDescription: "Allow invalid TLS certificates when connecting to the S3 service",
 								Computed:            true,
+							},
+							"auth": schema.SingleNestedAttribute{
+								MarkdownDescription: "Authentication method used to access the Storage Account",
+								Computed:            true,
+								Attributes: map[string]schema.Attribute{
+									"type": schema.StringAttribute{
+										MarkdownDescription: "Variant discriminator.",
+										Computed:            true,
+									},
+									"account_key": schema.SingleNestedAttribute{
+										MarkdownDescription: "The shared key of the Azure Storage Account",
+										Computed:            true,
+										Attributes: map[string]schema.Attribute{
+											"type": schema.StringAttribute{
+												MarkdownDescription: "Variant discriminator.",
+												Computed:            true,
+											},
+											"file_path": schema.StringAttribute{
+												MarkdownDescription: "File path to read the secret from",
+												Computed:            true,
+											},
+											"secret": schema.StringAttribute{
+												MarkdownDescription: "Password or secret value",
+												Computed:            true,
+												Sensitive:           true,
+											},
+											"variable_name": schema.StringAttribute{
+												MarkdownDescription: "Environment variable name to read the secret from",
+												Computed:            true,
+											},
+										},
+									},
+									"client_id": schema.StringAttribute{
+										MarkdownDescription: "Application (client) ID of the service principal",
+										Computed:            true,
+									},
+									"client_secret": schema.SingleNestedAttribute{
+										MarkdownDescription: "Application client secret",
+										Computed:            true,
+										Attributes: map[string]schema.Attribute{
+											"type": schema.StringAttribute{
+												MarkdownDescription: "Variant discriminator.",
+												Computed:            true,
+											},
+											"file_path": schema.StringAttribute{
+												MarkdownDescription: "File path to read the secret from",
+												Computed:            true,
+											},
+											"secret": schema.StringAttribute{
+												MarkdownDescription: "Password or secret value",
+												Computed:            true,
+												Sensitive:           true,
+											},
+											"variable_name": schema.StringAttribute{
+												MarkdownDescription: "Environment variable name to read the secret from",
+												Computed:            true,
+											},
+										},
+									},
+									"sas_token": schema.SingleNestedAttribute{
+										MarkdownDescription: "SAS token granting read, write and delete permissions on the container. The leading '?' is optional",
+										Computed:            true,
+										Attributes: map[string]schema.Attribute{
+											"type": schema.StringAttribute{
+												MarkdownDescription: "Variant discriminator.",
+												Computed:            true,
+											},
+											"file_path": schema.StringAttribute{
+												MarkdownDescription: "File path to read the secret from",
+												Computed:            true,
+											},
+											"secret": schema.StringAttribute{
+												MarkdownDescription: "Password or secret value",
+												Computed:            true,
+												Sensitive:           true,
+											},
+											"variable_name": schema.StringAttribute{
+												MarkdownDescription: "Environment variable name to read the secret from",
+												Computed:            true,
+											},
+										},
+									},
+									"tenant_id": schema.StringAttribute{
+										MarkdownDescription: "Microsoft Entra ID tenant ID",
+										Computed:            true,
+									},
+									"token_file": schema.StringAttribute{
+										MarkdownDescription: "Path to the federated token file. When empty, the AZURE_FEDERATED_TOKEN_FILE environment variable is used",
+										Computed:            true,
+									},
+								},
 							},
 							"auth_secret": schema.SingleNestedAttribute{
 								MarkdownDescription: "Password to connect to the store",
@@ -1481,6 +2048,10 @@ var generatedDataSources = []dataSourceDescriptor{
 								MarkdownDescription: "Path to the cluster file for the FoundationDB cluster",
 								Computed:            true,
 							},
+							"connect_timeout": schema.Int64Attribute{
+								MarkdownDescription: "Maximum time to wait for a connection to the database server to be established",
+								Computed:            true,
+							},
 							"container": schema.StringAttribute{
 								MarkdownDescription: "The name of the container in the Storage Account",
 								Computed:            true,
@@ -1497,8 +2068,16 @@ var generatedDataSources = []dataSourceDescriptor{
 								MarkdownDescription: "Maximum depth of nested directories",
 								Computed:            true,
 							},
+							"environment": schema.StringAttribute{
+								MarkdownDescription: "Azure cloud environment, used to derive the default blob service URL and the Microsoft Entra ID authority",
+								Computed:            true,
+							},
 							"host": schema.StringAttribute{
 								MarkdownDescription: "Hostname of the database server",
+								Computed:            true,
+							},
+							"idle_timeout": schema.Int64Attribute{
+								MarkdownDescription: "Time an idle connection may stay open before the server closes it (sets the MySQL wait_timeout session variable)",
 								Computed:            true,
 							},
 							"key_prefix": schema.StringAttribute{
@@ -1526,7 +2105,7 @@ var generatedDataSources = []dataSourceDescriptor{
 								Computed:            true,
 							},
 							"pool_max_connections": schema.Int64Attribute{
-								MarkdownDescription: "Maximum number of connections to the store",
+								MarkdownDescription: "Maximum number of connections to the store. When unset, 4 per CPU core, between 16 and 32.",
 								Computed:            true,
 							},
 							"pool_min_connections": schema.Int64Attribute{
@@ -1604,64 +2183,18 @@ var generatedDataSources = []dataSourceDescriptor{
 										MarkdownDescription: "Variant discriminator.",
 										Computed:            true,
 									},
-									"custom_endpoint": schema.StringAttribute{
-										MarkdownDescription: "Endpoint URL",
-										Computed:            true,
-									},
-									"custom_region": schema.StringAttribute{
+									"region": schema.StringAttribute{
 										MarkdownDescription: "Region name",
 										Computed:            true,
 									},
-								},
-							},
-							"sas_token": schema.SingleNestedAttribute{
-								MarkdownDescription: "SAS Token, when not using accessKey based authentication",
-								Computed:            true,
-								Attributes: map[string]schema.Attribute{
-									"type": schema.StringAttribute{
-										MarkdownDescription: "Variant discriminator.",
-										Computed:            true,
-									},
-									"file_path": schema.StringAttribute{
-										MarkdownDescription: "File path to read the secret from",
-										Computed:            true,
-									},
-									"secret": schema.StringAttribute{
-										MarkdownDescription: "Password or secret value",
-										Computed:            true,
-										Sensitive:           true,
-									},
-									"variable_name": schema.StringAttribute{
-										MarkdownDescription: "Environment variable name to read the secret from",
+									"url": schema.StringAttribute{
+										MarkdownDescription: "Endpoint URL",
 										Computed:            true,
 									},
 								},
 							},
 							"secret_key": schema.SingleNestedAttribute{
-								MarkdownDescription: "The secret key for the S3 account",
-								Computed:            true,
-								Attributes: map[string]schema.Attribute{
-									"type": schema.StringAttribute{
-										MarkdownDescription: "Variant discriminator.",
-										Computed:            true,
-									},
-									"file_path": schema.StringAttribute{
-										MarkdownDescription: "File path to read the secret from",
-										Computed:            true,
-									},
-									"secret": schema.StringAttribute{
-										MarkdownDescription: "Password or secret value",
-										Computed:            true,
-										Sensitive:           true,
-									},
-									"variable_name": schema.StringAttribute{
-										MarkdownDescription: "Environment variable name to read the secret from",
-										Computed:            true,
-									},
-								},
-							},
-							"security_token": schema.SingleNestedAttribute{
-								MarkdownDescription: "Security token for temporary credentials",
+								MarkdownDescription: "The secret access key for the S3 account",
 								Computed:            true,
 								Attributes: map[string]schema.Attribute{
 									"type": schema.StringAttribute{
@@ -1684,7 +2217,7 @@ var generatedDataSources = []dataSourceDescriptor{
 								},
 							},
 							"session_token": schema.SingleNestedAttribute{
-								MarkdownDescription: "Temporary session token for the S3 account",
+								MarkdownDescription: "Session token for temporary credentials, sent as the x-amz-security-token header",
 								Computed:            true,
 								Attributes: map[string]schema.Attribute{
 									"type": schema.StringAttribute{
@@ -1711,7 +2244,7 @@ var generatedDataSources = []dataSourceDescriptor{
 								Computed:            true,
 							},
 							"timeout": schema.Int64Attribute{
-								MarkdownDescription: "Connection timeout to the S3 service",
+								MarkdownDescription: "Request timeout for S3 operations",
 								Computed:            true,
 							},
 							"transaction_retry_delay": schema.Int64Attribute{
@@ -1726,6 +2259,10 @@ var generatedDataSources = []dataSourceDescriptor{
 								MarkdownDescription: "Transaction timeout",
 								Computed:            true,
 							},
+							"url": schema.StringAttribute{
+								MarkdownDescription: "Custom blob service URL, for private endpoints or the Azurite emulator. When empty, it is derived from the storage account and the cloud environment",
+								Computed:            true,
+							},
 							"use_tls": schema.BoolAttribute{
 								MarkdownDescription: "Use TLS to connect to the store",
 								Computed:            true,
@@ -1738,7 +2275,7 @@ var generatedDataSources = []dataSourceDescriptor{
 					},
 				},
 				"timeout": schema.Int64Attribute{
-					MarkdownDescription: "Connection timeout to the S3 service",
+					MarkdownDescription: "Request timeout for S3 operations",
 					Computed:            true,
 				},
 				"transaction_retry_delay": schema.Int64Attribute{
@@ -1751,6 +2288,10 @@ var generatedDataSources = []dataSourceDescriptor{
 				},
 				"transaction_timeout": schema.Int64Attribute{
 					MarkdownDescription: "Transaction timeout",
+					Computed:            true,
+				},
+				"url": schema.StringAttribute{
+					MarkdownDescription: "Custom blob service URL, for private endpoints or the Azurite emulator. When empty, it is derived from the storage account and the cloud environment",
 					Computed:            true,
 				},
 				"use_tls": schema.BoolAttribute{
@@ -1831,6 +2372,14 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Maximum size of the address books and contacts cache",
 					Computed:            true,
 				},
+				"directory_recipients": schema.Int64Attribute{
+					MarkdownDescription: "Maximum size of the cache that records which recipients were recently resolved against an external directory",
+					Computed:            true,
+				},
+				"directory_recipients_ttl": schema.Int64Attribute{
+					MarkdownDescription: "How long a recipient resolved against an external directory is trusted before the directory is queried again",
+					Computed:            true,
+				},
 				"dkim_signatures": schema.Int64Attribute{
 					MarkdownDescription: "Maximum size of the DKIM signatures cache",
 					Computed:            true,
@@ -1853,10 +2402,6 @@ var generatedDataSources = []dataSourceDescriptor{
 				},
 				"dns_ptr": schema.Int64Attribute{
 					MarkdownDescription: "Maximum size of the PTR record cache",
-					Computed:            true,
-				},
-				"dns_rbl": schema.Int64Attribute{
-					MarkdownDescription: "Maximum size of the DNSBl record cache",
 					Computed:            true,
 				},
 				"dns_tlsa": schema.Int64Attribute{
@@ -1891,8 +2436,20 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Maximum size of the calendar and events cache",
 					Computed:            true,
 				},
+				"external_public_keys": schema.Int64Attribute{
+					MarkdownDescription: "Maximum size of the cache of parsed recipient keys used by the encryption gateway",
+					Computed:            true,
+				},
 				"files": schema.Int64Attribute{
 					MarkdownDescription: "Maximum size of the file storage data cache",
+					Computed:            true,
+				},
+				"groupware_large": schema.Int64Attribute{
+					MarkdownDescription: "Maximum size of the calendar, contact, file and scheduling caches for accounts too large for their main cache. Set it to zero to disable it, so that these accounts are only shared between the requests using them at the same time",
+					Computed:            true,
+				},
+				"groupware_large_ttl": schema.Int64Attribute{
+					MarkdownDescription: "Minimum time the calendar, contact, file or scheduling cache of a large account is kept in memory after it was last used. Once it has passed, the cache is released the next time one of these caches is updated. Set it to zero to keep these caches until the space is needed for another large account",
 					Computed:            true,
 				},
 				"http_auth": schema.Int64Attribute{
@@ -1907,8 +2464,16 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Maximum size of the e-mail data cache",
 					Computed:            true,
 				},
+				"messages_large": schema.Int64Attribute{
+					MarkdownDescription: "Maximum size of the e-mail data cache for accounts too large for the main e-mail data cache. Set it to zero to disable it, so that these accounts are only shared between the requests using them at the same time",
+					Computed:            true,
+				},
+				"messages_large_ttl": schema.Int64Attribute{
+					MarkdownDescription: "Minimum time the e-mail data cache of a large account is kept in memory after it was last used. Once it has passed, the cache is released the next time an e-mail data cache is updated. Set it to zero to keep these caches until the space is needed for another large account",
+					Computed:            true,
+				},
 				"negative_ttl": schema.Int64Attribute{
-					MarkdownDescription: "Time-to-live for domain and account name lookup negative cache entries",
+					MarkdownDescription: "Time-to-live for negative cache entries of domain and account name lookups, and the maximum time a negative DNS answer is cached",
 					Computed:            true,
 				},
 				"roles": schema.Int64Attribute{
@@ -1919,8 +2484,499 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Maximum size of the scheduling cache",
 					Computed:            true,
 				},
+				"spam_lookup": schema.Int64Attribute{
+					MarkdownDescription: "Maximum size of the spam filter lookup cache, which holds DNSBL results and resolved URL redirects",
+					Computed:            true,
+				},
+				"swap": schema.SingleNestedAttribute{
+					MarkdownDescription: "Where account cache snapshots are persisted, so a cache miss reloads a snapshot and catches it up from the change log instead of rebuilding the whole cache from the data store",
+					Computed:            true,
+					Attributes: map[string]schema.Attribute{
+						"type": schema.StringAttribute{
+							MarkdownDescription: "Variant discriminator.",
+							Computed:            true,
+						},
+						"chunk_size": schema.Int64Attribute{
+							MarkdownDescription: "Size of each snapshot chunk written to Redis",
+							Computed:            true,
+						},
+						"flush_changes": schema.Int64Attribute{
+							MarkdownDescription: "Minimum number of changes accumulated against an account cache before its snapshot is rewritten. Large accounts need proportionally more: one sixteenth of the messages or resources in the cache",
+							Computed:            true,
+						},
+						"flush_interval": schema.Int64Attribute{
+							MarkdownDescription: "Shortest interval between two snapshot writes for the same account",
+							Computed:            true,
+						},
+						"max_account_size": schema.Int64Attribute{
+							MarkdownDescription: "Largest snapshot that will be persisted. Accounts whose snapshot would exceed this are skipped",
+							Computed:            true,
+						},
+						"min_account_size": schema.Int64Attribute{
+							MarkdownDescription: "Smallest snapshot worth persisting. Below this the rebuild costs less than the write, so the account is skipped. This is the uncompressed snapshot size, which is close to the account's in-memory cache size and much smaller than its compressed size in the database",
+							Computed:            true,
+						},
+						"path": schema.StringAttribute{
+							MarkdownDescription: "Directory in which cache snapshots are stored",
+							Computed:            true,
+						},
+						"retention": schema.Int64Attribute{
+							MarkdownDescription: "How long a snapshot survives in Redis without being rewritten before it expires",
+							Computed:            true,
+						},
+						"store": schema.SingleNestedAttribute{
+							MarkdownDescription: "Redis deployment in which cache snapshots are stored",
+							Computed:            true,
+							Attributes: map[string]schema.Attribute{
+								"type": schema.StringAttribute{
+									MarkdownDescription: "Variant discriminator.",
+									Computed:            true,
+								},
+								"access_key_id": schema.SingleNestedAttribute{
+									MarkdownDescription: "Access key ID that identifies the S3 account",
+									Computed:            true,
+									Attributes: map[string]schema.Attribute{
+										"type": schema.StringAttribute{
+											MarkdownDescription: "Variant discriminator.",
+											Computed:            true,
+										},
+										"file_path": schema.StringAttribute{
+											MarkdownDescription: "File path to read the secret from",
+											Computed:            true,
+										},
+										"value": schema.StringAttribute{
+											MarkdownDescription: "Value",
+											Computed:            true,
+										},
+										"variable_name": schema.StringAttribute{
+											MarkdownDescription: "Environment variable name to read the secret from",
+											Computed:            true,
+										},
+									},
+								},
+								"allow_invalid_certs": schema.BoolAttribute{
+									MarkdownDescription: "Allow invalid TLS certificates when connecting to the Redis server",
+									Computed:            true,
+								},
+								"auth": schema.SingleNestedAttribute{
+									MarkdownDescription: "Authentication method used to access the Storage Account",
+									Computed:            true,
+									Attributes: map[string]schema.Attribute{
+										"type": schema.StringAttribute{
+											MarkdownDescription: "Variant discriminator.",
+											Computed:            true,
+										},
+										"account_key": schema.SingleNestedAttribute{
+											MarkdownDescription: "The shared key of the Azure Storage Account",
+											Computed:            true,
+											Attributes: map[string]schema.Attribute{
+												"type": schema.StringAttribute{
+													MarkdownDescription: "Variant discriminator.",
+													Computed:            true,
+												},
+												"file_path": schema.StringAttribute{
+													MarkdownDescription: "File path to read the secret from",
+													Computed:            true,
+												},
+												"secret": schema.StringAttribute{
+													MarkdownDescription: "Password or secret value",
+													Computed:            true,
+													Sensitive:           true,
+												},
+												"variable_name": schema.StringAttribute{
+													MarkdownDescription: "Environment variable name to read the secret from",
+													Computed:            true,
+												},
+											},
+										},
+										"client_id": schema.StringAttribute{
+											MarkdownDescription: "Application (client) ID of the service principal",
+											Computed:            true,
+										},
+										"client_secret": schema.SingleNestedAttribute{
+											MarkdownDescription: "Application client secret",
+											Computed:            true,
+											Attributes: map[string]schema.Attribute{
+												"type": schema.StringAttribute{
+													MarkdownDescription: "Variant discriminator.",
+													Computed:            true,
+												},
+												"file_path": schema.StringAttribute{
+													MarkdownDescription: "File path to read the secret from",
+													Computed:            true,
+												},
+												"secret": schema.StringAttribute{
+													MarkdownDescription: "Password or secret value",
+													Computed:            true,
+													Sensitive:           true,
+												},
+												"variable_name": schema.StringAttribute{
+													MarkdownDescription: "Environment variable name to read the secret from",
+													Computed:            true,
+												},
+											},
+										},
+										"sas_token": schema.SingleNestedAttribute{
+											MarkdownDescription: "SAS token granting read, write and delete permissions on the container. The leading '?' is optional",
+											Computed:            true,
+											Attributes: map[string]schema.Attribute{
+												"type": schema.StringAttribute{
+													MarkdownDescription: "Variant discriminator.",
+													Computed:            true,
+												},
+												"file_path": schema.StringAttribute{
+													MarkdownDescription: "File path to read the secret from",
+													Computed:            true,
+												},
+												"secret": schema.StringAttribute{
+													MarkdownDescription: "Password or secret value",
+													Computed:            true,
+													Sensitive:           true,
+												},
+												"variable_name": schema.StringAttribute{
+													MarkdownDescription: "Environment variable name to read the secret from",
+													Computed:            true,
+												},
+											},
+										},
+										"tenant_id": schema.StringAttribute{
+											MarkdownDescription: "Microsoft Entra ID tenant ID",
+											Computed:            true,
+										},
+										"token_file": schema.StringAttribute{
+											MarkdownDescription: "Path to the federated token file. When empty, the AZURE_FEDERATED_TOKEN_FILE environment variable is used",
+											Computed:            true,
+										},
+									},
+								},
+								"auth_secret": schema.SingleNestedAttribute{
+									MarkdownDescription: "Password to connect to the store",
+									Computed:            true,
+									Attributes: map[string]schema.Attribute{
+										"type": schema.StringAttribute{
+											MarkdownDescription: "Variant discriminator.",
+											Computed:            true,
+										},
+										"file_path": schema.StringAttribute{
+											MarkdownDescription: "File path to read the secret from",
+											Computed:            true,
+										},
+										"secret": schema.StringAttribute{
+											MarkdownDescription: "Password or secret value",
+											Computed:            true,
+											Sensitive:           true,
+										},
+										"variable_name": schema.StringAttribute{
+											MarkdownDescription: "Environment variable name to read the secret from",
+											Computed:            true,
+										},
+									},
+								},
+								"auth_username": schema.StringAttribute{
+									MarkdownDescription: "Username to connect to the store",
+									Computed:            true,
+								},
+								"bucket": schema.StringAttribute{
+									MarkdownDescription: "The S3 bucket where blobs (e-mail messages, Sieve scripts, etc.) will be stored",
+									Computed:            true,
+								},
+								"cluster_file": schema.StringAttribute{
+									MarkdownDescription: "Path to the cluster file for the FoundationDB cluster",
+									Computed:            true,
+								},
+								"connect_timeout": schema.Int64Attribute{
+									MarkdownDescription: "Maximum time to wait for a new connection to the Redis server to be established",
+									Computed:            true,
+								},
+								"container": schema.StringAttribute{
+									MarkdownDescription: "The name of the container in the Storage Account",
+									Computed:            true,
+								},
+								"database": schema.StringAttribute{
+									MarkdownDescription: "Name of the database",
+									Computed:            true,
+								},
+								"datacenter_id": schema.StringAttribute{
+									MarkdownDescription: "Data center ID (optional)",
+									Computed:            true,
+								},
+								"depth": schema.Int64Attribute{
+									MarkdownDescription: "Maximum depth of nested directories",
+									Computed:            true,
+								},
+								"environment": schema.StringAttribute{
+									MarkdownDescription: "Azure cloud environment, used to derive the default blob service URL and the Microsoft Entra ID authority",
+									Computed:            true,
+								},
+								"host": schema.StringAttribute{
+									MarkdownDescription: "Hostname of the database server",
+									Computed:            true,
+								},
+								"idle_timeout": schema.Int64Attribute{
+									MarkdownDescription: "Time an idle connection may stay open before the server closes it (sets the MySQL wait_timeout session variable)",
+									Computed:            true,
+								},
+								"key_prefix": schema.StringAttribute{
+									MarkdownDescription: "A prefix that will be added to the keys of all objects stored in the blob store",
+									Computed:            true,
+								},
+								"machine_id": schema.StringAttribute{
+									MarkdownDescription: "Machine ID in the FoundationDB cluster (optional)",
+									Computed:            true,
+								},
+								"max_allowed_packet": schema.Int64Attribute{
+									MarkdownDescription: "Maximum size of a packet in bytes",
+									Computed:            true,
+								},
+								"max_retries": schema.Int64Attribute{
+									MarkdownDescription: "Number of retries to connect to the Redis cluster",
+									Computed:            true,
+								},
+								"max_retry_wait": schema.Int64Attribute{
+									MarkdownDescription: "Maximum time to wait between retries",
+									Computed:            true,
+								},
+								"min_retry_wait": schema.Int64Attribute{
+									MarkdownDescription: "Minimum time to wait between retries",
+									Computed:            true,
+								},
+								"options": schema.StringAttribute{
+									MarkdownDescription: "Additional connection options",
+									Computed:            true,
+								},
+								"path": schema.StringAttribute{
+									MarkdownDescription: "Where to store the data in the server's filesystem",
+									Computed:            true,
+								},
+								"pool_max_connections": schema.Int64Attribute{
+									MarkdownDescription: "Maximum number of connections to the store",
+									Computed:            true,
+								},
+								"pool_min_connections": schema.Int64Attribute{
+									MarkdownDescription: "Minimum number of connections to the store",
+									Computed:            true,
+								},
+								"pool_recycling_method": schema.StringAttribute{
+									MarkdownDescription: "Method to use when recycling connections in the pool",
+									Computed:            true,
+								},
+								"pool_timeout_create": schema.Int64Attribute{
+									MarkdownDescription: "Timeout for creating a new connection",
+									Computed:            true,
+								},
+								"pool_timeout_recycle": schema.Int64Attribute{
+									MarkdownDescription: "Timeout for recycling a connection",
+									Computed:            true,
+								},
+								"pool_timeout_wait": schema.Int64Attribute{
+									MarkdownDescription: "Timeout for waiting for a connection from the pool",
+									Computed:            true,
+								},
+								"port": schema.Int64Attribute{
+									MarkdownDescription: "Port of the database server",
+									Computed:            true,
+								},
+								"profile": schema.StringAttribute{
+									MarkdownDescription: "Used when retrieving credentials from a shared credentials file. If specified, the server will use the access key ID, secret access key, and session token (if available) associated with the given profile",
+									Computed:            true,
+								},
+								"protocol_version": schema.StringAttribute{
+									MarkdownDescription: "Protocol Version",
+									Computed:            true,
+								},
+								"read_from_replicas": schema.BoolAttribute{
+									MarkdownDescription: "Whether to read from replicas",
+									Computed:            true,
+								},
+								"read_replicas": schema.ListNestedAttribute{
+									MarkdownDescription: "List of read replicas for the store Requires an Enterprise license.",
+									Computed:            true,
+									NestedObject: schema.NestedAttributeObject{
+										Attributes: map[string]schema.Attribute{
+											"auth_secret": schema.SingleNestedAttribute{
+												MarkdownDescription: "Password to connect to the store",
+												Computed:            true,
+												Attributes: map[string]schema.Attribute{
+													"type": schema.StringAttribute{
+														MarkdownDescription: "Variant discriminator.",
+														Computed:            true,
+													},
+													"file_path": schema.StringAttribute{
+														MarkdownDescription: "File path to read the secret from",
+														Computed:            true,
+													},
+													"secret": schema.StringAttribute{
+														MarkdownDescription: "Password or secret value",
+														Computed:            true,
+														Sensitive:           true,
+													},
+													"variable_name": schema.StringAttribute{
+														MarkdownDescription: "Environment variable name to read the secret from",
+														Computed:            true,
+													},
+												},
+											},
+											"auth_username": schema.StringAttribute{
+												MarkdownDescription: "Username to connect to the store",
+												Computed:            true,
+											},
+											"database": schema.StringAttribute{
+												MarkdownDescription: "Name of the database",
+												Computed:            true,
+											},
+											"host": schema.StringAttribute{
+												MarkdownDescription: "Hostname of the database server",
+												Computed:            true,
+											},
+											"options": schema.StringAttribute{
+												MarkdownDescription: "Additional connection options",
+												Computed:            true,
+											},
+											"port": schema.Int64Attribute{
+												MarkdownDescription: "Port of the database server",
+												Computed:            true,
+											},
+										},
+									},
+								},
+								"region": schema.SingleNestedAttribute{
+									MarkdownDescription: "The S3 region where the bucket resides",
+									Computed:            true,
+									Attributes: map[string]schema.Attribute{
+										"type": schema.StringAttribute{
+											MarkdownDescription: "Variant discriminator.",
+											Computed:            true,
+										},
+										"region": schema.StringAttribute{
+											MarkdownDescription: "Region name",
+											Computed:            true,
+										},
+										"url": schema.StringAttribute{
+											MarkdownDescription: "Endpoint URL",
+											Computed:            true,
+										},
+									},
+								},
+								"secret_key": schema.SingleNestedAttribute{
+									MarkdownDescription: "The secret access key for the S3 account",
+									Computed:            true,
+									Attributes: map[string]schema.Attribute{
+										"type": schema.StringAttribute{
+											MarkdownDescription: "Variant discriminator.",
+											Computed:            true,
+										},
+										"file_path": schema.StringAttribute{
+											MarkdownDescription: "File path to read the secret from",
+											Computed:            true,
+										},
+										"secret": schema.StringAttribute{
+											MarkdownDescription: "Password or secret value",
+											Computed:            true,
+											Sensitive:           true,
+										},
+										"variable_name": schema.StringAttribute{
+											MarkdownDescription: "Environment variable name to read the secret from",
+											Computed:            true,
+										},
+									},
+								},
+								"sentinel_secret": schema.SingleNestedAttribute{
+									MarkdownDescription: "Password to connect to the Sentinel nodes",
+									Computed:            true,
+									Attributes: map[string]schema.Attribute{
+										"type": schema.StringAttribute{
+											MarkdownDescription: "Variant discriminator.",
+											Computed:            true,
+										},
+										"file_path": schema.StringAttribute{
+											MarkdownDescription: "File path to read the secret from",
+											Computed:            true,
+										},
+										"secret": schema.StringAttribute{
+											MarkdownDescription: "Password or secret value",
+											Computed:            true,
+											Sensitive:           true,
+										},
+										"variable_name": schema.StringAttribute{
+											MarkdownDescription: "Environment variable name to read the secret from",
+											Computed:            true,
+										},
+									},
+								},
+								"sentinel_username": schema.StringAttribute{
+									MarkdownDescription: "Username to connect to the Sentinel nodes",
+									Computed:            true,
+								},
+								"service_name": schema.StringAttribute{
+									MarkdownDescription: "Name of the monitored master (service) to query via the Sentinels",
+									Computed:            true,
+								},
+								"session_token": schema.SingleNestedAttribute{
+									MarkdownDescription: "Session token for temporary credentials, sent as the x-amz-security-token header",
+									Computed:            true,
+									Attributes: map[string]schema.Attribute{
+										"type": schema.StringAttribute{
+											MarkdownDescription: "Variant discriminator.",
+											Computed:            true,
+										},
+										"file_path": schema.StringAttribute{
+											MarkdownDescription: "File path to read the secret from",
+											Computed:            true,
+										},
+										"secret": schema.StringAttribute{
+											MarkdownDescription: "Password or secret value",
+											Computed:            true,
+											Sensitive:           true,
+										},
+										"variable_name": schema.StringAttribute{
+											MarkdownDescription: "Environment variable name to read the secret from",
+											Computed:            true,
+										},
+									},
+								},
+								"storage_account": schema.StringAttribute{
+									MarkdownDescription: "The Azure Storage Account where blobs (e-mail messages, Sieve scripts, etc.) will be stored",
+									Computed:            true,
+								},
+								"timeout": schema.Int64Attribute{
+									MarkdownDescription: "Request timeout for S3 operations",
+									Computed:            true,
+								},
+								"transaction_retry_delay": schema.Int64Attribute{
+									MarkdownDescription: "Transaction maximum retry delay",
+									Computed:            true,
+								},
+								"transaction_retry_limit": schema.Int64Attribute{
+									MarkdownDescription: "Transaction retry limit",
+									Computed:            true,
+								},
+								"transaction_timeout": schema.Int64Attribute{
+									MarkdownDescription: "Transaction timeout",
+									Computed:            true,
+								},
+								"url": schema.StringAttribute{
+									MarkdownDescription: "URL of the Redis server",
+									Computed:            true,
+								},
+								"urls": schema.SetAttribute{
+									MarkdownDescription: "URL(s) of the Redis server(s)",
+									Computed:            true,
+									ElementType:         types.StringType,
+								},
+								"use_tls": schema.BoolAttribute{
+									MarkdownDescription: "Use TLS to connect to the store",
+									Computed:            true,
+								},
+								"verify_after_write": schema.BoolAttribute{
+									MarkdownDescription: "After each successful write, verify the object is readable on the backend. Defends against the rare case where an S3-compatible backend returns success but does not actually persist the data. Adds one extra request per write.",
+									Computed:            true,
+								},
+							},
+						},
+					},
+				},
 				"tenants": schema.Int64Attribute{
-					MarkdownDescription: "Maximum size of the tenants cache",
+					MarkdownDescription: "Maximum size of the tenants cache Requires an Enterprise license.",
 					Computed:            true,
 				},
 			},
@@ -1937,6 +2993,20 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Always `singleton`.",
 					Computed:            true,
 				},
+				"availability_rate_limit": schema.SingleNestedAttribute{
+					MarkdownDescription: "Maximum rate at which an account can query principal availability",
+					Computed:            true,
+					Attributes: map[string]schema.Attribute{
+						"count": schema.Int64Attribute{
+							MarkdownDescription: "Count",
+							Computed:            true,
+						},
+						"period": schema.Int64Attribute{
+							MarkdownDescription: "Period",
+							Computed:            true,
+						},
+					},
+				},
 				"default_display_name": schema.StringAttribute{
 					MarkdownDescription: "Specifies the default display name for a calendar when it is created",
 					Computed:            true,
@@ -1945,12 +3015,24 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Specifies the default href name for a calendar when it is created",
 					Computed:            true,
 				},
+				"max_attachments_size": schema.Int64Attribute{
+					MarkdownDescription: "Maximum total size of the attachments embedded in a single calendar event",
+					Computed:            true,
+				},
 				"max_attendees": schema.Int64Attribute{
 					MarkdownDescription: "Specifies the maximum number of attendees that can be included in a single iCalendar instance",
 					Computed:            true,
 				},
+				"max_availability_duration": schema.Int64Attribute{
+					MarkdownDescription: "Maximum time span that can be requested when querying the availability (free/busy) of a principal",
+					Computed:            true,
+				},
 				"max_calendars": schema.Int64Attribute{
 					MarkdownDescription: "The default maximum number of calendars a user can create",
+					Computed:            true,
+				},
+				"max_calendars_per_event": schema.Int64Attribute{
+					MarkdownDescription: "Maximum number of calendars a single calendar event can belong to",
 					Computed:            true,
 				},
 				"max_event_notifications": schema.Int64Attribute{
@@ -1959,6 +3041,10 @@ var generatedDataSources = []dataSourceDescriptor{
 				},
 				"max_events": schema.Int64Attribute{
 					MarkdownDescription: "The default maximum number of calendar events a user can create",
+					Computed:            true,
+				},
+				"max_expanded_query_duration": schema.Int64Attribute{
+					MarkdownDescription: "Maximum time span between the after and before arguments of a calendar event query that expands recurrences",
 					Computed:            true,
 				},
 				"max_i_calendar_size": schema.Int64Attribute{
@@ -1995,7 +3081,7 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Enables the calendar alarms feature, allowing users to set alarms for events and receive notifications via e-mail",
 					Computed:            true,
 				},
-				"from_email": schema.StringAttribute{
+				"from_address": schema.StringAttribute{
 					MarkdownDescription: "Specifies the e-mail address that will appear in the 'From' field of calendar alarm e-mails, ensuring that users can reply to or contact the sender",
 					Computed:            true,
 				},
@@ -2046,14 +3132,14 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"http_rsvp_template": schema.StringAttribute{
-					MarkdownDescription: "Specifies the HTML template used for rendering HTTP RSVP confirmations. Requires an Enterprise license.",
+					MarkdownDescription: "Replaces the built-in HTTP RSVP page. The document is served verbatim and is responsible for calling the /api/calendar/rsvp endpoint itself. Requires an Enterprise license.",
 					Computed:            true,
 				},
 				"http_rsvp_url": schema.StringAttribute{
 					MarkdownDescription: "Specifies a custom URL for the HTTP RSVP endpoint, where users can respond to calendar invitations.",
 					Computed:            true,
 				},
-				"itip_max_size": schema.Int64Attribute{
+				"max_itip_size": schema.Int64Attribute{
 					MarkdownDescription: "Sets the maximum iCalendar object size for incoming iTIP messages.",
 					Computed:            true,
 				},
@@ -2158,7 +3244,7 @@ var generatedDataSources = []dataSourceDescriptor{
 		Name:     "cluster_node",
 		JMAPType: "x:ClusterNode",
 		Schema: schema.Schema{
-			MarkdownDescription: "Represents a node in the cluster",
+			MarkdownDescription: "Represents a node in the cluster.",
 			Attributes: map[string]schema.Attribute{
 				"id": schema.StringAttribute{
 					MarkdownDescription: "Identifier of the object.",
@@ -2282,10 +3368,9 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Variant discriminator.",
 					Computed:            true,
 				},
-				"addresses": schema.SetAttribute{
-					MarkdownDescription: "Address of the NATS server",
+				"allow_invalid_certs": schema.BoolAttribute{
+					MarkdownDescription: "Allow invalid TLS certificates when connecting to the Kafka brokers",
 					Computed:            true,
-					ElementType:         types.StringType,
 				},
 				"auth_secret": schema.SingleNestedAttribute{
 					MarkdownDescription: "Password to connect to the store",
@@ -2314,25 +3399,16 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Username to connect to the store",
 					Computed:            true,
 				},
-				"brokers": schema.SetAttribute{
-					MarkdownDescription: "List of Kafka brokers",
-					Computed:            true,
-					ElementType:         types.StringType,
-				},
-				"capacity_client": schema.Int64Attribute{
+				"client_capacity": schema.Int64Attribute{
 					MarkdownDescription: "By default, Client dispatches op's to the Client onto the channel with capacity of 2048. This option enables overriding it",
-					Computed:            true,
-				},
-				"capacity_read_buffer": schema.Int64Attribute{
-					MarkdownDescription: "Sets the initial capacity of the read buffer. Which is a buffer used to gather partial protocol messages.",
-					Computed:            true,
-				},
-				"capacity_subscription": schema.Int64Attribute{
-					MarkdownDescription: "Sets the capacity for Subscribers. Exceeding it will trigger slow consumer error callback and drop messages.",
 					Computed:            true,
 				},
 				"config": schema.StringAttribute{
 					MarkdownDescription: "Zenoh configuration string",
+					Computed:            true,
+				},
+				"connect_timeout": schema.Int64Attribute{
+					MarkdownDescription: "Timeout for establishing a connection to the server",
 					Computed:            true,
 				},
 				"credentials": schema.SingleNestedAttribute{
@@ -2359,8 +3435,13 @@ var generatedDataSources = []dataSourceDescriptor{
 					},
 				},
 				"group_id": schema.StringAttribute{
-					MarkdownDescription: "Consumer group ID",
+					MarkdownDescription: "Consumer group ID prefix. Each node joins its own consumer group, named after this prefix followed by a dash and the node ID, so that every node receives every notification",
 					Computed:            true,
+				},
+				"hosts": schema.SetAttribute{
+					MarkdownDescription: "Kafka bootstrap brokers, as host:port pairs",
+					Computed:            true,
+					ElementType:         types.StringType,
 				},
 				"max_reconnects": schema.Int64Attribute{
 					MarkdownDescription: "Maximum number of times to attempt to reconnect to the server",
@@ -2372,6 +3453,10 @@ var generatedDataSources = []dataSourceDescriptor{
 				},
 				"max_retry_wait": schema.Int64Attribute{
 					MarkdownDescription: "Maximum time to wait between retries",
+					Computed:            true,
+				},
+				"message_timeout": schema.Int64Attribute{
+					MarkdownDescription: "Timeout for message processing",
 					Computed:            true,
 				},
 				"min_retry_wait": schema.Int64Attribute{
@@ -2406,8 +3491,16 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Protocol Version",
 					Computed:            true,
 				},
+				"read_buffer_capacity": schema.Int64Attribute{
+					MarkdownDescription: "Sets the initial capacity of the read buffer. Which is a buffer used to gather partial protocol messages.",
+					Computed:            true,
+				},
 				"read_from_replicas": schema.BoolAttribute{
 					MarkdownDescription: "Whether to read from replicas",
+					Computed:            true,
+				},
+				"request_timeout": schema.Int64Attribute{
+					MarkdownDescription: "Timeout for requests to the server",
 					Computed:            true,
 				},
 				"sentinel_secret": schema.SingleNestedAttribute{
@@ -2441,24 +3534,12 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Name of the monitored master (service) to query via the Sentinels",
 					Computed:            true,
 				},
-				"timeout": schema.Int64Attribute{
-					MarkdownDescription: "Connection timeout to the database",
-					Computed:            true,
-				},
-				"timeout_connection": schema.Int64Attribute{
-					MarkdownDescription: "Timeout for establishing a connection to the server",
-					Computed:            true,
-				},
-				"timeout_message": schema.Int64Attribute{
-					MarkdownDescription: "Timeout for message processing",
-					Computed:            true,
-				},
-				"timeout_request": schema.Int64Attribute{
-					MarkdownDescription: "Timeout for requests to the server",
-					Computed:            true,
-				},
-				"timeout_session": schema.Int64Attribute{
+				"session_timeout": schema.Int64Attribute{
 					MarkdownDescription: "Timeout for session",
+					Computed:            true,
+				},
+				"subscription_capacity": schema.Int64Attribute{
+					MarkdownDescription: "Sets the capacity for Subscribers. Exceeding it will trigger slow consumer error callback and drop messages.",
 					Computed:            true,
 				},
 				"url": schema.StringAttribute{
@@ -2471,7 +3552,7 @@ var generatedDataSources = []dataSourceDescriptor{
 					ElementType:         types.StringType,
 				},
 				"use_tls": schema.BoolAttribute{
-					MarkdownDescription: "Use TLS to connect to the store",
+					MarkdownDescription: "Use TLS to connect to the Kafka brokers",
 					Computed:            true,
 				},
 			},
@@ -2497,7 +3578,7 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"blob_cleanup_schedule": schema.SingleNestedAttribute{
-					MarkdownDescription: "How often to purge the data store. Expects a cron expression.",
+					MarkdownDescription: "When to delete blobs that are no longer referenced, such as expired uploads and the contents of deleted messages. Expects a cron expression.",
 					Computed:            true,
 					Attributes: map[string]schema.Attribute{
 						"type": schema.StringAttribute{
@@ -2666,15 +3747,23 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"blob_size": schema.Int64Attribute{
-					MarkdownDescription: "Minimum size of a blob to store in the blob store, smaller blobs are stored in the metadata store",
+					MarkdownDescription: "Minimum size of a blob to write to a separate RocksDB blob file; smaller blobs are stored inline in the LSM tree. Only applies when RocksDB is also the blob store",
 					Computed:            true,
 				},
 				"buffer_size": schema.Int64Attribute{
-					MarkdownDescription: "Size of the write buffer in bytes, used to batch writes to the store",
+					MarkdownDescription: "Total amount of memory shared by the write buffers (memtables) of every column family. Higher values batch more writes in memory before they are flushed to disk",
+					Computed:            true,
+				},
+				"cache_size": schema.Int64Attribute{
+					MarkdownDescription: "Total amount of memory shared by the block caches of every column family, used to cache data blocks, indexes and bloom filters read from disk. When unset, one eighth of the memory available to the server (the lower of physical memory and the container memory limit), between 256 MiB and 8 GiB; on hosts with less than 1 GiB, a quarter of the memory; 256 MiB when the memory cannot be determined",
 					Computed:            true,
 				},
 				"cluster_file": schema.StringAttribute{
 					MarkdownDescription: "Path to the cluster file for the FoundationDB cluster",
+					Computed:            true,
+				},
+				"connect_timeout": schema.Int64Attribute{
+					MarkdownDescription: "Maximum time to wait for a connection to the database server to be established",
 					Computed:            true,
 				},
 				"database": schema.StringAttribute{
@@ -2687,6 +3776,10 @@ var generatedDataSources = []dataSourceDescriptor{
 				},
 				"host": schema.StringAttribute{
 					MarkdownDescription: "Hostname of the database server",
+					Computed:            true,
+				},
+				"idle_timeout": schema.Int64Attribute{
+					MarkdownDescription: "Time an idle connection may stay open before the server closes it (sets the MySQL wait_timeout session variable)",
 					Computed:            true,
 				},
 				"machine_id": schema.StringAttribute{
@@ -2706,7 +3799,7 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"pool_max_connections": schema.Int64Attribute{
-					MarkdownDescription: "Maximum number of connections to the store",
+					MarkdownDescription: "Maximum number of connections to the store. When unset, the number of worker threads, between 4 and 16.",
 					Computed:            true,
 				},
 				"pool_min_connections": schema.Int64Attribute{
@@ -2775,10 +3868,6 @@ var generatedDataSources = []dataSourceDescriptor{
 							},
 						},
 					},
-				},
-				"timeout": schema.Int64Attribute{
-					MarkdownDescription: "Connection timeout to the database",
-					Computed:            true,
 				},
 				"transaction_retry_delay": schema.Int64Attribute{
 					MarkdownDescription: "Transaction maximum retry delay",
@@ -2907,12 +3996,12 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Searches for user accounts by e-mail address during authentication",
 					Computed:            true,
 				},
-				"filter_mailbox": schema.StringAttribute{
-					MarkdownDescription: "Searches for users or groups matching a recipient e-mail address or alias",
-					Computed:            true,
-				},
 				"filter_member_of": schema.StringAttribute{
 					MarkdownDescription: "Searches for groups that an account is member of. Use when the group membership is not provided in the account entry. The ? in the filter will be replaced with the account DN.",
+					Computed:            true,
+				},
+				"filter_recipient": schema.StringAttribute{
+					MarkdownDescription: "Searches for users or groups matching a recipient e-mail address or alias",
 					Computed:            true,
 				},
 				"group_class": schema.StringAttribute{
@@ -2940,12 +4029,17 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"timeout": schema.Int64Attribute{
-					MarkdownDescription: "Connection timeout to the server",
+					MarkdownDescription: "Timeout for establishing a connection to the LDAP server and for each LDAP operation",
 					Computed:            true,
 				},
 				"url": schema.StringAttribute{
 					MarkdownDescription: "URL of the LDAP server",
 					Computed:            true,
+				},
+				"url_failover": schema.SetAttribute{
+					MarkdownDescription: "URLs of backup LDAP servers, tried in order when the primary server is unreachable Requires an Enterprise license.",
+					Computed:            true,
+					ElementType:         types.StringType,
 				},
 				"use_tls": schema.BoolAttribute{
 					MarkdownDescription: "Use TLS to connect to the remote server",
@@ -2965,38 +4059,93 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Identifier of the object.",
 					Required:            true,
 				},
+				"accepted_audiences": schema.SetAttribute{
+					MarkdownDescription: "Additional values accepted in the token's aud claim besides this server's resource identifiers. Use it for the audience the identity provider puts in access tokens, for example the client id of the web interface, an API identifier, or a project id.",
+					Computed:            true,
+					ElementType:         types.StringType,
+				},
+				"allow_id_token_claims": schema.BoolAttribute{
+					MarkdownDescription: "Accept JWT access tokens that carry ID token claims such as nonce or at_hash. Needed for providers whose access tokens are copies of the ID token. When enabled, an ID token can be presented as an access token.",
+					Computed:            true,
+				},
+				"allow_invalid_certs": schema.BoolAttribute{
+					MarkdownDescription: "Allow invalid TLS certificates when connecting to the OpenID Connect provider",
+					Computed:            true,
+				},
 				"claim_groups": schema.StringAttribute{
-					MarkdownDescription: "The claim name used to retrieve the user's group memberships from the token or user info response. Common values are groups or roles depending on your provider's configuration. If not set, group information will not be populated. Note that some providers omit group claims from the token to keep its size small and only return them via the user info endpoint, if group information is missing, ensure your provider is configured to include it.",
+					MarkdownDescription: "The claim name used to retrieve the user's group memberships from the token or user info response. Common values are groups or roles depending on the provider's configuration. If not set, group information will not be populated. Note that some providers omit group claims from the token to keep its size small and only return them via the user info endpoint. When it is set and the access token does not carry the claim, every login calls the user info endpoint to fetch it.",
 					Computed:            true,
 				},
 				"claim_name": schema.StringAttribute{
-					MarkdownDescription: "The claim name used to retrieve the user's display name from the token or user info response. Common values are name or display_name. If not set, the display name will not be populated.",
+					MarkdownDescription: "The claim name used to retrieve the user's display name from the token or user info response. Common values are name or display_name. If not set, the display name will not be populated. When it is set and the access token does not carry the claim, every login calls the provider's user info endpoint to fetch it, so leave it unset unless the provider includes it in access tokens or the extra request is acceptable.",
 					Computed:            true,
 				},
 				"claim_username": schema.StringAttribute{
-					MarkdownDescription: "The claim name used to retrieve the user's login name from the token or user info response. Common values are preferred_username, email, or sub depending on your provider's configuration. If the claim value is not an email address and usernameDomain is set, the domain will be appended automatically (e.g. john becomes john@example.com). If the claim value already contains an @, it is used as-is. If the claim value is not an email address and no usernameDomain is configured, Stalwart will fall back to the email claim. If neither yields a valid email address, authentication will be rejected.",
+					MarkdownDescription: "The claim name used to retrieve the user's login name from the token or user info response. Common values are preferred_username, email, or sub depending on the provider's configuration. If the claim value is not an email address and usernameDomain is set, the domain will be appended automatically (e.g. john becomes john@example.com). If the claim value already contains an @, it is used as-is. If the claim value is not an email address and no usernameDomain is configured, Stalwart will fall back to the email claim. If neither yields a valid email address, authentication will be rejected.",
 					Computed:            true,
 				},
 				"description": schema.StringAttribute{
 					MarkdownDescription: "Short description of this directory",
 					Computed:            true,
 				},
+				"introspection_auth_method": schema.StringAttribute{
+					MarkdownDescription: "How the server authenticates to the introspection endpoint",
+					Computed:            true,
+				},
+				"introspection_client_id": schema.StringAttribute{
+					MarkdownDescription: "Client id used to authenticate to the introspection endpoint",
+					Computed:            true,
+				},
+				"introspection_client_secret": schema.SingleNestedAttribute{
+					MarkdownDescription: "Client secret used to authenticate to the introspection endpoint",
+					Computed:            true,
+					Attributes: map[string]schema.Attribute{
+						"type": schema.StringAttribute{
+							MarkdownDescription: "Variant discriminator.",
+							Computed:            true,
+						},
+						"file_path": schema.StringAttribute{
+							MarkdownDescription: "File path to read the secret from",
+							Computed:            true,
+						},
+						"secret": schema.StringAttribute{
+							MarkdownDescription: "Password or secret value",
+							Computed:            true,
+							Sensitive:           true,
+						},
+						"variable_name": schema.StringAttribute{
+							MarkdownDescription: "Environment variable name to read the secret from",
+							Computed:            true,
+						},
+					},
+				},
 				"issuer_url": schema.StringAttribute{
-					MarkdownDescription: "The base URL of the OpenID Connect provider (e.g. https://sso.example.com/realms/myrealm). Stalwart will use this URL to automatically discover the provider's endpoints, including the token validation and user info endpoints.",
+					MarkdownDescription: "The issuer URL of the OpenID Connect provider (e.g. https://sso.example.com/realms/myrealm). It is compared exactly with the issuer reported by the provider, so enter it exactly as the provider reports it, including any trailing slash. Endpoints are discovered from /.well-known/oauth-authorization-server first and then from /.well-known/openid-configuration. For Microsoft Entra ID, use the tenant-specific issuer.",
+					Computed:            true,
+				},
+				"lenient_issuer_match": schema.BoolAttribute{
+					MarkdownDescription: "Ignore a trailing slash difference between the configured issuer URL and the issuer reported by the provider and found in tokens",
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
 					MarkdownDescription: "Identifier for the tenant this directory belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
-				"require_audience": schema.StringAttribute{
-					MarkdownDescription: "If set, Stalwart will reject any token whose aud (audience) claim does not include this value. Set this to the client ID or resource identifier registered for Stalwart in your identity provider to ensure tokens issued for other applications are not accepted.",
+				"opaque_token_validation": schema.StringAttribute{
+					MarkdownDescription: "How access tokens that are not JWTs are validated. Disabled rejects them. User info calls the provider's UserInfo endpoint, which cannot check the token's audience or scopes, so any token the provider issued to any application is accepted, with the access set by the tokens without scopes option. Introspection calls the provider's RFC 7662 introspection endpoint, checks audience and scopes, and requires client credentials. Only one method is used per token.",
 					Computed:            true,
 				},
-				"require_scopes": schema.SetAttribute{
-					MarkdownDescription: "If set, Stalwart will reject any token that does not include all of the specified scopes. Useful for ensuring that only tokens explicitly granted access to the mail server are accepted.",
+				"skip_audience_validation": schema.BoolAttribute{
+					MarkdownDescription: "Accept access tokens whose aud claim is missing or matches none of this server's resource identifiers or accepted audiences. Tokens issued to any application at the provider will then be accepted.",
 					Computed:            true,
-					ElementType:         types.StringType,
+				},
+				"trusted_provider": schema.BoolAttribute{
+					MarkdownDescription: "Let a directory owned by a tenant contact its provider on private networks and over plain HTTP, as a directory owned by the server does. Only a superuser can save a directory with this setting enabled, so a tenant administrator cannot change a trusted directory afterwards. Requires an Enterprise license.",
+					Computed:            true,
+				},
+				"unscoped_tokens": schema.StringAttribute{
+					MarkdownDescription: "How access tokens that carry none of the interoperable mail, contacts, calendars or files scopes are handled. Tokens issued to this server's web interface always have full access. Reject follows the OAuth profile for open public clients. Interoperable services grants access to mail, contacts, calendars and files, which is enough for mail clients when the provider cannot issue these scopes. Full access also grants management permissions to any such token and should only be used together with a strict audience check.",
+					Computed:            true,
 				},
 				"username_domain": schema.StringAttribute{
 					MarkdownDescription: "The domain name to append to the username when the value of claimUsername does not contain an @ symbol (e.g. setting this to example.com will turn john into john@example.com). If not set, Stalwart will fall back to the email claim when the username claim does not contain a valid email address.",
@@ -3025,7 +4174,7 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"column_email": schema.StringAttribute{
-					MarkdownDescription: "Column name for e-mail address. Optional, you can use instead a query to obtain the account's addresses.",
+					MarkdownDescription: "Column holding the account's primary e-mail address. When the column is missing from the result or does not hold an address, the login name is used as the address at sign-in, and recipient lookups find no aliases or groups.",
 					Computed:            true,
 				},
 				"column_secret": schema.StringAttribute{
@@ -3095,12 +4244,20 @@ var generatedDataSources = []dataSourceDescriptor{
 							MarkdownDescription: "Username to connect to the store",
 							Computed:            true,
 						},
+						"connect_timeout": schema.Int64Attribute{
+							MarkdownDescription: "Maximum time to wait for a connection to the database server to be established",
+							Computed:            true,
+						},
 						"database": schema.StringAttribute{
 							MarkdownDescription: "Name of the database",
 							Computed:            true,
 						},
 						"host": schema.StringAttribute{
 							MarkdownDescription: "Hostname of the database server",
+							Computed:            true,
+						},
+						"idle_timeout": schema.Int64Attribute{
+							MarkdownDescription: "Time an idle connection may stay open before the server closes it (sets the MySQL wait_timeout session variable)",
 							Computed:            true,
 						},
 						"max_allowed_packet": schema.Int64Attribute{
@@ -3116,7 +4273,7 @@ var generatedDataSources = []dataSourceDescriptor{
 							Computed:            true,
 						},
 						"pool_max_connections": schema.Int64Attribute{
-							MarkdownDescription: "Maximum number of connections to the store",
+							MarkdownDescription: "Maximum number of connections to the store. When unset, 4 per CPU core, between 16 and 32.",
 							Computed:            true,
 						},
 						"pool_min_connections": schema.Int64Attribute{
@@ -3185,10 +4342,6 @@ var generatedDataSources = []dataSourceDescriptor{
 									},
 								},
 							},
-						},
-						"timeout": schema.Int64Attribute{
-							MarkdownDescription: "Connection timeout to the database",
-							Computed:            true,
 						},
 						"use_tls": schema.BoolAttribute{
 							MarkdownDescription: "Use TLS to connect to the store",
@@ -3411,7 +4564,7 @@ var generatedDataSources = []dataSourceDescriptor{
 					},
 				},
 				"public_key": schema.StringAttribute{
-					MarkdownDescription: "PEM-encoded public key used to verify signatures, derived from the private key",
+					MarkdownDescription: "Base64-encoded public key published in the p= tag of the DNS record, derived from the private key",
 					Computed:            true,
 				},
 				"report": schema.BoolAttribute{
@@ -3505,7 +4658,7 @@ var generatedDataSources = []dataSourceDescriptor{
 					},
 				},
 				"public_key": schema.StringAttribute{
-					MarkdownDescription: "PEM-encoded public key used to verify signatures, derived from the private key",
+					MarkdownDescription: "Base64-encoded public key published in the p= tag of the DNS record, derived from the private key",
 					Computed:            true,
 				},
 				"report": schema.BoolAttribute{
@@ -3551,7 +4704,12 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"flags": schema.SetAttribute{
-					MarkdownDescription: "Policy flags added to the signature, requesting downstream handlers to honor delivery constraints or provide feedback",
+					MarkdownDescription: "Flags added to the signature, such as a request for feedback about how the message is handled",
+					Computed:            true,
+					ElementType:         types.StringType,
+				},
+				"instance_hashes": schema.SetAttribute{
+					MarkdownDescription: "Hash algorithms used for the header and body hashes of the Message-Instance header fields added when signing",
 					Computed:            true,
 					ElementType:         types.StringType,
 				},
@@ -3587,7 +4745,82 @@ var generatedDataSources = []dataSourceDescriptor{
 					},
 				},
 				"public_key": schema.StringAttribute{
-					MarkdownDescription: "PEM-encoded public key used to verify signatures, derived from the private key",
+					MarkdownDescription: "Base64-encoded public key published in the p= tag of the DNS record, derived from the private key",
+					Computed:            true,
+				},
+				"selector": schema.StringAttribute{
+					MarkdownDescription: "Selector used to locate the DKIM public key in DNS",
+					Computed:            true,
+				},
+				"stage": schema.StringAttribute{
+					MarkdownDescription: "Current stage of the DKIM key in its rotation lifecycle",
+					Computed:            true,
+				},
+			},
+		},
+	},
+	{
+		Name:     "dkim_signature_dkim2_ml_dsa44",
+		JMAPType: "x:DkimSignature",
+		Variant:  "Dkim2MlDsa44",
+		Schema: schema.Schema{
+			MarkdownDescription: "Defines a DKIM signature used to sign outgoing email messages. Reads the DKIM2 (ML-DSA-44) variant.",
+			Attributes: map[string]schema.Attribute{
+				"id": schema.StringAttribute{
+					MarkdownDescription: "Identifier of the object.",
+					Required:            true,
+				},
+				"created_at": schema.StringAttribute{
+					MarkdownDescription: "Creation date of the DKIM signature",
+					Computed:            true,
+				},
+				"domain_id": schema.StringAttribute{
+					MarkdownDescription: "Identifier for the domain this DKIM signature is associated with",
+					Computed:            true,
+				},
+				"flags": schema.SetAttribute{
+					MarkdownDescription: "Flags added to the signature, such as a request for feedback about how the message is handled",
+					Computed:            true,
+					ElementType:         types.StringType,
+				},
+				"instance_hashes": schema.SetAttribute{
+					MarkdownDescription: "Hash algorithms used for the header and body hashes of the Message-Instance header fields added when signing",
+					Computed:            true,
+					ElementType:         types.StringType,
+				},
+				"member_tenant_id": schema.StringAttribute{
+					MarkdownDescription: "Identifier for the tenant this DKIM signature belongs to Requires an Enterprise license.",
+					Computed:            true,
+				},
+				"next_transition_at": schema.StringAttribute{
+					MarkdownDescription: "Date when this key will transition to the next rotation stage, or null if no transition is scheduled",
+					Computed:            true,
+				},
+				"private_key": schema.SingleNestedAttribute{
+					MarkdownDescription: "PEM-encoded private key used to sign outgoing messages",
+					Computed:            true,
+					Attributes: map[string]schema.Attribute{
+						"type": schema.StringAttribute{
+							MarkdownDescription: "Variant discriminator.",
+							Computed:            true,
+						},
+						"file_path": schema.StringAttribute{
+							MarkdownDescription: "File path to read the secret from",
+							Computed:            true,
+						},
+						"secret": schema.StringAttribute{
+							MarkdownDescription: "Password or secret value",
+							Computed:            true,
+							Sensitive:           true,
+						},
+						"variable_name": schema.StringAttribute{
+							MarkdownDescription: "Environment variable name to read the secret from",
+							Computed:            true,
+						},
+					},
+				},
+				"public_key": schema.StringAttribute{
+					MarkdownDescription: "Base64-encoded public key published in the p= tag of the DNS record, derived from the private key",
 					Computed:            true,
 				},
 				"selector": schema.StringAttribute{
@@ -3621,7 +4854,12 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"flags": schema.SetAttribute{
-					MarkdownDescription: "Policy flags added to the signature, requesting downstream handlers to honor delivery constraints or provide feedback",
+					MarkdownDescription: "Flags added to the signature, such as a request for feedback about how the message is handled",
+					Computed:            true,
+					ElementType:         types.StringType,
+				},
+				"instance_hashes": schema.SetAttribute{
+					MarkdownDescription: "Hash algorithms used for the header and body hashes of the Message-Instance header fields added when signing",
 					Computed:            true,
 					ElementType:         types.StringType,
 				},
@@ -3657,7 +4895,7 @@ var generatedDataSources = []dataSourceDescriptor{
 					},
 				},
 				"public_key": schema.StringAttribute{
-					MarkdownDescription: "PEM-encoded public key used to verify signatures, derived from the private key",
+					MarkdownDescription: "Base64-encoded public key published in the p= tag of the DNS record, derived from the private key",
 					Computed:            true,
 				},
 				"selector": schema.StringAttribute{
@@ -3716,12 +4954,12 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "DMARC report content",
 					Computed:            true,
 					Attributes: map[string]schema.Attribute{
-						"date_range_begin": schema.StringAttribute{
-							MarkdownDescription: "Start of the reporting period",
-							Computed:            true,
-						},
 						"date_range_end": schema.StringAttribute{
 							MarkdownDescription: "End of the reporting period",
+							Computed:            true,
+						},
+						"date_range_start": schema.StringAttribute{
+							MarkdownDescription: "Start of the reporting period",
 							Computed:            true,
 						},
 						"email": schema.StringAttribute{
@@ -3989,12 +5227,12 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "DMARC report content",
 					Computed:            true,
 					Attributes: map[string]schema.Attribute{
-						"date_range_begin": schema.StringAttribute{
-							MarkdownDescription: "Start of the reporting period",
-							Computed:            true,
-						},
 						"date_range_end": schema.StringAttribute{
 							MarkdownDescription: "End of the reporting period",
+							Computed:            true,
+						},
+						"date_range_start": schema.StringAttribute{
+							MarkdownDescription: "Start of the reporting period",
 							Computed:            true,
 						},
 						"email": schema.StringAttribute{
@@ -4343,32 +5581,6 @@ var generatedDataSources = []dataSourceDescriptor{
 						},
 					},
 				},
-				"aggregate_max_report_size": schema.SingleNestedAttribute{
-					MarkdownDescription: "Maximum size of the DMARC aggregate report in bytes",
-					Computed:            true,
-					Attributes: map[string]schema.Attribute{
-						"else": schema.StringAttribute{
-							MarkdownDescription: "Else condition",
-							Computed:            true,
-						},
-						"match": schema.ListNestedAttribute{
-							MarkdownDescription: "List of conditions and their corresponding results",
-							Computed:            true,
-							NestedObject: schema.NestedAttributeObject{
-								Attributes: map[string]schema.Attribute{
-									"if": schema.StringAttribute{
-										MarkdownDescription: "If condition",
-										Computed:            true,
-									},
-									"then": schema.StringAttribute{
-										MarkdownDescription: "Then clause",
-										Computed:            true,
-									},
-								},
-							},
-						},
-					},
-				},
 				"aggregate_org_name": schema.SingleNestedAttribute{
 					MarkdownDescription: "Name of the organization to be included in the report",
 					Computed:            true,
@@ -4397,32 +5609,6 @@ var generatedDataSources = []dataSourceDescriptor{
 				},
 				"aggregate_send_frequency": schema.SingleNestedAttribute{
 					MarkdownDescription: "Frequency at which the DMARC aggregate reports will be sent. The options are hourly, daily, weekly, or disable to disable reporting",
-					Computed:            true,
-					Attributes: map[string]schema.Attribute{
-						"else": schema.StringAttribute{
-							MarkdownDescription: "Else condition",
-							Computed:            true,
-						},
-						"match": schema.ListNestedAttribute{
-							MarkdownDescription: "List of conditions and their corresponding results",
-							Computed:            true,
-							NestedObject: schema.NestedAttributeObject{
-								Attributes: map[string]schema.Attribute{
-									"if": schema.StringAttribute{
-										MarkdownDescription: "If condition",
-										Computed:            true,
-									},
-									"then": schema.StringAttribute{
-										MarkdownDescription: "Then clause",
-										Computed:            true,
-									},
-								},
-							},
-						},
-					},
-				},
-				"aggregate_subject": schema.SingleNestedAttribute{
-					MarkdownDescription: "Subject name that will be used in the DMARC aggregate report email",
 					Computed:            true,
 					Attributes: map[string]schema.Attribute{
 						"else": schema.StringAttribute{
@@ -4577,6 +5763,32 @@ var generatedDataSources = []dataSourceDescriptor{
 						},
 					},
 				},
+				"max_aggregate_report_size": schema.SingleNestedAttribute{
+					MarkdownDescription: "Maximum size of the DMARC aggregate report in bytes",
+					Computed:            true,
+					Attributes: map[string]schema.Attribute{
+						"else": schema.StringAttribute{
+							MarkdownDescription: "Else condition",
+							Computed:            true,
+						},
+						"match": schema.ListNestedAttribute{
+							MarkdownDescription: "List of conditions and their corresponding results",
+							Computed:            true,
+							NestedObject: schema.NestedAttributeObject{
+								Attributes: map[string]schema.Attribute{
+									"if": schema.StringAttribute{
+										MarkdownDescription: "If condition",
+										Computed:            true,
+									},
+									"then": schema.StringAttribute{
+										MarkdownDescription: "Then clause",
+										Computed:            true,
+									},
+								},
+							},
+						},
+					},
+				},
 			},
 		},
 	},
@@ -4599,12 +5811,12 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Number of times a resolution request will be retried before it is considered failed",
 					Computed:            true,
 				},
-				"concurrency": schema.Int64Attribute{
-					MarkdownDescription: "Number of concurrent resolution requests that can be made at the same time",
-					Computed:            true,
-				},
 				"enable_edns": schema.BoolAttribute{
 					MarkdownDescription: "Whether to enable EDNS (Extension Mechanisms for DNS) support",
+					Computed:            true,
+				},
+				"max_concurrent_requests": schema.Int64Attribute{
+					MarkdownDescription: "Maximum number of name servers queried in parallel for each lookup (0 or 1 queries them one at a time)",
 					Computed:            true,
 				},
 				"preserve_intermediates": schema.BoolAttribute{
@@ -4657,7 +5869,7 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Identifier of the object.",
 					Required:            true,
 				},
-				"access_key": schema.StringAttribute{
+				"access_key_id": schema.StringAttribute{
 					MarkdownDescription: "The Alibaba Cloud access key ID",
 					Computed:            true,
 				},
@@ -4670,10 +5882,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -4712,7 +5924,7 @@ var generatedDataSources = []dataSourceDescriptor{
 						},
 					},
 				},
-				"security_token": schema.SingleNestedAttribute{
+				"session_token": schema.SingleNestedAttribute{
 					MarkdownDescription: "Optional STS security token for temporary credentials",
 					Computed:            true,
 					Attributes: map[string]schema.Attribute{
@@ -4762,10 +5974,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -4831,7 +6043,7 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
 				"password": schema.SingleNestedAttribute{
@@ -4857,7 +6069,7 @@ var generatedDataSources = []dataSourceDescriptor{
 						},
 					},
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -4931,10 +6143,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -4980,8 +6192,8 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Identifier of the object.",
 					Required:            true,
 				},
-				"access_key": schema.StringAttribute{
-					MarkdownDescription: "Baidu Cloud access key",
+				"access_key_id": schema.StringAttribute{
+					MarkdownDescription: "Baidu Cloud access key ID",
 					Computed:            true,
 				},
 				"description": schema.StringAttribute{
@@ -4989,10 +6201,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -5049,10 +6261,6 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Identifier of the object.",
 					Required:            true,
 				},
-				"base_url": schema.StringAttribute{
-					MarkdownDescription: "Base URL of the BlueCat Address Manager",
-					Computed:            true,
-				},
 				"config_name": schema.StringAttribute{
 					MarkdownDescription: "BlueCat configuration name",
 					Computed:            true,
@@ -5062,7 +6270,7 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
 				"password": schema.SingleNestedAttribute{
@@ -5088,7 +6296,7 @@ var generatedDataSources = []dataSourceDescriptor{
 						},
 					},
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -5110,6 +6318,10 @@ var generatedDataSources = []dataSourceDescriptor{
 				},
 				"ttl": schema.Int64Attribute{
 					MarkdownDescription: "The TTL for new DNS record",
+					Computed:            true,
+				},
+				"url": schema.StringAttribute{
+					MarkdownDescription: "Base URL of the BlueCat Address Manager",
 					Computed:            true,
 				},
 				"username": schema.StringAttribute{
@@ -5139,10 +6351,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -5208,7 +6420,7 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
 				"password": schema.SingleNestedAttribute{
@@ -5234,7 +6446,7 @@ var generatedDataSources = []dataSourceDescriptor{
 						},
 					},
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -5276,15 +6488,11 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Short description of this DNS server",
 					Computed:            true,
 				},
-				"email": schema.StringAttribute{
-					MarkdownDescription: "Optional account email to authenticate with Cloudflare",
-					Computed:            true,
-				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -5341,8 +6549,8 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Identifier of the object.",
 					Required:            true,
 				},
-				"api_key": schema.StringAttribute{
-					MarkdownDescription: "Constellix API key",
+				"api_key_id": schema.StringAttribute{
+					MarkdownDescription: "Constellix API key identifier",
 					Computed:            true,
 				},
 				"description": schema.StringAttribute{
@@ -5350,10 +6558,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -5410,19 +6618,15 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Identifier of the object.",
 					Required:            true,
 				},
-				"base_url": schema.StringAttribute{
-					MarkdownDescription: "Base URL of the cPanel server (e.g. https://host:2083)",
-					Computed:            true,
-				},
 				"description": schema.StringAttribute{
 					MarkdownDescription: "Short description of this DNS server",
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -5465,6 +6669,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "The TTL for new DNS record",
 					Computed:            true,
 				},
+				"url": schema.StringAttribute{
+					MarkdownDescription: "Base URL of the cPanel server (e.g. https://host:2083)",
+					Computed:            true,
+				},
 				"username": schema.StringAttribute{
 					MarkdownDescription: "cPanel account username",
 					Computed:            true,
@@ -5488,10 +6696,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -5553,10 +6761,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -5618,10 +6826,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -5678,8 +6886,8 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Identifier of the object.",
 					Required:            true,
 				},
-				"api_key": schema.StringAttribute{
-					MarkdownDescription: "DNS Made Easy API key",
+				"api_key_id": schema.StringAttribute{
+					MarkdownDescription: "DNS Made Easy API key identifier",
 					Computed:            true,
 				},
 				"description": schema.StringAttribute{
@@ -5687,10 +6895,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -5751,38 +6959,15 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "The account ID used to authenticate with DNSimple",
 					Computed:            true,
 				},
-				"auth_token": schema.SingleNestedAttribute{
-					MarkdownDescription: "The authentication token used to authenticate with DNSimple",
-					Computed:            true,
-					Attributes: map[string]schema.Attribute{
-						"type": schema.StringAttribute{
-							MarkdownDescription: "Variant discriminator.",
-							Computed:            true,
-						},
-						"file_path": schema.StringAttribute{
-							MarkdownDescription: "File path to read the secret from",
-							Computed:            true,
-						},
-						"secret": schema.StringAttribute{
-							MarkdownDescription: "Password or secret value",
-							Computed:            true,
-							Sensitive:           true,
-						},
-						"variable_name": schema.StringAttribute{
-							MarkdownDescription: "Environment variable name to read the secret from",
-							Computed:            true,
-						},
-					},
-				},
 				"description": schema.StringAttribute{
 					MarkdownDescription: "Short description of this DNS server",
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -5794,8 +6979,12 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "How long to wait for DNS records to propagate",
 					Computed:            true,
 				},
-				"secret": schema.SingleNestedAttribute{
-					MarkdownDescription: "Deprecated secret",
+				"timeout": schema.Int64Attribute{
+					MarkdownDescription: "Request timeout for the DNS server",
+					Computed:            true,
+				},
+				"token": schema.SingleNestedAttribute{
+					MarkdownDescription: "The API token used to authenticate with DNSimple",
 					Computed:            true,
 					Attributes: map[string]schema.Attribute{
 						"type": schema.StringAttribute{
@@ -5816,10 +7005,6 @@ var generatedDataSources = []dataSourceDescriptor{
 							Computed:            true,
 						},
 					},
-				},
-				"timeout": schema.Int64Attribute{
-					MarkdownDescription: "Request timeout for the DNS server",
-					Computed:            true,
 				},
 				"ttl": schema.Int64Attribute{
 					MarkdownDescription: "The TTL for new DNS record",
@@ -5839,19 +7024,15 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Identifier of the object.",
 					Required:            true,
 				},
-				"auth_token": schema.StringAttribute{
-					MarkdownDescription: "Domeneshop API token",
-					Computed:            true,
-				},
 				"description": schema.StringAttribute{
 					MarkdownDescription: "Short description of this DNS server",
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -5890,6 +7071,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Request timeout for the DNS server",
 					Computed:            true,
 				},
+				"token": schema.StringAttribute{
+					MarkdownDescription: "Domeneshop API token (the public half of the credential, paired with the API secret)",
+					Computed:            true,
+				},
 				"ttl": schema.Int64Attribute{
 					MarkdownDescription: "The TTL for new DNS record",
 					Computed:            true,
@@ -5913,10 +7098,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -5978,10 +7163,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -6043,10 +7228,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -6131,10 +7316,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					},
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -6151,7 +7336,7 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"token": schema.StringAttribute{
-					MarkdownDescription: "EasyDNS token",
+					MarkdownDescription: "EasyDNS API token (the public half of the credential, paired with the key)",
 					Computed:            true,
 				},
 				"ttl": schema.Int64Attribute{
@@ -6235,10 +7420,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -6272,8 +7457,8 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Identifier of the object.",
 					Required:            true,
 				},
-				"api_key": schema.StringAttribute{
-					MarkdownDescription: "Exoscale API key",
+				"api_key_id": schema.StringAttribute{
+					MarkdownDescription: "Exoscale API key identifier",
 					Computed:            true,
 				},
 				"description": schema.StringAttribute{
@@ -6281,10 +7466,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -6346,10 +7531,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -6411,10 +7596,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -6476,10 +7661,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -6559,19 +7744,15 @@ var generatedDataSources = []dataSourceDescriptor{
 						},
 					},
 				},
-				"api_user": schema.StringAttribute{
-					MarkdownDescription: "GleSYS API user",
-					Computed:            true,
-				},
 				"description": schema.StringAttribute{
 					MarkdownDescription: "Short description of this DNS server",
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -6591,6 +7772,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "The TTL for new DNS record",
 					Computed:            true,
 				},
+				"username": schema.StringAttribute{
+					MarkdownDescription: "GleSYS API username (the account or project name)",
+					Computed:            true,
+				},
 			},
 		},
 	},
@@ -6605,8 +7790,8 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Identifier of the object.",
 					Required:            true,
 				},
-				"api_key": schema.StringAttribute{
-					MarkdownDescription: "GoDaddy API key",
+				"api_key_id": schema.StringAttribute{
+					MarkdownDescription: "GoDaddy API key identifier",
 					Computed:            true,
 				},
 				"description": schema.StringAttribute{
@@ -6614,10 +7799,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -6687,10 +7872,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -6760,10 +7945,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -6825,10 +8010,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -6890,10 +8075,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -6950,8 +8135,8 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Identifier of the object.",
 					Required:            true,
 				},
-				"access_key": schema.StringAttribute{
-					MarkdownDescription: "Huawei Cloud access key",
+				"access_key_id": schema.StringAttribute{
+					MarkdownDescription: "Huawei Cloud access key ID",
 					Computed:            true,
 				},
 				"description": schema.StringAttribute{
@@ -6959,10 +8144,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -7063,10 +8248,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -7128,10 +8313,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -7182,7 +8367,7 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
 				"password": schema.SingleNestedAttribute{
@@ -7208,11 +8393,11 @@ var generatedDataSources = []dataSourceDescriptor{
 						},
 					},
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
-				"port": schema.StringAttribute{
+				"port": schema.Int64Attribute{
 					MarkdownDescription: "Optional port (defaults to 443)",
 					Computed:            true,
 				},
@@ -7259,10 +8444,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -7324,7 +8509,7 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
 				"password": schema.SingleNestedAttribute{
@@ -7350,7 +8535,7 @@ var generatedDataSources = []dataSourceDescriptor{
 						},
 					},
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -7420,10 +8605,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -7485,10 +8670,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -7610,10 +8795,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -7660,10 +8845,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -7679,7 +8864,7 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "AWS region (defaults to us-east-1)",
 					Computed:            true,
 				},
-				"secret_access_key": schema.SingleNestedAttribute{
+				"secret_key": schema.SingleNestedAttribute{
 					MarkdownDescription: "AWS secret access key",
 					Computed:            true,
 					Attributes: map[string]schema.Attribute{
@@ -7752,10 +8937,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -7812,7 +8997,31 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Identifier of the object.",
 					Required:            true,
 				},
-				"auth_token": schema.SingleNestedAttribute{
+				"description": schema.StringAttribute{
+					MarkdownDescription: "Short description of this DNS server",
+					Computed:            true,
+				},
+				"member_tenant_id": schema.StringAttribute{
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
+					Computed:            true,
+				},
+				"poll_interval": schema.Int64Attribute{
+					MarkdownDescription: "How often to check for DNS records to propagate",
+					Computed:            true,
+				},
+				"propagation_delay": schema.Int64Attribute{
+					MarkdownDescription: "Initial delay before first propagation check (useful for slow providers)",
+					Computed:            true,
+				},
+				"propagation_timeout": schema.Int64Attribute{
+					MarkdownDescription: "How long to wait for DNS records to propagate",
+					Computed:            true,
+				},
+				"timeout": schema.Int64Attribute{
+					MarkdownDescription: "Request timeout for the DNS server",
+					Computed:            true,
+				},
+				"token": schema.SingleNestedAttribute{
 					MarkdownDescription: "LuaDNS API token",
 					Computed:            true,
 					Attributes: map[string]schema.Attribute{
@@ -7834,30 +9043,6 @@ var generatedDataSources = []dataSourceDescriptor{
 							Computed:            true,
 						},
 					},
-				},
-				"description": schema.StringAttribute{
-					MarkdownDescription: "Short description of this DNS server",
-					Computed:            true,
-				},
-				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
-					Computed:            true,
-				},
-				"polling_interval": schema.Int64Attribute{
-					MarkdownDescription: "How often to check for DNS records to propagate",
-					Computed:            true,
-				},
-				"propagation_delay": schema.Int64Attribute{
-					MarkdownDescription: "Initial delay before first propagation check (useful for slow providers)",
-					Computed:            true,
-				},
-				"propagation_timeout": schema.Int64Attribute{
-					MarkdownDescription: "How long to wait for DNS records to propagate",
-					Computed:            true,
-				},
-				"timeout": schema.Int64Attribute{
-					MarkdownDescription: "Request timeout for the DNS server",
-					Computed:            true,
 				},
 				"ttl": schema.Int64Attribute{
 					MarkdownDescription: "The TTL for new DNS record",
@@ -7886,7 +9071,7 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
 				"password": schema.SingleNestedAttribute{
@@ -7912,7 +9097,7 @@ var generatedDataSources = []dataSourceDescriptor{
 						},
 					},
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -7950,7 +9135,31 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Identifier of the object.",
 					Required:            true,
 				},
-				"auth_token": schema.SingleNestedAttribute{
+				"description": schema.StringAttribute{
+					MarkdownDescription: "Short description of this DNS server",
+					Computed:            true,
+				},
+				"member_tenant_id": schema.StringAttribute{
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
+					Computed:            true,
+				},
+				"poll_interval": schema.Int64Attribute{
+					MarkdownDescription: "How often to check for DNS records to propagate",
+					Computed:            true,
+				},
+				"propagation_delay": schema.Int64Attribute{
+					MarkdownDescription: "Initial delay before first propagation check (useful for slow providers)",
+					Computed:            true,
+				},
+				"propagation_timeout": schema.Int64Attribute{
+					MarkdownDescription: "How long to wait for DNS records to propagate",
+					Computed:            true,
+				},
+				"timeout": schema.Int64Attribute{
+					MarkdownDescription: "Request timeout for the DNS server",
+					Computed:            true,
+				},
+				"token": schema.SingleNestedAttribute{
 					MarkdownDescription: "Name.com API token",
 					Computed:            true,
 					Attributes: map[string]schema.Attribute{
@@ -7972,30 +9181,6 @@ var generatedDataSources = []dataSourceDescriptor{
 							Computed:            true,
 						},
 					},
-				},
-				"description": schema.StringAttribute{
-					MarkdownDescription: "Short description of this DNS server",
-					Computed:            true,
-				},
-				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
-					Computed:            true,
-				},
-				"polling_interval": schema.Int64Attribute{
-					MarkdownDescription: "How often to check for DNS records to propagate",
-					Computed:            true,
-				},
-				"propagation_delay": schema.Int64Attribute{
-					MarkdownDescription: "Initial delay before first propagation check (useful for slow providers)",
-					Computed:            true,
-				},
-				"propagation_timeout": schema.Int64Attribute{
-					MarkdownDescription: "How long to wait for DNS records to propagate",
-					Computed:            true,
-				},
-				"timeout": schema.Int64Attribute{
-					MarkdownDescription: "Request timeout for the DNS server",
-					Computed:            true,
 				},
 				"ttl": schema.Int64Attribute{
 					MarkdownDescription: "The TTL for new DNS record",
@@ -8024,10 +9209,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -8120,10 +9305,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -8161,8 +9346,8 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Identifier of the object.",
 					Required:            true,
 				},
-				"api_key": schema.StringAttribute{
-					MarkdownDescription: "Netcup API key",
+				"api_key_id": schema.StringAttribute{
+					MarkdownDescription: "Netcup API key identifier",
 					Computed:            true,
 				},
 				"customer_number": schema.StringAttribute{
@@ -8174,7 +9359,7 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
 				"password": schema.SingleNestedAttribute{
@@ -8200,7 +9385,7 @@ var generatedDataSources = []dataSourceDescriptor{
 						},
 					},
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -8239,10 +9424,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -8299,8 +9484,8 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Identifier of the object.",
 					Required:            true,
 				},
-				"access_key": schema.StringAttribute{
-					MarkdownDescription: "Nifcloud access key",
+				"access_key_id": schema.StringAttribute{
+					MarkdownDescription: "Nifcloud access key ID",
 					Computed:            true,
 				},
 				"description": schema.StringAttribute{
@@ -8308,10 +9493,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -8373,10 +9558,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -8446,10 +9631,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -8596,14 +9781,14 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
 				"ovh_endpoint": schema.StringAttribute{
 					MarkdownDescription: "Which OVH endpoint to use",
 					Computed:            true,
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -8660,19 +9845,15 @@ var generatedDataSources = []dataSourceDescriptor{
 						},
 					},
 				},
-				"base_url": schema.StringAttribute{
-					MarkdownDescription: "Base URL of the Plesk server (e.g. https://host:8443)",
-					Computed:            true,
-				},
 				"description": schema.StringAttribute{
 					MarkdownDescription: "Short description of this DNS server",
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -8692,6 +9873,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "The TTL for new DNS record",
 					Computed:            true,
 				},
+				"url": schema.StringAttribute{
+					MarkdownDescription: "Base URL of the Plesk server (e.g. https://host:8443)",
+					Computed:            true,
+				},
 			},
 		},
 	},
@@ -8706,8 +9891,8 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Identifier of the object.",
 					Required:            true,
 				},
-				"api_key": schema.StringAttribute{
-					MarkdownDescription: "The API key used to authenticate with Porkbun",
+				"api_key_id": schema.StringAttribute{
+					MarkdownDescription: "The public API key identifier used to authenticate with Porkbun",
 					Computed:            true,
 				},
 				"description": schema.StringAttribute{
@@ -8715,10 +9900,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -8731,29 +9916,6 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"secret": schema.SingleNestedAttribute{
-					MarkdownDescription: "Deprecated secret",
-					Computed:            true,
-					Attributes: map[string]schema.Attribute{
-						"type": schema.StringAttribute{
-							MarkdownDescription: "Variant discriminator.",
-							Computed:            true,
-						},
-						"file_path": schema.StringAttribute{
-							MarkdownDescription: "File path to read the secret from",
-							Computed:            true,
-						},
-						"secret": schema.StringAttribute{
-							MarkdownDescription: "Password or secret value",
-							Computed:            true,
-							Sensitive:           true,
-						},
-						"variable_name": schema.StringAttribute{
-							MarkdownDescription: "Environment variable name to read the secret from",
-							Computed:            true,
-						},
-					},
-				},
-				"secret_api_key": schema.SingleNestedAttribute{
 					MarkdownDescription: "The secret API key used to authenticate with Porkbun",
 					Computed:            true,
 					Attributes: map[string]schema.Attribute{
@@ -8788,6 +9950,79 @@ var generatedDataSources = []dataSourceDescriptor{
 		},
 	},
 	{
+		Name:     "dns_server_power_dns",
+		JMAPType: "x:DnsServer",
+		Variant:  "PowerDns",
+		Schema: schema.Schema{
+			MarkdownDescription: "Defines a DNS server for automatic record management. Reads the PowerDNS Authoritative variant.",
+			Attributes: map[string]schema.Attribute{
+				"id": schema.StringAttribute{
+					MarkdownDescription: "Identifier of the object.",
+					Required:            true,
+				},
+				"api_key": schema.SingleNestedAttribute{
+					MarkdownDescription: "PowerDNS API key",
+					Computed:            true,
+					Attributes: map[string]schema.Attribute{
+						"type": schema.StringAttribute{
+							MarkdownDescription: "Variant discriminator.",
+							Computed:            true,
+						},
+						"file_path": schema.StringAttribute{
+							MarkdownDescription: "File path to read the secret from",
+							Computed:            true,
+						},
+						"secret": schema.StringAttribute{
+							MarkdownDescription: "Password or secret value",
+							Computed:            true,
+							Sensitive:           true,
+						},
+						"variable_name": schema.StringAttribute{
+							MarkdownDescription: "Environment variable name to read the secret from",
+							Computed:            true,
+						},
+					},
+				},
+				"description": schema.StringAttribute{
+					MarkdownDescription: "Short description of this DNS server",
+					Computed:            true,
+				},
+				"member_tenant_id": schema.StringAttribute{
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
+					Computed:            true,
+				},
+				"poll_interval": schema.Int64Attribute{
+					MarkdownDescription: "How often to check for DNS records to propagate",
+					Computed:            true,
+				},
+				"propagation_delay": schema.Int64Attribute{
+					MarkdownDescription: "Initial delay before first propagation check (useful for slow providers)",
+					Computed:            true,
+				},
+				"propagation_timeout": schema.Int64Attribute{
+					MarkdownDescription: "How long to wait for DNS records to propagate",
+					Computed:            true,
+				},
+				"server_id": schema.StringAttribute{
+					MarkdownDescription: "PowerDNS server ID used in API paths (defaults to localhost)",
+					Computed:            true,
+				},
+				"timeout": schema.Int64Attribute{
+					MarkdownDescription: "Request timeout for the DNS server",
+					Computed:            true,
+				},
+				"ttl": schema.Int64Attribute{
+					MarkdownDescription: "The TTL for new DNS record",
+					Computed:            true,
+				},
+				"url": schema.StringAttribute{
+					MarkdownDescription: "Base URL of the PowerDNS HTTP API (defaults to http://localhost:8081)",
+					Computed:            true,
+				},
+			},
+		},
+	},
+	{
 		Name:     "dns_server_route53",
 		JMAPType: "x:DnsServer",
 		Variant:  "Route53",
@@ -8811,10 +10046,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -8834,7 +10069,7 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "The AWS region",
 					Computed:            true,
 				},
-				"secret_access_key": schema.SingleNestedAttribute{
+				"secret_key": schema.SingleNestedAttribute{
 					MarkdownDescription: "The AWS secret access key",
 					Computed:            true,
 					Attributes: map[string]schema.Attribute{
@@ -8907,10 +10142,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -8972,10 +10207,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -9032,8 +10267,8 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Identifier of the object.",
 					Required:            true,
 				},
-				"api_key": schema.StringAttribute{
-					MarkdownDescription: "The API key used to authenticate with Spaceship",
+				"api_key_id": schema.StringAttribute{
+					MarkdownDescription: "The API key identifier used to authenticate with Spaceship",
 					Computed:            true,
 				},
 				"description": schema.StringAttribute{
@@ -9041,10 +10276,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -9101,15 +10336,19 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Identifier of the object.",
 					Required:            true,
 				},
+				"access_key_id": schema.StringAttribute{
+					MarkdownDescription: "Tencent Cloud SecretId that identifies the API key",
+					Computed:            true,
+				},
 				"description": schema.StringAttribute{
 					MarkdownDescription: "Short description of this DNS server",
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -9123,10 +10362,6 @@ var generatedDataSources = []dataSourceDescriptor{
 				},
 				"region": schema.StringAttribute{
 					MarkdownDescription: "Optional regional endpoint",
-					Computed:            true,
-				},
-				"secret_id": schema.StringAttribute{
-					MarkdownDescription: "Tencent Cloud secret ID",
 					Computed:            true,
 				},
 				"secret_key": schema.SingleNestedAttribute{
@@ -9202,10 +10437,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -9302,10 +10537,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -9355,12 +10590,8 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Short description of this DNS server",
 					Computed:            true,
 				},
-				"endpoint": schema.StringAttribute{
-					MarkdownDescription: "Optional REST API endpoint override",
-					Computed:            true,
-				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
 				"password": schema.SingleNestedAttribute{
@@ -9386,7 +10617,7 @@ var generatedDataSources = []dataSourceDescriptor{
 						},
 					},
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -9404,6 +10635,10 @@ var generatedDataSources = []dataSourceDescriptor{
 				},
 				"ttl": schema.Int64Attribute{
 					MarkdownDescription: "The TTL for new DNS record",
+					Computed:            true,
+				},
+				"url": schema.StringAttribute{
+					MarkdownDescription: "Optional REST API base URL override",
 					Computed:            true,
 				},
 				"username": schema.StringAttribute{
@@ -9424,7 +10659,35 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Identifier of the object.",
 					Required:            true,
 				},
-				"auth_token": schema.SingleNestedAttribute{
+				"description": schema.StringAttribute{
+					MarkdownDescription: "Short description of this DNS server",
+					Computed:            true,
+				},
+				"member_tenant_id": schema.StringAttribute{
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
+					Computed:            true,
+				},
+				"poll_interval": schema.Int64Attribute{
+					MarkdownDescription: "How often to check for DNS records to propagate",
+					Computed:            true,
+				},
+				"propagation_delay": schema.Int64Attribute{
+					MarkdownDescription: "Initial delay before first propagation check (useful for slow providers)",
+					Computed:            true,
+				},
+				"propagation_timeout": schema.Int64Attribute{
+					MarkdownDescription: "How long to wait for DNS records to propagate",
+					Computed:            true,
+				},
+				"team_id": schema.StringAttribute{
+					MarkdownDescription: "Optional team ID to scope API requests to",
+					Computed:            true,
+				},
+				"timeout": schema.Int64Attribute{
+					MarkdownDescription: "Request timeout for the DNS server",
+					Computed:            true,
+				},
+				"token": schema.SingleNestedAttribute{
 					MarkdownDescription: "Vercel auth token",
 					Computed:            true,
 					Attributes: map[string]schema.Attribute{
@@ -9447,34 +10710,6 @@ var generatedDataSources = []dataSourceDescriptor{
 						},
 					},
 				},
-				"description": schema.StringAttribute{
-					MarkdownDescription: "Short description of this DNS server",
-					Computed:            true,
-				},
-				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
-					Computed:            true,
-				},
-				"polling_interval": schema.Int64Attribute{
-					MarkdownDescription: "How often to check for DNS records to propagate",
-					Computed:            true,
-				},
-				"propagation_delay": schema.Int64Attribute{
-					MarkdownDescription: "Initial delay before first propagation check (useful for slow providers)",
-					Computed:            true,
-				},
-				"propagation_timeout": schema.Int64Attribute{
-					MarkdownDescription: "How long to wait for DNS records to propagate",
-					Computed:            true,
-				},
-				"team_id": schema.StringAttribute{
-					MarkdownDescription: "Optional team ID to scope API requests to",
-					Computed:            true,
-				},
-				"timeout": schema.Int64Attribute{
-					MarkdownDescription: "Request timeout for the DNS server",
-					Computed:            true,
-				},
 				"ttl": schema.Int64Attribute{
 					MarkdownDescription: "The TTL for new DNS record",
 					Computed:            true,
@@ -9493,8 +10728,8 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Identifier of the object.",
 					Required:            true,
 				},
-				"access_key": schema.StringAttribute{
-					MarkdownDescription: "Volcengine access key",
+				"access_key_id": schema.StringAttribute{
+					MarkdownDescription: "Volcengine access key ID",
 					Computed:            true,
 				},
 				"description": schema.StringAttribute{
@@ -9506,10 +10741,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -9579,10 +10814,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -9639,8 +10874,8 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Identifier of the object.",
 					Required:            true,
 				},
-				"api_key": schema.StringAttribute{
-					MarkdownDescription: "WebSupport API key",
+				"api_key_id": schema.StringAttribute{
+					MarkdownDescription: "WebSupport API key identifier",
 					Computed:            true,
 				},
 				"description": schema.StringAttribute{
@@ -9648,10 +10883,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -9740,10 +10975,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this DNS server belongs to",
+					MarkdownDescription: "Identifier for the tenant this DNS server belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
-				"polling_interval": schema.Int64Attribute{
+				"poll_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to check for DNS records to propagate",
 					Computed:            true,
 				},
@@ -9802,6 +11037,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Whether to allow relaying for non-local recipients, useful in split delivery scenarios",
 					Computed:            true,
 				},
+				"allow_scim_provisioning": schema.BoolAttribute{
+					MarkdownDescription: "Whether external SCIM clients may provision accounts in this domain. When enabled, SCIM becomes authoritative for accounts in this domain and just-in-time directory provisioning no longer modifies them Requires an Enterprise license.",
+					Computed:            true,
+				},
 				"catch_all_address": schema.StringAttribute{
 					MarkdownDescription: "Catch-all email address that receives messages addressed to unknown local recipients",
 					Computed:            true,
@@ -9851,7 +11090,7 @@ var generatedDataSources = []dataSourceDescriptor{
 							ElementType:         types.StringType,
 						},
 						"delete_after": schema.Int64Attribute{
-							MarkdownDescription: "How long to retain old DKIM keys on the server after rotation before deleting them permanently. Requires automatic DNS management.",
+							MarkdownDescription: "How long to retain old DKIM keys on the server after their DNS record has been removed before deleting them permanently. Requires automatic DNS management.",
 							Computed:            true,
 						},
 						"retire_after": schema.Int64Attribute{
@@ -9863,7 +11102,7 @@ var generatedDataSources = []dataSourceDescriptor{
 							Computed:            true,
 						},
 						"selector_template": schema.StringAttribute{
-							MarkdownDescription: "Template for generating DKIM selectors during key rotation. Supported variables:\n- `{algorithm}`: signing algorithm in lowercase (`rsa`, `ed25519`)\n- `{hash}`: hash algorithm (`sha256`)\n- `{version}`: DKIM version number (`1`)\n- `{date-<fmt>}`: current UTC date formatted with chrono strftime (e.g. `{date-%Y%m%d}`)\n- `{epoch}`: current UTC unix timestamp\n- `{random}`: random 8-character alphanumeric string",
+							MarkdownDescription: "Template for generating DKIM selectors during key rotation. Supported variables:\n- `{algorithm}`: signing algorithm in lowercase (`rsa`, `ed25519`, `mldsa44`)\n- `{hash}`: hash algorithm (`sha256`, or `none` for ML-DSA-44)\n- `{version}`: DKIM version number (`1`, `2`)\n- `{date-<fmt>}`: current UTC date formatted with strftime specifiers (e.g. `{date-%Y%m%d}`)\n- `{epoch}`: current UTC unix timestamp\n- `{random}`: random 8-character alphanumeric string",
 							Computed:            true,
 						},
 					},
@@ -9895,7 +11134,7 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Current DNS zone data for the domain",
 					Computed:            true,
 				},
-				"is_enabled": schema.BoolAttribute{
+				"enable": schema.BoolAttribute{
 					MarkdownDescription: "Whether this domain is enabled",
 					Computed:            true,
 				},
@@ -10067,26 +11306,38 @@ var generatedDataSources = []dataSourceDescriptor{
 		JMAPType:  "x:Email",
 		Singleton: true,
 		Schema: schema.Schema{
-			MarkdownDescription: "Configures email message limits, encryption, compression, and default folder settings. This singleton object always exists: creating the resource adopts the current server settings and destroying it only removes the resource from state.",
+			MarkdownDescription: "Configures email message limits, compression, and default folder settings. This singleton object always exists: creating the resource adopts the current server settings and destroying it only removes the resource from state.",
 			Attributes: map[string]schema.Attribute{
 				"id": schema.StringAttribute{
 					MarkdownDescription: "Always `singleton`.",
 					Computed:            true,
 				},
+				"blob_encryption_key": schema.StringAttribute{
+					MarkdownDescription: "Key used to encrypt new email and Sieve script blobs; when empty, they are stored unencrypted",
+					Computed:            true,
+				},
 				"compression_algorithm": schema.StringAttribute{
-					MarkdownDescription: "Algorithm to use to compress e-mail data",
-					Computed:            true,
-				},
-				"encrypt_at_rest": schema.BoolAttribute{
-					MarkdownDescription: "Allow users to configure encryption at rest for their data",
-					Computed:            true,
-				},
-				"encrypt_on_append": schema.BoolAttribute{
-					MarkdownDescription: "Encrypt messages that are manually appended by the user using JMAP or IMAP",
+					MarkdownDescription: "Algorithm to use to compress email and Sieve script data",
 					Computed:            true,
 				},
 				"max_attachment_size": schema.Int64Attribute{
 					MarkdownDescription: "Specifies the maximum size for an email attachment",
+					Computed:            true,
+				},
+				"max_flag_length": schema.Int64Attribute{
+					MarkdownDescription: "Maximum length in bytes of a single flag (keyword) name",
+					Computed:            true,
+				},
+				"max_flags_per_email": schema.Int64Attribute{
+					MarkdownDescription: "Maximum number of flags (keywords) that can be set on a single email",
+					Computed:            true,
+				},
+				"max_header_count": schema.Int64Attribute{
+					MarkdownDescription: "Maximum number of header fields in the header section of a message",
+					Computed:            true,
+				},
+				"max_header_size": schema.Int64Attribute{
+					MarkdownDescription: "Maximum size in bytes of the header section of a message",
 					Computed:            true,
 				},
 				"max_identities": schema.Int64Attribute{
@@ -10103,6 +11354,10 @@ var generatedDataSources = []dataSourceDescriptor{
 				},
 				"max_mailboxes": schema.Int64Attribute{
 					MarkdownDescription: "The default maximum number of mailboxes a user can create",
+					Computed:            true,
+				},
+				"max_mailboxes_per_email": schema.Int64Attribute{
+					MarkdownDescription: "Maximum number of mailboxes a single email can belong to",
 					Computed:            true,
 				},
 				"max_masked_addresses": schema.Int64Attribute{
@@ -10123,6 +11378,148 @@ var generatedDataSources = []dataSourceDescriptor{
 				},
 				"max_submissions": schema.Int64Attribute{
 					MarkdownDescription: "The default maximum number of email submissions a user can create",
+					Computed:            true,
+				},
+			},
+		},
+	},
+	{
+		Name:      "encryption",
+		JMAPType:  "x:Encryption",
+		Singleton: true,
+		Schema: schema.Schema{
+			MarkdownDescription: "Configures encryption at rest and the encryption gateway. This singleton object always exists: creating the resource adopts the current server settings and destroying it only removes the resource from state.",
+			Attributes: map[string]schema.Attribute{
+				"id": schema.StringAttribute{
+					MarkdownDescription: "Always `singleton`.",
+					Computed:            true,
+				},
+				"at_rest_enable": schema.BoolAttribute{
+					MarkdownDescription: "Encrypt stored messages for accounts that configured encryption at rest",
+					Computed:            true,
+				},
+				"discovery_proxy": schema.StringAttribute{
+					MarkdownDescription: "HTTP proxy for key fetches and certificate revocation list downloads",
+					Computed:            true,
+				},
+				"gateway_enable": schema.BoolAttribute{
+					MarkdownDescription: "Enable the encryption gateway, which encrypts messages for remote recipients and maintains their public keys",
+					Computed:            true,
+				},
+				"gateway_encrypt_signed": schema.BoolAttribute{
+					MarkdownDescription: "Whether to encrypt messages that are signed but not encrypted",
+					Computed:            true,
+				},
+				"gateway_header_protection": schema.StringAttribute{
+					MarkdownDescription: "Header protection for messages encrypted for remote recipients. Signed messages are not header protected.",
+					Computed:            true,
+				},
+				"gateway_methods": schema.SetAttribute{
+					MarkdownDescription: "Key types the gateway encrypts with; when a DNS lookup returns both an OpenPGP key and an S/MIME certificate for a new key, the certificate is stored",
+					Computed:            true,
+					ElementType:         types.StringType,
+				},
+				"gateway_min_trust": schema.SingleNestedAttribute{
+					MarkdownDescription: "Minimum trust level a key needs before it is used for a recipient",
+					Computed:            true,
+					Attributes: map[string]schema.Attribute{
+						"else": schema.StringAttribute{
+							MarkdownDescription: "Else condition",
+							Computed:            true,
+						},
+						"match": schema.ListNestedAttribute{
+							MarkdownDescription: "List of conditions and their corresponding results",
+							Computed:            true,
+							NestedObject: schema.NestedAttributeObject{
+								Attributes: map[string]schema.Attribute{
+									"if": schema.StringAttribute{
+										MarkdownDescription: "If condition",
+										Computed:            true,
+									},
+									"then": schema.StringAttribute{
+										MarkdownDescription: "Then clause",
+										Computed:            true,
+									},
+								},
+							},
+						},
+					},
+				},
+				"gateway_outbound": schema.SingleNestedAttribute{
+					MarkdownDescription: "When to encrypt a message for a recipient with a stored key",
+					Computed:            true,
+					Attributes: map[string]schema.Attribute{
+						"else": schema.StringAttribute{
+							MarkdownDescription: "Else condition",
+							Computed:            true,
+						},
+						"match": schema.ListNestedAttribute{
+							MarkdownDescription: "List of conditions and their corresponding results",
+							Computed:            true,
+							NestedObject: schema.NestedAttributeObject{
+								Attributes: map[string]schema.Attribute{
+									"if": schema.StringAttribute{
+										MarkdownDescription: "If condition",
+										Computed:            true,
+									},
+									"then": schema.StringAttribute{
+										MarkdownDescription: "Then clause",
+										Computed:            true,
+									},
+								},
+							},
+						},
+					},
+				},
+				"harvest_keys": schema.SingleNestedAttribute{
+					MarkdownDescription: "Whether to learn the S/MIME certificate or Autocrypt key of an authenticated sender from a received message; a valid OpenPGP signature on the message raises the trust level of an Autocrypt key",
+					Computed:            true,
+					Attributes: map[string]schema.Attribute{
+						"else": schema.StringAttribute{
+							MarkdownDescription: "Else condition",
+							Computed:            true,
+						},
+						"match": schema.ListNestedAttribute{
+							MarkdownDescription: "List of conditions and their corresponding results",
+							Computed:            true,
+							NestedObject: schema.NestedAttributeObject{
+								Attributes: map[string]schema.Attribute{
+									"if": schema.StringAttribute{
+										MarkdownDescription: "If condition",
+										Computed:            true,
+									},
+									"then": schema.StringAttribute{
+										MarkdownDescription: "Then clause",
+										Computed:            true,
+									},
+								},
+							},
+						},
+					},
+				},
+				"hkp_servers": schema.SetAttribute{
+					MarkdownDescription: "Keyservers queried for keys that use the HKP discovery method",
+					Computed:            true,
+					ElementType:         types.StringType,
+				},
+				"key_refresh_interval": schema.Int64Attribute{
+					MarkdownDescription: "How often keys are fetched again from their discovery method",
+					Computed:            true,
+				},
+				"max_crl_size": schema.Int64Attribute{
+					MarkdownDescription: "Maximum size of a downloaded certificate revocation list",
+					Computed:            true,
+				},
+				"negative_cache_ttl": schema.Int64Attribute{
+					MarkdownDescription: "How long an address with no key is remembered before the store is read again",
+					Computed:            true,
+				},
+				"source_timeout": schema.Int64Attribute{
+					MarkdownDescription: "Maximum time spent fetching one key",
+					Computed:            true,
+				},
+				"use_bundled_roots": schema.BoolAttribute{
+					MarkdownDescription: "Trust the bundled Mozilla S/MIME root certificates when validating recipient certificates",
 					Computed:            true,
 				},
 			},
@@ -10185,8 +11582,8 @@ var generatedDataSources = []dataSourceDescriptor{
 						},
 					},
 				},
-				"logo_url": schema.StringAttribute{
-					MarkdownDescription: "URL to the default logo to use in the Webadmin interface. Requires an Enterprise license.",
+				"logo": schema.StringAttribute{
+					MarkdownDescription: "URL or base64-encoded image used as the default logo in the Webadmin interface Requires an Enterprise license.",
 					Computed:            true,
 				},
 			},
@@ -10229,14 +11626,168 @@ var generatedDataSources = []dataSourceDescriptor{
 		},
 	},
 	{
+		Name:     "external_public_key",
+		JMAPType: "x:ExternalPublicKey",
+		Schema: schema.Schema{
+			MarkdownDescription: "Public key of a remote recipient used by the encryption gateway, entered manually, kept up to date from a discovery method or learned from received mail.",
+			Attributes: map[string]schema.Attribute{
+				"id": schema.StringAttribute{
+					MarkdownDescription: "Identifier of the object.",
+					Required:            true,
+				},
+				"authenticated_encryption": schema.BoolAttribute{
+					MarkdownDescription: "All mail clients holding the private key can read AES-GCM with RSA-OAEP. Applies to S/MIME RSA and elliptic-curve keys. Apple Mail and Thunderbird ESR cannot read it.",
+					Computed:            true,
+				},
+				"blocked_fingerprints": schema.SetAttribute{
+					MarkdownDescription: "Fingerprints of keys that were revoked or rejected and are not accepted again",
+					Computed:            true,
+					ElementType:         types.StringType,
+				},
+				"capabilities": schema.SetAttribute{
+					MarkdownDescription: "Encryption features supported by the key",
+					Computed:            true,
+					ElementType:         types.StringType,
+				},
+				"description": schema.StringAttribute{
+					MarkdownDescription: "Description of the key",
+					Computed:            true,
+				},
+				"email_address": schema.StringAttribute{
+					MarkdownDescription: "Address the key is used for",
+					Computed:            true,
+				},
+				"expires_at": schema.StringAttribute{
+					MarkdownDescription: "When the key stops being used: its own expiration date or, for keys from DNSSEC, the end of the DNS TTL",
+					Computed:            true,
+				},
+				"fingerprint": schema.StringAttribute{
+					MarkdownDescription: "Fingerprint of the key or certificate used for encryption",
+					Computed:            true,
+				},
+				"first_seen": schema.StringAttribute{
+					MarkdownDescription: "When the key was first stored",
+					Computed:            true,
+				},
+				"key": schema.StringAttribute{
+					MarkdownDescription: "OpenPGP key or S/MIME certificate, armored, PEM, or binary encoded as base64; an S/MIME certificate may be followed by its intermediate certificates",
+					Computed:            true,
+				},
+				"key_type": schema.StringAttribute{
+					MarkdownDescription: "Type of key and its encryption algorithms, taken from the key itself",
+					Computed:            true,
+				},
+				"kind": schema.StringAttribute{
+					MarkdownDescription: "Type of key, taken from the key itself",
+					Computed:            true,
+				},
+				"last_checked": schema.StringAttribute{
+					MarkdownDescription: "When the key was last confirmed by its discovery method or certificate check",
+					Computed:            true,
+				},
+				"last_seen": schema.StringAttribute{
+					MarkdownDescription: "When the key was last seen in a discovery result or received message",
+					Computed:            true,
+				},
+				"next_capabilities": schema.SetAttribute{
+					MarkdownDescription: "Encryption features supported by the replacement key",
+					Computed:            true,
+					ElementType:         types.StringType,
+				},
+				"next_check_at": schema.StringAttribute{
+					MarkdownDescription: "When the key is next fetched or checked",
+					Computed:            true,
+				},
+				"next_expires_at": schema.StringAttribute{
+					MarkdownDescription: "Expiration date of the replacement key",
+					Computed:            true,
+				},
+				"next_fingerprint": schema.StringAttribute{
+					MarkdownDescription: "Fingerprint of the replacement key",
+					Computed:            true,
+				},
+				"next_key": schema.StringAttribute{
+					MarkdownDescription: "Replacement key waiting for approval, or for the current key to expire",
+					Computed:            true,
+				},
+				"next_key_type": schema.StringAttribute{
+					MarkdownDescription: "Type of the replacement key and its encryption algorithms",
+					Computed:            true,
+				},
+				"pinned": schema.BoolAttribute{
+					MarkdownDescription: "Never replace this key automatically",
+					Computed:            true,
+				},
+				"smime_ciphers": schema.SetAttribute{
+					MarkdownDescription: "Content encryption algorithms advertised by the recipient in signed S/MIME messages",
+					Computed:            true,
+					ElementType:         types.StringType,
+				},
+				"smime_oaep": schema.BoolAttribute{
+					MarkdownDescription: "Whether the recipient advertised support for RSA-OAEP in signed S/MIME messages",
+					Computed:            true,
+				},
+				"smime_signed_at": schema.StringAttribute{
+					MarkdownDescription: "Signing time of the message the S/MIME capabilities were learned from",
+					Computed:            true,
+				},
+				"source": schema.SingleNestedAttribute{
+					MarkdownDescription: "Where the key comes from; it cannot be changed once the key is created",
+					Computed:            true,
+					Attributes: map[string]schema.Attribute{
+						"type": schema.StringAttribute{
+							MarkdownDescription: "Variant discriminator.",
+							Computed:            true,
+						},
+						"method": schema.StringAttribute{
+							MarkdownDescription: "Where the key is fetched from",
+							Computed:            true,
+						},
+					},
+				},
+				"status": schema.StringAttribute{
+					MarkdownDescription: "Whether the key is used",
+					Computed:            true,
+				},
+				"trust": schema.StringAttribute{
+					MarkdownDescription: "Trust level derived from the source and certificate validation",
+					Computed:            true,
+				},
+			},
+		},
+	},
+	{
+		Name:     "external_public_keys",
+		JMAPType: "x:ExternalPublicKey",
+		Plural:   true,
+		Schema: schema.Schema{
+			MarkdownDescription: "Lists the identifiers of all `x:ExternalPublicKey` objects on the server.",
+			Attributes: map[string]schema.Attribute{
+				"ids": schema.SetAttribute{
+					MarkdownDescription: "Identifiers of all objects of this type.",
+					Computed:            true,
+					ElementType:         types.StringType,
+				},
+			},
+		},
+	},
+	{
 		Name:      "file_storage",
 		JMAPType:  "x:FileStorage",
 		Singleton: true,
 		Schema: schema.Schema{
-			MarkdownDescription: "Configures file storage limits. This singleton object always exists: creating the resource adopts the current server settings and destroying it only removes the resource from state.",
+			MarkdownDescription: "Configures file storage limits, compression and encryption. This singleton object always exists: creating the resource adopts the current server settings and destroying it only removes the resource from state.",
 			Attributes: map[string]schema.Attribute{
 				"id": schema.StringAttribute{
 					MarkdownDescription: "Always `singleton`.",
+					Computed:            true,
+				},
+				"blob_encryption_key": schema.StringAttribute{
+					MarkdownDescription: "Key used to encrypt new file blobs; when empty, they are stored unencrypted",
+					Computed:            true,
+				},
+				"compression_algorithm": schema.StringAttribute{
+					MarkdownDescription: "Algorithm to use to compress file data",
 					Computed:            true,
 				},
 				"max_files": schema.Int64Attribute{
@@ -10280,7 +11831,7 @@ var generatedDataSources = []dataSourceDescriptor{
 								MarkdownDescription: "Identifier for the domain of the email alias (the part after the @ symbol).",
 								Computed:            true,
 							},
-							"enabled": schema.BoolAttribute{
+							"enable": schema.BoolAttribute{
 								MarkdownDescription: "Whether this email alias is enabled",
 								Computed:            true,
 							},
@@ -10307,12 +11858,16 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Email address of the group, formed as name@domain.",
 					Computed:            true,
 				},
+				"external_id": schema.StringAttribute{
+					MarkdownDescription: "Identifier assigned by an external provisioning client such as a SCIM identity provider Requires an Enterprise license.",
+					Computed:            true,
+				},
 				"locale": schema.StringAttribute{
 					MarkdownDescription: "Preferred locale for the group",
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this group belongs to",
+					MarkdownDescription: "Identifier for the tenant this group belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
 				"name": schema.StringAttribute{
@@ -10408,8 +11963,16 @@ var generatedDataSources = []dataSourceDescriptor{
 						},
 					},
 				},
+				"client_ip_source": schema.StringAttribute{
+					MarkdownDescription: "Specifies where the client's IP address is obtained from. When a forwarding header is selected, the listener must only be reachable through the trusted proxies, since any client that connects directly can claim an arbitrary address.",
+					Computed:            true,
+				},
 				"enable_hsts": schema.BoolAttribute{
 					MarkdownDescription: "Specifies whether to enable HTTP Strict Transport Security for the HTTP server.",
+					Computed:            true,
+				},
+				"forwarded_hops": schema.Int64Attribute{
+					MarkdownDescription: "Number of trusted proxy entries appended to the forwarding header; the client address is taken this many entries from the right.",
 					Computed:            true,
 				},
 				"rate_limit_anonymous": schema.SingleNestedAttribute{
@@ -10451,10 +12014,6 @@ var generatedDataSources = []dataSourceDescriptor{
 				},
 				"use_permissive_cors": schema.BoolAttribute{
 					MarkdownDescription: "Specifies whether to allow all origins in the CORS policy for the HTTP server",
-					Computed:            true,
-				},
-				"use_x_forwarded": schema.BoolAttribute{
-					MarkdownDescription: "Specifies whether to use the Forwarded or X-Forwarded-For header to determine the client's IP address",
 					Computed:            true,
 				},
 			},
@@ -10543,6 +12102,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Identifier of the object.",
 					Required:            true,
 				},
+				"allow_invalid_certs": schema.BoolAttribute{
+					MarkdownDescription: "Whether to allow invalid SSL certificates",
+					Computed:            true,
+				},
 				"enable": schema.BoolAttribute{
 					MarkdownDescription: "Whether to enable this HTTP list",
 					Computed:            true,
@@ -10573,6 +12136,71 @@ var generatedDataSources = []dataSourceDescriptor{
 						},
 					},
 				},
+				"http_auth": schema.SingleNestedAttribute{
+					MarkdownDescription: "The type of HTTP authentication to use",
+					Computed:            true,
+					Attributes: map[string]schema.Attribute{
+						"type": schema.StringAttribute{
+							MarkdownDescription: "Variant discriminator.",
+							Computed:            true,
+						},
+						"bearer_token": schema.SingleNestedAttribute{
+							MarkdownDescription: "Bearer token for HTTP Bearer Authentication",
+							Computed:            true,
+							Attributes: map[string]schema.Attribute{
+								"type": schema.StringAttribute{
+									MarkdownDescription: "Variant discriminator.",
+									Computed:            true,
+								},
+								"file_path": schema.StringAttribute{
+									MarkdownDescription: "File path to read the secret from",
+									Computed:            true,
+								},
+								"secret": schema.StringAttribute{
+									MarkdownDescription: "Password or secret value",
+									Computed:            true,
+									Sensitive:           true,
+								},
+								"variable_name": schema.StringAttribute{
+									MarkdownDescription: "Environment variable name to read the secret from",
+									Computed:            true,
+								},
+							},
+						},
+						"secret": schema.SingleNestedAttribute{
+							MarkdownDescription: "Password for HTTP Basic Authentication",
+							Computed:            true,
+							Attributes: map[string]schema.Attribute{
+								"type": schema.StringAttribute{
+									MarkdownDescription: "Variant discriminator.",
+									Computed:            true,
+								},
+								"file_path": schema.StringAttribute{
+									MarkdownDescription: "File path to read the secret from",
+									Computed:            true,
+								},
+								"secret": schema.StringAttribute{
+									MarkdownDescription: "Password or secret value",
+									Computed:            true,
+									Sensitive:           true,
+								},
+								"variable_name": schema.StringAttribute{
+									MarkdownDescription: "Environment variable name to read the secret from",
+									Computed:            true,
+								},
+							},
+						},
+						"username": schema.StringAttribute{
+							MarkdownDescription: "Username for HTTP Basic Authentication",
+							Computed:            true,
+						},
+					},
+				},
+				"http_headers": schema.MapAttribute{
+					MarkdownDescription: "Additional headers to include in HTTP requests",
+					Computed:            true,
+					ElementType:         types.StringType,
+				},
 				"is_gzipped": schema.BoolAttribute{
 					MarkdownDescription: "Whether to use gzip compression when downloading the list",
 					Computed:            true,
@@ -10586,14 +12214,14 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"max_size": schema.Int64Attribute{
-					MarkdownDescription: "Maximum size of the list. The list is truncated if it exceeds this size.",
+					MarkdownDescription: "Maximum size of the downloaded list and of each of its lines. A download exceeding this size is rejected and the previously loaded list is kept; lines exceeding it are skipped.",
 					Computed:            true,
 				},
 				"namespace": schema.StringAttribute{
 					MarkdownDescription: "Unique identifier for this store when used in lookups",
 					Computed:            true,
 				},
-				"refresh": schema.Int64Attribute{
+				"refresh_interval": schema.Int64Attribute{
 					MarkdownDescription: "How often to refresh the list",
 					Computed:            true,
 				},
@@ -10602,7 +12230,7 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"timeout": schema.Int64Attribute{
-					MarkdownDescription: "How long to wait for the list to download before timing out",
+					MarkdownDescription: "Timeout for HTTP requests",
 					Computed:            true,
 				},
 				"url": schema.StringAttribute{
@@ -10642,12 +12270,24 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Whether to allow plain text authentication on unencrypted connections",
 					Computed:            true,
 				},
+				"anonymous_timeout": schema.Int64Attribute{
+					MarkdownDescription: "Time an unauthenticated session can stay inactive before being ended by the server",
+					Computed:            true,
+				},
+				"authenticated_timeout": schema.Int64Attribute{
+					MarkdownDescription: "Time an authenticated session can remain idle before the server terminates it",
+					Computed:            true,
+				},
+				"idle_timeout": schema.Int64Attribute{
+					MarkdownDescription: "Time a connection can stay idle in the IMAP IDLE state before the server breaks the connection",
+					Computed:            true,
+				},
 				"max_auth_failures": schema.Int64Attribute{
 					MarkdownDescription: "Number of authentication attempts a user can make before being disconnected by the server",
 					Computed:            true,
 				},
-				"max_concurrent": schema.Int64Attribute{
-					MarkdownDescription: "The maximum number of concurrent connections",
+				"max_concurrent_connections": schema.Int64Attribute{
+					MarkdownDescription: "Maximum number of concurrent authenticated IMAP connections per account",
 					Computed:            true,
 				},
 				"max_messages_per_command": schema.Int64Attribute{
@@ -10657,20 +12297,6 @@ var generatedDataSources = []dataSourceDescriptor{
 				"max_messages_per_save": schema.Int64Attribute{
 					MarkdownDescription: "Maximum number of messages accepted by a single COPY or APPEND command, announced to clients through the SAVELIMIT capability. These commands are atomic, so exceeding the limit stores nothing; keep it at or above the MESSAGELIMIT value",
 					Computed:            true,
-				},
-				"max_request_rate": schema.SingleNestedAttribute{
-					MarkdownDescription: "The maximum number of requests per minute",
-					Computed:            true,
-					Attributes: map[string]schema.Attribute{
-						"count": schema.Int64Attribute{
-							MarkdownDescription: "Count",
-							Computed:            true,
-						},
-						"period": schema.Int64Attribute{
-							MarkdownDescription: "Period",
-							Computed:            true,
-						},
-					},
 				},
 				"max_request_size": schema.Int64Attribute{
 					MarkdownDescription: "Maximum size of an IMAP request that the server will accept",
@@ -10684,17 +12310,19 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Smallest batch size a client may ask for in a UIDBATCHES command; smaller requests are rejected with a TOOFEW response code. Cannot exceed 500, which is the batch size every server is required to support",
 					Computed:            true,
 				},
-				"timeout_anonymous": schema.Int64Attribute{
-					MarkdownDescription: "Time an unauthenticated session can stay inactive before being ended by the server",
+				"rate_limit": schema.SingleNestedAttribute{
+					MarkdownDescription: "Maximum number of requests an account may issue within the rate period (applies to IMAP, POP3 and ManageSieve)",
 					Computed:            true,
-				},
-				"timeout_authenticated": schema.Int64Attribute{
-					MarkdownDescription: "Time an authenticated session can remain idle before the server terminates it",
-					Computed:            true,
-				},
-				"timeout_idle": schema.Int64Attribute{
-					MarkdownDescription: "Time a connection can stay idle in the IMAP IDLE state before the server breaks the connection",
-					Computed:            true,
+					Attributes: map[string]schema.Attribute{
+						"count": schema.Int64Attribute{
+							MarkdownDescription: "Count",
+							Computed:            true,
+						},
+						"period": schema.Int64Attribute{
+							MarkdownDescription: "Period",
+							Computed:            true,
+						},
+					},
 				},
 			},
 		},
@@ -10712,6 +12340,10 @@ var generatedDataSources = []dataSourceDescriptor{
 				},
 				"type": schema.StringAttribute{
 					MarkdownDescription: "Variant discriminator.",
+					Computed:            true,
+				},
+				"allow_invalid_certs": schema.BoolAttribute{
+					MarkdownDescription: "Allow invalid TLS certificates when connecting to the Redis server",
 					Computed:            true,
 				},
 				"auth_secret": schema.SingleNestedAttribute{
@@ -10739,6 +12371,10 @@ var generatedDataSources = []dataSourceDescriptor{
 				},
 				"auth_username": schema.StringAttribute{
 					MarkdownDescription: "Username to connect to the store",
+					Computed:            true,
+				},
+				"connect_timeout": schema.Int64Attribute{
+					MarkdownDescription: "Maximum time to wait for a new connection to the Redis server to be established",
 					Computed:            true,
 				},
 				"max_retries": schema.Int64Attribute{
@@ -10817,6 +12453,10 @@ var generatedDataSources = []dataSourceDescriptor{
 								MarkdownDescription: "Variant discriminator.",
 								Computed:            true,
 							},
+							"allow_invalid_certs": schema.BoolAttribute{
+								MarkdownDescription: "Allow invalid TLS certificates when connecting to the Redis server",
+								Computed:            true,
+							},
 							"auth_secret": schema.SingleNestedAttribute{
 								MarkdownDescription: "Password to connect to the store",
 								Computed:            true,
@@ -10842,6 +12482,10 @@ var generatedDataSources = []dataSourceDescriptor{
 							},
 							"auth_username": schema.StringAttribute{
 								MarkdownDescription: "Username to connect to the store",
+								Computed:            true,
+							},
+							"connect_timeout": schema.Int64Attribute{
+								MarkdownDescription: "Maximum time to wait for a new connection to the Redis server to be established",
 								Computed:            true,
 							},
 							"max_retries": schema.Int64Attribute{
@@ -10911,10 +12555,6 @@ var generatedDataSources = []dataSourceDescriptor{
 								MarkdownDescription: "Name of the monitored master (service) to query via the Sentinels",
 								Computed:            true,
 							},
-							"timeout": schema.Int64Attribute{
-								MarkdownDescription: "Connection timeout to the database",
-								Computed:            true,
-							},
 							"url": schema.StringAttribute{
 								MarkdownDescription: "URL of the Redis server",
 								Computed:            true,
@@ -10927,16 +12567,74 @@ var generatedDataSources = []dataSourceDescriptor{
 						},
 					},
 				},
-				"timeout": schema.Int64Attribute{
-					MarkdownDescription: "Connection timeout to the database",
-					Computed:            true,
-				},
 				"url": schema.StringAttribute{
 					MarkdownDescription: "URL of the Redis server",
 					Computed:            true,
 				},
 				"urls": schema.SetAttribute{
 					MarkdownDescription: "URL(s) of the Redis server(s)",
+					Computed:            true,
+					ElementType:         types.StringType,
+				},
+			},
+		},
+	},
+	{
+		Name:     "index_queue_status",
+		JMAPType: "x:IndexQueueStatus",
+		Schema: schema.Schema{
+			MarkdownDescription: "Represents the processing state of a search index queue.",
+			Attributes: map[string]schema.Attribute{
+				"id": schema.StringAttribute{
+					MarkdownDescription: "Identifier of the object.",
+					Required:            true,
+				},
+				"index": schema.StringAttribute{
+					MarkdownDescription: "Search index the queue belongs to",
+					Computed:            true,
+				},
+				"partition": schema.Int64Attribute{
+					MarkdownDescription: "Account or telemetry bucket the queued documents belong to",
+					Computed:            true,
+				},
+				"queued_deletions": schema.Int64Attribute{
+					MarkdownDescription: "Number of documents awaiting deletion from the index",
+					Computed:            true,
+				},
+				"queued_updates": schema.Int64Attribute{
+					MarkdownDescription: "Number of documents awaiting indexing",
+					Computed:            true,
+				},
+				"status": schema.SingleNestedAttribute{
+					MarkdownDescription: "Current processing state of the queue",
+					Computed:            true,
+					Attributes: map[string]schema.Attribute{
+						"type": schema.StringAttribute{
+							MarkdownDescription: "Variant discriminator.",
+							Computed:            true,
+						},
+						"next_retry": schema.StringAttribute{
+							MarkdownDescription: "Date and time when indexing will be retried",
+							Computed:            true,
+						},
+						"reason": schema.StringAttribute{
+							MarkdownDescription: "Error reported by the last indexing attempt",
+							Computed:            true,
+						},
+					},
+				},
+			},
+		},
+	},
+	{
+		Name:     "index_queue_statuss",
+		JMAPType: "x:IndexQueueStatus",
+		Plural:   true,
+		Schema: schema.Schema{
+			MarkdownDescription: "Lists the identifiers of all `x:IndexQueueStatus` objects on the server.",
+			Attributes: map[string]schema.Attribute{
+				"ids": schema.SetAttribute{
+					MarkdownDescription: "Identifiers of all objects of this type.",
 					Computed:            true,
 					ElementType:         types.StringType,
 				},
@@ -10954,16 +12652,12 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Always `singleton`.",
 					Computed:            true,
 				},
-				"changes_max_results": schema.Int64Attribute{
-					MarkdownDescription: "Determines the maximum number of change objects that a Changes method can return",
-					Computed:            true,
-				},
 				"event_source_throttle": schema.Int64Attribute{
 					MarkdownDescription: "Specifies the minimum time between two event source notifications",
 					Computed:            true,
 				},
-				"get_max_results": schema.Int64Attribute{
-					MarkdownDescription: "Determines the maximum number of objects that can be fetched in a single method call",
+				"max_changes_results": schema.Int64Attribute{
+					MarkdownDescription: "Determines the maximum number of change objects that a Changes method can return",
 					Computed:            true,
 				},
 				"max_concurrent_requests": schema.Int64Attribute{
@@ -10974,16 +12668,36 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Restricts the number of concurrent file uploads a user can perform",
 					Computed:            true,
 				},
+				"max_get_results": schema.Int64Attribute{
+					MarkdownDescription: "Determines the maximum number of objects that can be fetched in a single method call",
+					Computed:            true,
+				},
 				"max_method_calls": schema.Int64Attribute{
 					MarkdownDescription: "Limits the maximum number of method calls that can be included in a single request",
+					Computed:            true,
+				},
+				"max_push_attempts": schema.Int64Attribute{
+					MarkdownDescription: "Maximum number of push attempts before a notification is discarded",
 					Computed:            true,
 				},
 				"max_push_size": schema.Int64Attribute{
 					MarkdownDescription: "Maximum size in bytes for a Web Push notification payload; EmailPush objects are truncated to fit within this limit",
 					Computed:            true,
 				},
+				"max_query_results": schema.Int64Attribute{
+					MarkdownDescription: "Sets the maximum number of results that a Query method can return",
+					Computed:            true,
+				},
 				"max_request_size": schema.Int64Attribute{
 					MarkdownDescription: "Defines the maximum size of a single request, in bytes, that the server will accept",
+					Computed:            true,
+				},
+				"max_set_objects": schema.Int64Attribute{
+					MarkdownDescription: "Establishes the maximum number of objects that can be modified in a single method call",
+					Computed:            true,
+				},
+				"max_snippet_results": schema.Int64Attribute{
+					MarkdownDescription: "Maximum number of search snippets to return in a single request",
 					Computed:            true,
 				},
 				"max_subscriptions": schema.Int64Attribute{
@@ -11014,10 +12728,6 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Time to wait between push attempts",
 					Computed:            true,
 				},
-				"push_max_attempts": schema.Int64Attribute{
-					MarkdownDescription: "Maximum number of push attempts before a notification is discarded",
-					Computed:            true,
-				},
 				"push_request_timeout": schema.Int64Attribute{
 					MarkdownDescription: "Time before a connection with a push service URL times out",
 					Computed:            true,
@@ -11038,24 +12748,12 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Time to wait for the push service to verify a subscription",
 					Computed:            true,
 				},
-				"query_max_results": schema.Int64Attribute{
-					MarkdownDescription: "Sets the maximum number of results that a Query method can return",
-					Computed:            true,
-				},
-				"set_max_objects": schema.Int64Attribute{
-					MarkdownDescription: "Establishes the maximum number of objects that can be modified in a single method call",
-					Computed:            true,
-				},
-				"snippet_max_results": schema.Int64Attribute{
-					MarkdownDescription: "Maximum number of search snippets to return in a single request",
-					Computed:            true,
-				},
 				"upload_quota": schema.Int64Attribute{
 					MarkdownDescription: "Defines the total size of files that a user can upload within a certain period",
 					Computed:            true,
 				},
 				"upload_ttl": schema.Int64Attribute{
-					MarkdownDescription: "Specifies the Time-To-Live (TTL) for each uploaded file, after which the file is deleted from temporary storage",
+					MarkdownDescription: "Specifies the Time-To-Live (TTL) for each uploaded file, after which the file is deleted from temporary storage. Set a long duration to effectively keep uploads until they are referenced",
 					Computed:            true,
 				},
 				"web_push_contact": schema.StringAttribute{
@@ -11169,7 +12867,7 @@ var generatedDataSources = []dataSourceDescriptor{
 								MarkdownDescription: "Identifier for the domain of the email alias (the part after the @ symbol).",
 								Computed:            true,
 							},
-							"enabled": schema.BoolAttribute{
+							"enable": schema.BoolAttribute{
 								MarkdownDescription: "Whether this email alias is enabled",
 								Computed:            true,
 							},
@@ -11193,7 +12891,7 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this mailing list belongs to",
+					MarkdownDescription: "Identifier for the tenant this mailing list belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
 				"name": schema.StringAttribute{
@@ -11262,7 +12960,7 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "This is only used on create and otherwise ignored; if supplied, the server-assigned email will start with the given prefix. The string MUST be <= 64 characters in length and MUST only contain characters a-z, 0-9 and _ (underscore).",
 					Computed:            true,
 				},
-				"enabled": schema.BoolAttribute{
+				"enable": schema.BoolAttribute{
 					MarkdownDescription: "Whether this masked email address is enabled",
 					Computed:            true,
 				},
@@ -11381,6 +13079,65 @@ var generatedDataSources = []dataSourceDescriptor{
 		},
 	},
 	{
+		Name:      "metadata",
+		JMAPType:  "x:Metadata",
+		Singleton: true,
+		Schema: schema.Schema{
+			MarkdownDescription: "Configures object metadata: JMAP metadata, WebDAV dead properties and IMAP annotations. This singleton object always exists: creating the resource adopts the current server settings and destroying it only removes the resource from state.",
+			Attributes: map[string]schema.Attribute{
+				"id": schema.StringAttribute{
+					MarkdownDescription: "Always `singleton`.",
+					Computed:            true,
+				},
+				"data_types": schema.SetAttribute{
+					MarkdownDescription: "JMAP data types that support the metadata and privateMetadata properties",
+					Computed:            true,
+					ElementType:         types.StringType,
+				},
+				"imap_server_admin": schema.StringAttribute{
+					MarkdownDescription: "URI for contacting the server administrator (for example mailto:postmaster@example.org), returned to IMAP clients as the /shared/admin server annotation",
+					Computed:            true,
+				},
+				"imap_server_comment": schema.StringAttribute{
+					MarkdownDescription: "Comment returned to IMAP clients as the /shared/comment server annotation",
+					Computed:            true,
+				},
+				"max_depth": schema.Int64Attribute{
+					MarkdownDescription: "Maximum nesting depth of a JMAP metadata namespace value. Leave empty for no limit",
+					Computed:            true,
+				},
+				"max_entries": schema.Int64Attribute{
+					MarkdownDescription: "Maximum number of entries in the metadata of an object",
+					Computed:            true,
+				},
+				"max_entry_size": schema.Int64Attribute{
+					MarkdownDescription: "Maximum size of a single entry: a JMAP namespace value, a WebDAV dead property or an IMAP annotation",
+					Computed:            true,
+				},
+				"max_private_size": schema.Int64Attribute{
+					MarkdownDescription: "Maximum size of the private metadata a user stores on an object",
+					Computed:            true,
+				},
+				"max_query_scan": schema.Int64Attribute{
+					MarkdownDescription: "Maximum number of annotated objects a JMAP query scans to evaluate a metadata text condition. Queries above this limit reject text conditions",
+					Computed:            true,
+				},
+				"max_size": schema.Int64Attribute{
+					MarkdownDescription: "Maximum size of the shared metadata of an object",
+					Computed:            true,
+				},
+				"private_metadata": schema.BoolAttribute{
+					MarkdownDescription: "Whether users may store private metadata that only they can see",
+					Computed:            true,
+				},
+				"vendor_namespaces": schema.BoolAttribute{
+					MarkdownDescription: "Whether JMAP clients may store metadata under vendor (domain name) namespaces",
+					Computed:            true,
+				},
+			},
+		},
+	},
+	{
 		Name:     "metric",
 		JMAPType: "x:Metric",
 		Schema: schema.Schema{
@@ -11402,8 +13159,12 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Metric event type",
 					Computed:            true,
 				},
+				"node_id": schema.Int64Attribute{
+					MarkdownDescription: "Id of the cluster node that recorded the data point",
+					Computed:            true,
+				},
 				"sum": schema.Int64Attribute{
-					MarkdownDescription: "Sum associated with the metric",
+					MarkdownDescription: "Sum of the observations recorded since the previous data point from the same node",
 					Computed:            true,
 				},
 				"timestamp": schema.StringAttribute{
@@ -11456,8 +13217,8 @@ var generatedDataSources = []dataSourceDescriptor{
 							MarkdownDescription: "Variant discriminator.",
 							Computed:            true,
 						},
-						"endpoint": schema.StringAttribute{
-							MarkdownDescription: "The endpoint for Open Telemetry",
+						"allow_invalid_certs": schema.BoolAttribute{
+							MarkdownDescription: "Whether to allow invalid SSL certificates",
 							Computed:            true,
 						},
 						"http_auth": schema.SingleNestedAttribute{
@@ -11526,11 +13287,15 @@ var generatedDataSources = []dataSourceDescriptor{
 							ElementType:         types.StringType,
 						},
 						"interval": schema.Int64Attribute{
-							MarkdownDescription: "The minimum amount of time that must pass between each push request to the OpenTelemetry endpoint",
+							MarkdownDescription: "How often metrics are exported to the OpenTelemetry collector",
 							Computed:            true,
 						},
 						"timeout": schema.Int64Attribute{
-							MarkdownDescription: "Maximum amount of time that Stalwart will wait for a response from the OpenTelemetry endpoint",
+							MarkdownDescription: "Maximum amount of time that Stalwart will wait for a response from the OpenTelemetry collector",
+							Computed:            true,
+						},
+						"url": schema.StringAttribute{
+							MarkdownDescription: "Base URL of the OpenTelemetry collector; /v1/metrics is appended",
 							Computed:            true,
 						},
 					},
@@ -11571,6 +13336,19 @@ var generatedDataSources = []dataSourceDescriptor{
 							Computed:            true,
 						},
 					},
+				},
+				"resource_attributes": schema.MapAttribute{
+					MarkdownDescription: "Additional resource attributes reported to OpenTelemetry collectors by the metrics exporter and the OpenTelemetry tracers",
+					Computed:            true,
+					ElementType:         types.StringType,
+				},
+				"service_name": schema.StringAttribute{
+					MarkdownDescription: "Service name reported to OpenTelemetry collectors by the metrics exporter and the OpenTelemetry tracers",
+					Computed:            true,
+				},
+				"service_namespace": schema.StringAttribute{
+					MarkdownDescription: "Optional service namespace reported to OpenTelemetry collectors by the metrics exporter and the OpenTelemetry tracers",
+					Computed:            true,
 				},
 			},
 		},
@@ -11625,6 +13403,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Path to the cluster file for the FoundationDB cluster",
 					Computed:            true,
 				},
+				"connect_timeout": schema.Int64Attribute{
+					MarkdownDescription: "Maximum time to wait for a connection to the database server to be established",
+					Computed:            true,
+				},
 				"database": schema.StringAttribute{
 					MarkdownDescription: "Name of the database",
 					Computed:            true,
@@ -11635,6 +13417,10 @@ var generatedDataSources = []dataSourceDescriptor{
 				},
 				"host": schema.StringAttribute{
 					MarkdownDescription: "Hostname of the database server",
+					Computed:            true,
+				},
+				"idle_timeout": schema.Int64Attribute{
+					MarkdownDescription: "Time an idle connection may stay open before the server closes it (sets the MySQL wait_timeout session variable)",
 					Computed:            true,
 				},
 				"machine_id": schema.StringAttribute{
@@ -11650,7 +13436,7 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"pool_max_connections": schema.Int64Attribute{
-					MarkdownDescription: "Maximum number of connections to the store",
+					MarkdownDescription: "Maximum number of connections to the store. When unset, 4 per CPU core, between 16 and 32.",
 					Computed:            true,
 				},
 				"pool_min_connections": schema.Int64Attribute{
@@ -11715,10 +13501,6 @@ var generatedDataSources = []dataSourceDescriptor{
 							},
 						},
 					},
-				},
-				"timeout": schema.Int64Attribute{
-					MarkdownDescription: "Connection timeout to the database",
-					Computed:            true,
 				},
 				"transaction_retry_delay": schema.Int64Attribute{
 					MarkdownDescription: "Transaction maximum retry delay",
@@ -11790,6 +13572,22 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Maximum time to wait for the SMTP greeting message",
 					Computed:            true,
 				},
+				"local_ips": schema.ListNestedAttribute{
+					MarkdownDescription: "List of local IPv4 and IPv6 addresses to use when delivering emails to remote SMTP servers",
+					Computed:            true,
+					NestedObject: schema.NestedAttributeObject{
+						Attributes: map[string]schema.Attribute{
+							"ehlo_hostname": schema.StringAttribute{
+								MarkdownDescription: "Overrides the EHLO hostname that will be used when connecting from this IP address",
+								Computed:            true,
+							},
+							"local_ip": schema.StringAttribute{
+								MarkdownDescription: "Local IPv4 and IPv6 address to use when delivering emails to remote SMTP servers",
+								Computed:            true,
+							},
+						},
+					},
+				},
 				"mail_from_timeout": schema.Int64Attribute{
 					MarkdownDescription: "Maximum time to wait for the MAIL-FROM command response",
 					Computed:            true,
@@ -11802,22 +13600,6 @@ var generatedDataSources = []dataSourceDescriptor{
 				"rcpt_to_timeout": schema.Int64Attribute{
 					MarkdownDescription: "Maximum time to wait for the RCPT-TO command response",
 					Computed:            true,
-				},
-				"source_ips": schema.ListNestedAttribute{
-					MarkdownDescription: "List of local IPv4 and IPv6 addresses to use when delivering emails to remote SMTP servers",
-					Computed:            true,
-					NestedObject: schema.NestedAttributeObject{
-						Attributes: map[string]schema.Attribute{
-							"ehlo_hostname": schema.StringAttribute{
-								MarkdownDescription: "Overrides the EHLO hostname that will be used when connecting from this IP address",
-								Computed:            true,
-							},
-							"source_ip": schema.StringAttribute{
-								MarkdownDescription: "Local IPv4 and IPv6 address to use when delivering emails to remote SMTP servers",
-								Computed:            true,
-							},
-						},
-					},
 				},
 			},
 		},
@@ -11939,7 +13721,7 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"chunking": schema.SingleNestedAttribute{
-					MarkdownDescription: "Enables chunking (RFC 1830), an extension that allows large messages to be transferred in chunks which may reduce the load on the network and server.",
+					MarkdownDescription: "Enables chunking (RFC 3030), an extension that allows large messages to be transferred in chunks which may reduce the load on the network and server.",
 					Computed:            true,
 					Attributes: map[string]schema.Attribute{
 						"else": schema.StringAttribute{
@@ -12212,7 +13994,7 @@ var generatedDataSources = []dataSourceDescriptor{
 					Required:            true,
 				},
 				"allow_invalid_certs": schema.BoolAttribute{
-					MarkdownDescription: "Whether Stalwart should connect to a hook server that has an invalid TLS certificate",
+					MarkdownDescription: "Whether to allow invalid SSL certificates",
 					Computed:            true,
 				},
 				"enable": schema.SingleNestedAttribute{
@@ -12320,7 +14102,7 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"timeout": schema.Int64Attribute{
-					MarkdownDescription: "Maximum amount of time that Stalwart will wait for a response from this hook server",
+					MarkdownDescription: "Timeout for HTTP requests",
 					Computed:            true,
 				},
 				"url": schema.StringAttribute{
@@ -12356,8 +14138,8 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Always `singleton`.",
 					Computed:            true,
 				},
-				"max_duration": schema.SingleNestedAttribute{
-					MarkdownDescription: "The maximum duration of a session",
+				"idle_timeout": schema.SingleNestedAttribute{
+					MarkdownDescription: "How long to wait for a client to send a command before timing out",
 					Computed:            true,
 					Attributes: map[string]schema.Attribute{
 						"else": schema.StringAttribute{
@@ -12382,8 +14164,8 @@ var generatedDataSources = []dataSourceDescriptor{
 						},
 					},
 				},
-				"timeout": schema.SingleNestedAttribute{
-					MarkdownDescription: "How long to wait for a client to send a command before timing out",
+				"max_duration": schema.SingleNestedAttribute{
+					MarkdownDescription: "The maximum duration of a session",
 					Computed:            true,
 					Attributes: map[string]schema.Attribute{
 						"else": schema.StringAttribute{
@@ -12532,6 +14314,18 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Whether Stalwart should connect to a Milter filter server that has an invalid TLS certificate",
 					Computed:            true,
 				},
+				"command_timeout": schema.Int64Attribute{
+					MarkdownDescription: "How long Stalwart will wait to send a command to the Milter server",
+					Computed:            true,
+				},
+				"connect_timeout": schema.Int64Attribute{
+					MarkdownDescription: "Maximum amount of time that Stalwart will wait to establish a connection with this Milter server",
+					Computed:            true,
+				},
+				"data_timeout": schema.Int64Attribute{
+					MarkdownDescription: "Maximum amount of time Stalwart will wait for a response from the Milter server",
+					Computed:            true,
+				},
 				"enable": schema.SingleNestedAttribute{
 					MarkdownDescription: "Expression that determines whether to enable this milter",
 					Computed:            true,
@@ -12566,7 +14360,7 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Optional protocol flags to set on the Milter connection. See the Milter protocol documentation for details on available protocol flags.",
 					Computed:            true,
 				},
-				"hostname": schema.StringAttribute{
+				"host": schema.StringAttribute{
 					MarkdownDescription: "Hostname or IP address of the server where the Milter filter is running",
 					Computed:            true,
 				},
@@ -12589,18 +14383,6 @@ var generatedDataSources = []dataSourceDescriptor{
 				},
 				"temp_fail_on_error": schema.BoolAttribute{
 					MarkdownDescription: "Whether to respond with a temporary failure (typically a 4xx SMTP status code) when Stalwart encounters an error while communicating with this Milter server",
-					Computed:            true,
-				},
-				"timeout_command": schema.Int64Attribute{
-					MarkdownDescription: "How long Stalwart will wait to send a command to the Milter server",
-					Computed:            true,
-				},
-				"timeout_connect": schema.Int64Attribute{
-					MarkdownDescription: "Maximum amount of time that Stalwart will wait to establish a connection with this Milter server",
-					Computed:            true,
-				},
-				"timeout_data": schema.Int64Attribute{
-					MarkdownDescription: "Maximum amount of time Stalwart will wait for a response from the Milter server",
 					Computed:            true,
 				},
 				"use_tls": schema.BoolAttribute{
@@ -12974,10 +14756,6 @@ var generatedDataSources = []dataSourceDescriptor{
 					Optional:            true,
 					Computed:            true,
 				},
-				"address": schema.StringAttribute{
-					MarkdownDescription: "The address of the remote SMTP server, which can be an IP address or a domain name",
-					Computed:            true,
-				},
 				"allow_invalid_certs": schema.BoolAttribute{
 					MarkdownDescription: "Whether to allow connections to servers with invalid TLS certificates",
 					Computed:            true,
@@ -13011,6 +14789,10 @@ var generatedDataSources = []dataSourceDescriptor{
 				},
 				"description": schema.StringAttribute{
 					MarkdownDescription: "A short description of the route, which can be used to identify it in the list of routes",
+					Computed:            true,
+				},
+				"host": schema.StringAttribute{
+					MarkdownDescription: "Hostname or IP address of the remote SMTP server",
 					Computed:            true,
 				},
 				"implicit_tls": schema.BoolAttribute{
@@ -13138,7 +14920,7 @@ var generatedDataSources = []dataSourceDescriptor{
 					},
 				},
 				"sasl_mechanisms": schema.SingleNestedAttribute{
-					MarkdownDescription: "A list of SASL authentication mechanisms offered to clients, or an empty list to disable authentication. Stalwart supports PLAIN, LOGIN, and OAUTHBEARER mechanisms",
+					MarkdownDescription: "A list of SASL authentication mechanisms offered to clients, or an empty list to disable authentication. Stalwart supports PLAIN, LOGIN, OAUTHBEARER and XOAUTH2. OAUTHBEARER and XOAUTH2 are never offered on connections without TLS, whatever this expression returns.",
 					Computed:            true,
 					Attributes: map[string]schema.Attribute{
 						"else": schema.StringAttribute{
@@ -13431,6 +15213,32 @@ var generatedDataSources = []dataSourceDescriptor{
 				},
 				"add_return_path_header": schema.SingleNestedAttribute{
 					MarkdownDescription: "Whether to add a Return-Path header to the message",
+					Computed:            true,
+					Attributes: map[string]schema.Attribute{
+						"else": schema.StringAttribute{
+							MarkdownDescription: "Else condition",
+							Computed:            true,
+						},
+						"match": schema.ListNestedAttribute{
+							MarkdownDescription: "List of conditions and their corresponding results",
+							Computed:            true,
+							NestedObject: schema.NestedAttributeObject{
+								Attributes: map[string]schema.Attribute{
+									"if": schema.StringAttribute{
+										MarkdownDescription: "If condition",
+										Computed:            true,
+									},
+									"then": schema.StringAttribute{
+										MarkdownDescription: "Then clause",
+										Computed:            true,
+									},
+								},
+							},
+						},
+					},
+				},
+				"dkim_sign_domain": schema.SingleNestedAttribute{
+					MarkdownDescription: "Domain to use for DKIM signing",
 					Computed:            true,
 					Attributes: map[string]schema.Attribute{
 						"else": schema.StringAttribute{
@@ -14092,8 +15900,12 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 					ElementType:         types.StringType,
 				},
+				"implicit_tls": schema.BoolAttribute{
+					MarkdownDescription: "Whether to use implicit TLS",
+					Computed:            true,
+				},
 				"max_connections": schema.Int64Attribute{
-					MarkdownDescription: "The maximum number of concurrent connections the listener will accept",
+					MarkdownDescription: "The maximum number of concurrent connections this listener accepts, shared by all its bind addresses. If not set, the default from System Settings applies",
 					Computed:            true,
 				},
 				"name": schema.StringAttribute{
@@ -14156,10 +15968,6 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Whether to ignore the client's cipher order",
 					Computed:            true,
 				},
-				"tls_implicit": schema.BoolAttribute{
-					MarkdownDescription: "Whether to use implicit TLS",
-					Computed:            true,
-				},
 				"tls_timeout": schema.Int64Attribute{
 					MarkdownDescription: "TLS handshake timeout",
 					Computed:            true,
@@ -14187,6 +15995,79 @@ var generatedDataSources = []dataSourceDescriptor{
 		},
 	},
 	{
+		Name:     "o_auth_grant",
+		JMAPType: "x:OAuthGrant",
+		Schema: schema.Schema{
+			MarkdownDescription: "Authorization granted by an account to an OAuth application. Deleting it signs the application out.",
+			Attributes: map[string]schema.Attribute{
+				"id": schema.StringAttribute{
+					MarkdownDescription: "Identifier of the object.",
+					Required:            true,
+				},
+				"account_id": schema.StringAttribute{
+					MarkdownDescription: "Identifier for the account that granted the authorization",
+					Computed:            true,
+				},
+				"client_hash": schema.StringAttribute{
+					MarkdownDescription: "BLAKE3 hash of the client identifier, used to find the authorizations of a client",
+					Computed:            true,
+				},
+				"client_id": schema.StringAttribute{
+					MarkdownDescription: "Identifier of the OAuth client that received the authorization",
+					Computed:            true,
+				},
+				"client_kind": schema.StringAttribute{
+					MarkdownDescription: "How the application was registered. Dynamically registered applications and Client ID Metadata Documents are not verified by an administrator.",
+					Computed:            true,
+				},
+				"client_name": schema.StringAttribute{
+					MarkdownDescription: "Name of the application, as provided by the client or its administrator",
+					Computed:            true,
+				},
+				"created_at": schema.StringAttribute{
+					MarkdownDescription: "Date the authorization was granted",
+					Computed:            true,
+				},
+				"generation": schema.Int64Attribute{
+					MarkdownDescription: "Refresh token generation, used to detect reuse of superseded refresh tokens",
+					Computed:            true,
+				},
+				"last_used_at": schema.StringAttribute{
+					MarkdownDescription: "Date the application last renewed its access",
+					Computed:            true,
+				},
+				"pending": schema.BoolAttribute{
+					MarkdownDescription: "Whether the latest refresh token has not yet been used by the application",
+					Computed:            true,
+				},
+				"remote_ip": schema.StringAttribute{
+					MarkdownDescription: "IP address from which the authorization was granted",
+					Computed:            true,
+				},
+				"scopes": schema.SetAttribute{
+					MarkdownDescription: "Services the application was given access to. First-party applications have full access to the account.",
+					Computed:            true,
+					ElementType:         types.StringType,
+				},
+			},
+		},
+	},
+	{
+		Name:     "o_auth_grants",
+		JMAPType: "x:OAuthGrant",
+		Plural:   true,
+		Schema: schema.Schema{
+			MarkdownDescription: "Lists the identifiers of all `x:OAuthGrant` objects on the server.",
+			Attributes: map[string]schema.Attribute{
+				"ids": schema.SetAttribute{
+					MarkdownDescription: "Identifiers of all objects of this type.",
+					Computed:            true,
+					ElementType:         types.StringType,
+				},
+			},
+		},
+	},
+	{
 		Name:     "oauth_client",
 		JMAPType: "x:OAuthClient",
 		Schema: schema.Schema{
@@ -14197,7 +16078,7 @@ var generatedDataSources = []dataSourceDescriptor{
 					Required:            true,
 				},
 				"client_id": schema.StringAttribute{
-					MarkdownDescription: "Unique identifier of the OAuth client",
+					MarkdownDescription: "Unique identifier of the OAuth client. It may be the HTTPS URL of a Client ID Metadata Document to pre-register an application that publishes one. Identifiers generated by this server never start with https://.",
 					Computed:            true,
 				},
 				"contacts": schema.SetAttribute{
@@ -14217,16 +16098,31 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Expiration date of the OAuth client",
 					Computed:            true,
 				},
+				"grant_types": schema.SetAttribute{
+					MarkdownDescription: "OAuth grant types the client may use. The device authorization grant is only available when listed here.",
+					Computed:            true,
+					ElementType:         types.StringType,
+				},
 				"logo": schema.StringAttribute{
 					MarkdownDescription: "URL or base64-encoded image representing the OAuth client",
 					Computed:            true,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this OAuth client belongs to",
+					MarkdownDescription: "Identifier for the tenant this OAuth client belongs to Requires an Enterprise license.",
 					Computed:            true,
+				},
+				"post_logout_redirect_uris": schema.SetAttribute{
+					MarkdownDescription: "URIs the client may ask to return to after signing out (OpenID Connect RP-Initiated Logout). A requested URI must match an entry exactly.",
+					Computed:            true,
+					ElementType:         types.StringType,
 				},
 				"redirect_uris": schema.SetAttribute{
 					MarkdownDescription: "List of redirect URIs for the OAuth client",
+					Computed:            true,
+					ElementType:         types.StringType,
+				},
+				"scopes": schema.SetAttribute{
+					MarkdownDescription: "Scopes the client may request. When empty, the client can only request sign-in (openid).",
 					Computed:            true,
 					ElementType:         types.StringType,
 				},
@@ -14265,19 +16161,15 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"access_token_expiry": schema.Int64Attribute{
-					MarkdownDescription: "Expiration time of an OAuth access token",
-					Computed:            true,
-				},
-				"anonymous_client_registration": schema.BoolAttribute{
-					MarkdownDescription: "Whether to allow OAuth clients to register without authentication",
+					MarkdownDescription: "Expiration time of an OAuth access token. OAuth clients require at least 10 minutes and expect at least 1 hour.",
 					Computed:            true,
 				},
 				"auth_code_expiry": schema.Int64Attribute{
-					MarkdownDescription: "Expiration time of an authorization code issued by the authorization code flow",
+					MarkdownDescription: "Expiration time of an authorization code issued by the authorization code flow. OAuth clients require at least 10 minutes.",
 					Computed:            true,
 				},
-				"auth_code_max_attempts": schema.Int64Attribute{
-					MarkdownDescription: "Number of failed login attempts before an authorization code is invalidated",
+				"client_metadata_documents": schema.StringAttribute{
+					MarkdownDescription: "Whether OAuth client ids that are HTTPS URLs of Client ID Metadata Documents published by third-party applications are accepted. Same domain accepts only documents hosted under the same registrable domain as this server. Third-party clients are always shown as unverified on the consent screen. Documents served by this server's own web applications are always accepted.",
 					Computed:            true,
 				},
 				"encryption_key": schema.SingleNestedAttribute{
@@ -14308,15 +16200,7 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"refresh_token_expiry": schema.Int64Attribute{
-					MarkdownDescription: "Expiration time of an OAuth refresh token",
-					Computed:            true,
-				},
-				"refresh_token_renewal": schema.Int64Attribute{
-					MarkdownDescription: "Remaining time in a refresh token before a new one is issued to the client",
-					Computed:            true,
-				},
-				"require_client_registration": schema.BoolAttribute{
-					MarkdownDescription: "Whether to require OAuth client_ids to be registered before they can be used",
+					MarkdownDescription: "How long an OAuth application can stay unused before it is signed out. Each refresh issues a new refresh token valid for this long, so a grant ends only after this much inactivity. Values below 30 days do not follow the OAuth profile for open public clients and make mail applications ask users to sign in again more often.",
 					Computed:            true,
 				},
 				"signature_algorithm": schema.StringAttribute{
@@ -14367,6 +16251,15 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Identifier for the account this public key belongs to",
 					Computed:            true,
 				},
+				"authenticated_encryption": schema.BoolAttribute{
+					MarkdownDescription: "All mail clients holding the private key can read AES-GCM with RSA-OAEP. Applies to S/MIME RSA and elliptic-curve keys. Apple Mail and Thunderbird ESR cannot read it.",
+					Computed:            true,
+				},
+				"capabilities": schema.SetAttribute{
+					MarkdownDescription: "Encryption features supported by the key",
+					Computed:            true,
+					ElementType:         types.StringType,
+				},
 				"created_at": schema.StringAttribute{
 					MarkdownDescription: "Creation date of the public key",
 					Computed:            true,
@@ -14376,17 +16269,39 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"email_addresses": schema.SetAttribute{
-					MarkdownDescription: "Email addresses associated with the public key",
+					MarkdownDescription: "Email addresses bound to the key, taken from the key itself",
 					Computed:            true,
 					ElementType:         types.StringType,
 				},
 				"expires_at": schema.StringAttribute{
-					MarkdownDescription: "Expiration date of the public key",
+					MarkdownDescription: "Expiration date of the key, taken from the key itself",
 					Computed:            true,
 				},
-				"key": schema.StringAttribute{
-					MarkdownDescription: "OpenPGP or S/MIME public key data",
+				"fingerprints": schema.SetAttribute{
+					MarkdownDescription: "Fingerprints of the keys or certificates used for encryption",
 					Computed:            true,
+					ElementType:         types.StringType,
+				},
+				"key": schema.StringAttribute{
+					MarkdownDescription: "OpenPGP key or S/MIME certificate, armored, PEM, or binary encoded as base64",
+					Computed:            true,
+				},
+				"key_type": schema.StringAttribute{
+					MarkdownDescription: "Type of key and its encryption algorithms, taken from the key itself",
+					Computed:            true,
+				},
+				"kind": schema.StringAttribute{
+					MarkdownDescription: "Type of key, taken from the key itself",
+					Computed:            true,
+				},
+				"strict_key_wrap_encoding": schema.BoolAttribute{
+					MarkdownDescription: "Use the RFC 5753 key wrap encoding for elliptic-curve S/MIME certificates; required by gpgsm and KMail, may not be readable by Microsoft Outlook",
+					Computed:            true,
+				},
+				"warnings": schema.SetAttribute{
+					MarkdownDescription: "Issues detected in the key that may affect security or compatibility",
+					Computed:            true,
+					ElementType:         types.StringType,
 				},
 			},
 		},
@@ -14442,7 +16357,7 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"priority": schema.Int64Attribute{
-					MarkdownDescription: "Message priority (lower values = higher priority)",
+					MarkdownDescription: "Message priority from the MT-PRIORITY parameter (RFC 6710); higher values mean higher priority",
 					Computed:            true,
 				},
 				"received_from_ip": schema.StringAttribute{
@@ -14499,8 +16414,12 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Whether reports should be forwarded to their final recipient after analysis",
 					Computed:            true,
 				},
+				"max_inbound_report_size": schema.Int64Attribute{
+					MarkdownDescription: "Maximum size of inbound reports to be intercepted and analyzed, in bytes. Reports larger than this size will be ignored",
+					Computed:            true,
+				},
 				"outbound_report_domain": schema.StringAttribute{
-					MarkdownDescription: "The default domain name used for DSNs and other reports. If left empty, the default domain will be used.",
+					MarkdownDescription: "Domain name used by default in the sender address and organization name of DSNs and outbound reports, available in expressions as `system('report_domain')`. If left empty, the default domain is used.",
 					Computed:            true,
 				},
 				"outbound_report_submitter": schema.SingleNestedAttribute{
@@ -14536,7 +16455,7 @@ var generatedDataSources = []dataSourceDescriptor{
 		Name:     "role",
 		JMAPType: "x:Role",
 		Schema: schema.Schema{
-			MarkdownDescription: "Defines a named set of permissions that can be assigned to accounts, groups, or tenants.",
+			MarkdownDescription: "Defines a named set of permissions that can be assigned to accounts and groups.",
 			Attributes: map[string]schema.Attribute{
 				"id": schema.StringAttribute{
 					MarkdownDescription: "Identifier of the object.",
@@ -14557,7 +16476,7 @@ var generatedDataSources = []dataSourceDescriptor{
 					ElementType:         types.StringType,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this role belongs to",
+					MarkdownDescription: "Identifier for the tenant this role belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
 				"role_ids": schema.SetAttribute{
@@ -14588,7 +16507,7 @@ var generatedDataSources = []dataSourceDescriptor{
 		JMAPType:  "x:Search",
 		Singleton: true,
 		Schema: schema.Schema{
-			MarkdownDescription: "Configures full-text search indexing for emails, calendars, contacts, and tracing. This singleton object always exists: creating the resource adopts the current server settings and destroying it only removes the resource from state.",
+			MarkdownDescription: "Configures full-text search indexing for emails, calendars, contacts, files, and tracing. This singleton object always exists: creating the resource adopts the current server settings and destroying it only removes the resource from state.",
 			Attributes: map[string]schema.Attribute{
 				"id": schema.StringAttribute{
 					MarkdownDescription: "Always `singleton`.",
@@ -14629,14 +16548,49 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 					ElementType:         types.StringType,
 				},
+				"index_files": schema.BoolAttribute{
+					MarkdownDescription: "Enable full-text search indexing for file storage content (file names are always searchable)",
+					Computed:            true,
+				},
 				"index_telemetry": schema.BoolAttribute{
 					MarkdownDescription: "Enable full-text search indexing for tracing data Requires an Enterprise license.",
 					Computed:            true,
 				},
-				"index_tracing_fields": schema.SetAttribute{
-					MarkdownDescription: "List of tracing fields to index Requires an Enterprise license.",
+				"max_concurrent_index_tasks": schema.Int64Attribute{
+					MarkdownDescription: "Maximum number of indexing tasks that run at the same time",
 					Computed:            true,
-					ElementType:         types.StringType,
+				},
+				"max_extract_archive_entries": schema.Int64Attribute{
+					MarkdownDescription: "Maximum number of ZIP entries accepted in an Office, OpenDocument or EPUB file",
+					Computed:            true,
+				},
+				"max_extract_decompressed_size": schema.Int64Attribute{
+					MarkdownDescription: "Maximum number of bytes decompressed while extracting text from a single document",
+					Computed:            true,
+				},
+				"max_extract_document_size": schema.Int64Attribute{
+					MarkdownDescription: "Maximum size in bytes of a document (file or email attachment) from which text is extracted for indexing",
+					Computed:            true,
+				},
+				"max_extract_part_size": schema.Int64Attribute{
+					MarkdownDescription: "Maximum decompressed size in bytes of a single part (XML part, EPUB chapter or PDF stream) inside a document",
+					Computed:            true,
+				},
+				"max_extract_parts": schema.Int64Attribute{
+					MarkdownDescription: "Maximum number of parts (XML parts, slides, sheets or chapters) read from a single document",
+					Computed:            true,
+				},
+				"max_extract_pdf_objects": schema.Int64Attribute{
+					MarkdownDescription: "Maximum number of objects in a PDF cross-reference table",
+					Computed:            true,
+				},
+				"max_extract_rtf_depth": schema.Int64Attribute{
+					MarkdownDescription: "Maximum group nesting depth of an RTF document",
+					Computed:            true,
+				},
+				"max_extract_text_size": schema.Int64Attribute{
+					MarkdownDescription: "Maximum amount of text in bytes extracted from a single document for indexing",
+					Computed:            true,
 				},
 				"supported_languages": schema.SetAttribute{
 					MarkdownDescription: "List of languages to enable for full-text search",
@@ -14696,6 +16650,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Path to the cluster file for the FoundationDB cluster",
 					Computed:            true,
 				},
+				"connect_timeout": schema.Int64Attribute{
+					MarkdownDescription: "Maximum time to wait for a connection to the database server to be established",
+					Computed:            true,
+				},
 				"database": schema.StringAttribute{
 					MarkdownDescription: "Name of the database",
 					Computed:            true,
@@ -14705,7 +16663,7 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"fail_on_timeout": schema.BoolAttribute{
-					MarkdownDescription: "Whether to fail the operation if the task does not complete within the polling retries",
+					MarkdownDescription: "Whether to fail the operation if the task does not complete within the maximum number of polls",
 					Computed:            true,
 				},
 				"host": schema.StringAttribute{
@@ -14777,6 +16735,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 					ElementType:         types.StringType,
 				},
+				"idle_timeout": schema.Int64Attribute{
+					MarkdownDescription: "Time an idle connection may stay open before the server closes it (sets the MySQL wait_timeout session variable)",
+					Computed:            true,
+				},
 				"include_source": schema.BoolAttribute{
 					MarkdownDescription: "Whether to index the full source document",
 					Computed:            true,
@@ -14789,8 +16751,8 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Maximum size of a packet in bytes",
 					Computed:            true,
 				},
-				"max_retries": schema.Int64Attribute{
-					MarkdownDescription: "Number of times to poll for task status before giving up",
+				"max_polls": schema.Int64Attribute{
+					MarkdownDescription: "Maximum number of task status polls before giving up",
 					Computed:            true,
 				},
 				"num_replicas": schema.Int64Attribute{
@@ -14810,7 +16772,7 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"pool_max_connections": schema.Int64Attribute{
-					MarkdownDescription: "Maximum number of connections to the store",
+					MarkdownDescription: "Maximum number of connections to the store. When unset, 4 per CPU core, between 16 and 32.",
 					Computed:            true,
 				},
 				"pool_min_connections": schema.Int64Attribute{
@@ -15007,32 +16969,6 @@ var generatedDataSources = []dataSourceDescriptor{
 				},
 				"arc_verify": schema.SingleNestedAttribute{
 					MarkdownDescription: "Whether ARC verification is strict, relaxed or disabled.",
-					Computed:            true,
-					Attributes: map[string]schema.Attribute{
-						"else": schema.StringAttribute{
-							MarkdownDescription: "Else condition",
-							Computed:            true,
-						},
-						"match": schema.ListNestedAttribute{
-							MarkdownDescription: "List of conditions and their corresponding results",
-							Computed:            true,
-							NestedObject: schema.NestedAttributeObject{
-								Attributes: map[string]schema.Attribute{
-									"if": schema.StringAttribute{
-										MarkdownDescription: "If condition",
-										Computed:            true,
-									},
-									"then": schema.StringAttribute{
-										MarkdownDescription: "Then clause",
-										Computed:            true,
-									},
-								},
-							},
-						},
-					},
-				},
-				"dkim_sign_domain": schema.SingleNestedAttribute{
-					MarkdownDescription: "Domain to use for DKIM signing",
 					Computed:            true,
 					Attributes: map[string]schema.Attribute{
 						"else": schema.StringAttribute{
@@ -15331,10 +17267,6 @@ var generatedDataSources = []dataSourceDescriptor{
 						},
 					},
 				},
-				"duplicate_expiry": schema.Int64Attribute{
-					MarkdownDescription: "Default expiration time for IDs stored by the duplicate extension from trusted scripts",
-					Computed:            true,
-				},
 				"max_cpu_cycles": schema.Int64Attribute{
 					MarkdownDescription: "Maximum number CPU cycles a script can use",
 					Computed:            true,
@@ -15453,6 +17385,32 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "List of capabilities to disable in the user interpreter",
 					Computed:            true,
 					ElementType:         types.StringType,
+				},
+				"dkim_sign_domain": schema.SingleNestedAttribute{
+					MarkdownDescription: "Which domain's DKIM signatures to use when signing messages generated by a user's Sieve script, such as vacation auto-replies",
+					Computed:            true,
+					Attributes: map[string]schema.Attribute{
+						"else": schema.StringAttribute{
+							MarkdownDescription: "Else condition",
+							Computed:            true,
+						},
+						"match": schema.ListNestedAttribute{
+							MarkdownDescription: "List of conditions and their corresponding results",
+							Computed:            true,
+							NestedObject: schema.NestedAttributeObject{
+								Attributes: map[string]schema.Attribute{
+									"if": schema.StringAttribute{
+										MarkdownDescription: "If condition",
+										Computed:            true,
+									},
+									"then": schema.StringAttribute{
+										MarkdownDescription: "Then clause",
+										Computed:            true,
+									},
+								},
+							},
+						},
+					},
 				},
 				"max_cpu_cycles": schema.Int64Attribute{
 					MarkdownDescription: "Maximum number CPU cycles a script can use",
@@ -15582,6 +17540,264 @@ var generatedDataSources = []dataSourceDescriptor{
 		},
 	},
 	{
+		Name:     "smime_trust_anchor",
+		JMAPType: "x:SmimeTrustAnchor",
+		Schema: schema.Schema{
+			MarkdownDescription: "Additional certificate authority trusted when validating recipient S/MIME certificates.",
+			Attributes: map[string]schema.Attribute{
+				"id": schema.StringAttribute{
+					MarkdownDescription: "Identifier of the object.",
+					Required:            true,
+				},
+				"certificate": schema.StringAttribute{
+					MarkdownDescription: "CA certificate in PEM format",
+					Computed:            true,
+				},
+				"description": schema.StringAttribute{
+					MarkdownDescription: "Description of the certificate authority",
+					Computed:            true,
+				},
+				"enable": schema.BoolAttribute{
+					MarkdownDescription: "Whether the certificate authority is trusted",
+					Computed:            true,
+				},
+				"expires_at": schema.StringAttribute{
+					MarkdownDescription: "Expiration date of the CA certificate, taken from the certificate itself",
+					Computed:            true,
+				},
+				"subject": schema.StringAttribute{
+					MarkdownDescription: "Subject of the CA certificate, taken from the certificate itself",
+					Computed:            true,
+				},
+			},
+		},
+	},
+	{
+		Name:     "smime_trust_anchors",
+		JMAPType: "x:SmimeTrustAnchor",
+		Plural:   true,
+		Schema: schema.Schema{
+			MarkdownDescription: "Lists the identifiers of all `x:SmimeTrustAnchor` objects on the server.",
+			Attributes: map[string]schema.Attribute{
+				"ids": schema.SetAttribute{
+					MarkdownDescription: "Identifiers of all objects of this type.",
+					Computed:            true,
+					ElementType:         types.StringType,
+				},
+			},
+		},
+	},
+	{
+		Name:      "spam_ai",
+		JMAPType:  "x:SpamAi",
+		Singleton: true,
+		Schema: schema.Schema{
+			MarkdownDescription: "Configures the AI spam classifier. Spam rules whose condition references an AI_ tag, directly or through a tag emitted by another such rule, run after the classifier; all other rules run before it. Rules that build tag names dynamically are not detected. This singleton object always exists: creating the resource adopts the current server settings and destroying it only removes the resource from state. Requires an Enterprise license.",
+			Attributes: map[string]schema.Attribute{
+				"id": schema.StringAttribute{
+					MarkdownDescription: "Always `singleton`.",
+					Computed:            true,
+				},
+				"type": schema.StringAttribute{
+					MarkdownDescription: "Variant discriminator.",
+					Computed:            true,
+				},
+				"add_header": schema.BoolAttribute{
+					MarkdownDescription: "Whether to add the X-Spam-AI header with the verdict",
+					Computed:            true,
+				},
+				"breaker_cooldown": schema.Int64Attribute{
+					MarkdownDescription: "Time a model is skipped after the failure threshold is reached",
+					Computed:            true,
+				},
+				"breaker_threshold": schema.Int64Attribute{
+					MarkdownDescription: "Number of consecutive failures after which a model is not queried until the cooldown expires",
+					Computed:            true,
+				},
+				"bucket_high": schema.Float64Attribute{
+					MarkdownDescription: "Minimum category probability for the HIGH tag",
+					Computed:            true,
+				},
+				"bucket_medium": schema.Float64Attribute{
+					MarkdownDescription: "Minimum category probability for the MEDIUM tag; lower probabilities produce the LOW tag",
+					Computed:            true,
+				},
+				"categories": schema.ListNestedAttribute{
+					MarkdownDescription: "Categories the classifier chooses from. Each category produces the tags AI_<CATEGORY>_HIGH, AI_<CATEGORY>_MEDIUM and AI_<CATEGORY>_LOW.",
+					Computed:            true,
+					NestedObject: schema.NestedAttributeObject{
+						Attributes: map[string]schema.Attribute{
+							"description": schema.StringAttribute{
+								MarkdownDescription: "What messages belong to this category",
+								Computed:            true,
+							},
+							"includes": schema.SetAttribute{
+								MarkdownDescription: "Examples of messages in this category",
+								Computed:            true,
+								ElementType:         types.StringType,
+							},
+							"name": schema.StringAttribute{
+								MarkdownDescription: "Category name, used in the tag names",
+								Computed:            true,
+							},
+						},
+					},
+				},
+				"condition": schema.SingleNestedAttribute{
+					MarkdownDescription: "Expression evaluated after the statistical classifier and the rules that do not depend on AI tags. The classifier runs only when it returns true.",
+					Computed:            true,
+					Attributes: map[string]schema.Attribute{
+						"else": schema.StringAttribute{
+							MarkdownDescription: "Else condition",
+							Computed:            true,
+						},
+						"match": schema.ListNestedAttribute{
+							MarkdownDescription: "List of conditions and their corresponding results",
+							Computed:            true,
+							NestedObject: schema.NestedAttributeObject{
+								Attributes: map[string]schema.Attribute{
+									"if": schema.StringAttribute{
+										MarkdownDescription: "If condition",
+										Computed:            true,
+									},
+									"then": schema.StringAttribute{
+										MarkdownDescription: "Then clause",
+										Computed:            true,
+									},
+								},
+							},
+						},
+					},
+				},
+				"deadline": schema.Int64Attribute{
+					MarkdownDescription: "Maximum time the AI stage may take for one message, including retries and all tiers",
+					Computed:            true,
+				},
+				"explanation": schema.BoolAttribute{
+					MarkdownDescription: "Whether to ask generative models for a short explanation of the verdict",
+					Computed:            true,
+				},
+				"include_attachments": schema.BoolAttribute{
+					MarkdownDescription: "Whether to send attachment names and content types",
+					Computed:            true,
+				},
+				"include_auth": schema.BoolAttribute{
+					MarkdownDescription: "Whether to send the SPF, DKIM, DMARC and ARC results",
+					Computed:            true,
+				},
+				"include_links": schema.BoolAttribute{
+					MarkdownDescription: "Whether to send link texts and destination hosts",
+					Computed:            true,
+				},
+				"instructions": schema.StringAttribute{
+					MarkdownDescription: "Instructions sent to generative models as the system prompt",
+					Computed:            true,
+				},
+				"learn": schema.SingleNestedAttribute{
+					MarkdownDescription: "Whether confident verdicts are used to train the statistical classifier",
+					Computed:            true,
+					Attributes: map[string]schema.Attribute{
+						"type": schema.StringAttribute{
+							MarkdownDescription: "Variant discriminator.",
+							Computed:            true,
+						},
+						"min_probability": schema.Float64Attribute{
+							MarkdownDescription: "Minimum verdict probability required to use the message as a training sample",
+							Computed:            true,
+						},
+						"sample_rate": schema.Float64Attribute{
+							MarkdownDescription: "Fraction of eligible messages used as training samples",
+							Computed:            true,
+						},
+					},
+				},
+				"max_attachments": schema.Int64Attribute{
+					MarkdownDescription: "Maximum number of attachments sent to the model",
+					Computed:            true,
+				},
+				"max_input_chars": schema.Int64Attribute{
+					MarkdownDescription: "Maximum number of body characters sent to the model",
+					Computed:            true,
+				},
+				"max_links": schema.Int64Attribute{
+					MarkdownDescription: "Maximum number of links sent to the model",
+					Computed:            true,
+				},
+				"mode": schema.StringAttribute{
+					MarkdownDescription: "Whether the classifier verdict is scored or only logged and added to the headers",
+					Computed:            true,
+				},
+				"signals": schema.ListNestedAttribute{
+					MarkdownDescription: "Yes or no questions answered for each message. Each signal produces the tag AI_<SIGNAL> when it is likely true.",
+					Computed:            true,
+					NestedObject: schema.NestedAttributeObject{
+						Attributes: map[string]schema.Attribute{
+							"name": schema.StringAttribute{
+								MarkdownDescription: "Signal name, used in the tag name",
+								Computed:            true,
+							},
+							"question": schema.StringAttribute{
+								MarkdownDescription: "Question about the message; a yes answer means the signal is present",
+								Computed:            true,
+							},
+						},
+					},
+				},
+				"tiers": schema.ListNestedAttribute{
+					MarkdownDescription: "Models to query in order. A tier only runs when the previous tier was uncertain or returned one of its escalation categories.",
+					Computed:            true,
+					NestedObject: schema.NestedAttributeObject{
+						Attributes: map[string]schema.Attribute{
+							"escalate_below": schema.Float64Attribute{
+								MarkdownDescription: "Run the next tier when the confidence of this tier is below this value",
+								Computed:            true,
+							},
+							"escalate_on": schema.SetAttribute{
+								MarkdownDescription: "Run the next tier when this tier returns one of these categories",
+								Computed:            true,
+								ElementType:         types.StringType,
+							},
+							"model_id": schema.StringAttribute{
+								MarkdownDescription: "The AI model to query",
+								Computed:            true,
+							},
+						},
+					},
+				},
+				"trim_quotes": schema.BoolAttribute{
+					MarkdownDescription: "Whether to remove quoted replies and signatures from the body before sending it",
+					Computed:            true,
+				},
+				"uncertain_below": schema.Float64Attribute{
+					MarkdownDescription: "Verdicts with a confidence below this value produce the AI_UNCERTAIN tag instead of a category tag",
+					Computed:            true,
+				},
+				"verbal_high": schema.Float64Attribute{
+					MarkdownDescription: "Probability assigned to a high confidence answer from a model without log probabilities",
+					Computed:            true,
+				},
+				"verbal_low": schema.Float64Attribute{
+					MarkdownDescription: "Probability assigned to a low confidence answer from a model without log probabilities",
+					Computed:            true,
+				},
+				"verbal_medium": schema.Float64Attribute{
+					MarkdownDescription: "Probability assigned to a medium confidence answer from a model without log probabilities",
+					Computed:            true,
+				},
+				"web_search": schema.SingleNestedAttribute{
+					MarkdownDescription: "Web search provider used to describe unknown sender domains",
+					Computed:            true,
+					Attributes: map[string]schema.Attribute{
+						"type": schema.StringAttribute{
+							MarkdownDescription: "Variant discriminator.",
+							Computed:            true,
+						},
+					},
+				},
+			},
+		},
+	},
+	{
 		Name:      "spam_classifier",
 		JMAPType:  "x:SpamClassifier",
 		Singleton: true,
@@ -15605,7 +17821,7 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"learn_spam_from_rbl_hits": schema.Int64Attribute{
-					MarkdownDescription: "Number of DNSBL servers that list the sender to auto-learn as spam",
+					MarkdownDescription: "Minimum number of distinct DNSBL tags (named with the `RBL_` prefix and scoring above 1.0) that a message classified as spam must receive to be auto-learned as spam. Set to 0 to disable",
 					Computed:            true,
 				},
 				"learn_spam_from_traps": schema.BoolAttribute{
@@ -15694,8 +17910,8 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "The capacity of the training sample reservoir",
 					Computed:            true,
 				},
-				"train_frequency": schema.Int64Attribute{
-					MarkdownDescription: "Frequency to train the spam classifier",
+				"train_interval": schema.Int64Attribute{
+					MarkdownDescription: "How often to train the spam classifier",
 					Computed:            true,
 				},
 			},
@@ -16363,62 +18579,6 @@ var generatedDataSources = []dataSourceDescriptor{
 		},
 	},
 	{
-		Name:      "spam_llm",
-		JMAPType:  "x:SpamLlm",
-		Singleton: true,
-		Schema: schema.Schema{
-			MarkdownDescription: "Configures the LLM-based spam classifier. This singleton object always exists: creating the resource adopts the current server settings and destroying it only removes the resource from state. Requires an Enterprise license.",
-			Attributes: map[string]schema.Attribute{
-				"id": schema.StringAttribute{
-					MarkdownDescription: "Always `singleton`.",
-					Computed:            true,
-				},
-				"type": schema.StringAttribute{
-					MarkdownDescription: "Variant discriminator.",
-					Computed:            true,
-				},
-				"categories": schema.SetAttribute{
-					MarkdownDescription: "The expected categories in the LLM response",
-					Computed:            true,
-					ElementType:         types.StringType,
-				},
-				"confidence": schema.SetAttribute{
-					MarkdownDescription: "The expected confidence levels in the LLM response",
-					Computed:            true,
-					ElementType:         types.StringType,
-				},
-				"model_id": schema.StringAttribute{
-					MarkdownDescription: "The AI model to use for the LLM classifier",
-					Computed:            true,
-				},
-				"prompt": schema.StringAttribute{
-					MarkdownDescription: "The prompt to use for the LLM classifier",
-					Computed:            true,
-				},
-				"response_pos_category": schema.Int64Attribute{
-					MarkdownDescription: "The position of the category field in the LLM response.",
-					Computed:            true,
-				},
-				"response_pos_confidence": schema.Int64Attribute{
-					MarkdownDescription: "The position of the confidence field in the LLM response.",
-					Computed:            true,
-				},
-				"response_pos_explanation": schema.Int64Attribute{
-					MarkdownDescription: "The position of the explanation field in the LLM response.",
-					Computed:            true,
-				},
-				"separator": schema.StringAttribute{
-					MarkdownDescription: "The separator character used to parse the LLM response.",
-					Computed:            true,
-				},
-				"temperature": schema.Float64Attribute{
-					MarkdownDescription: "The temperature to use for the LLM classifier",
-					Computed:            true,
-				},
-			},
-		},
-	},
-	{
 		Name:      "spam_pyzor",
 		JMAPType:  "x:SpamPyzor",
 		Singleton: true,
@@ -16438,7 +18598,7 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"enable": schema.BoolAttribute{
-					MarkdownDescription: "Whether to enable the Pyzor classifier. Pyzor is a collaborative, networked system to detect and report spam.",
+					MarkdownDescription: "Whether to enable the Pyzor classifier. Pyzor is a collaborative, networked system to detect and report spam. Disabled by default.",
 					Computed:            true,
 				},
 				"host": schema.StringAttribute{
@@ -16904,19 +19064,43 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"greylist_for": schema.Int64Attribute{
-					MarkdownDescription: "Time to keep an IP address in the grey list. The grey list is used to delay messages from unknown senders.",
+					MarkdownDescription: "How long a sender and recipient pair is remembered after its first delivery attempt was deferred. Retries for the same pair within this period are accepted; once it expires, the pair is greylisted again. Only applies to unauthenticated sessions. Disabled when unset.",
+					Computed:            true,
+				},
+				"max_attachment_text": schema.Int64Attribute{
+					MarkdownDescription: "Maximum amount of text analysed from each non-body text part, such as text attachments",
+					Computed:            true,
+				},
+				"max_body_text": schema.Int64Attribute{
+					MarkdownDescription: "Maximum amount of text analysed from each body text part, the rest is ignored",
+					Computed:            true,
+				},
+				"max_message_text": schema.Int64Attribute{
+					MarkdownDescription: "Maximum amount of text analysed per message across all parts",
+					Computed:            true,
+				},
+				"max_redirect_urls": schema.Int64Attribute{
+					MarkdownDescription: "Maximum number of URL redirector requests sent per message; cached results do not count towards this limit",
+					Computed:            true,
+				},
+				"redirect_cache_ttl": schema.Int64Attribute{
+					MarkdownDescription: "Time to cache the destination of a resolved URL redirect",
+					Computed:            true,
+				},
+				"redirect_timeout": schema.Int64Attribute{
+					MarkdownDescription: "Time after which a URL redirector request is considered failed",
 					Computed:            true,
 				},
 				"score_discard": schema.Float64Attribute{
-					MarkdownDescription: "Discard messages with a score above this threshold",
+					MarkdownDescription: "Discard messages with a score at or above this threshold. Set to 0 or below to disable; rejection takes precedence",
 					Computed:            true,
 				},
 				"score_reject": schema.Float64Attribute{
-					MarkdownDescription: "Reject messages with a score above this threshold",
+					MarkdownDescription: "Reject messages with a score at or above this threshold. Set to 0 or below to disable",
 					Computed:            true,
 				},
 				"score_spam": schema.Float64Attribute{
-					MarkdownDescription: "Mark as Spam messages with a score above this threshold",
+					MarkdownDescription: "Mark as Spam messages with a score at or above this threshold",
 					Computed:            true,
 				},
 				"spam_filter_rules_url": schema.StringAttribute{
@@ -17260,12 +19444,20 @@ var generatedDataSources = []dataSourceDescriptor{
 							MarkdownDescription: "Username to connect to the store",
 							Computed:            true,
 						},
+						"connect_timeout": schema.Int64Attribute{
+							MarkdownDescription: "Maximum time to wait for a connection to the database server to be established",
+							Computed:            true,
+						},
 						"database": schema.StringAttribute{
 							MarkdownDescription: "Name of the database",
 							Computed:            true,
 						},
 						"host": schema.StringAttribute{
 							MarkdownDescription: "Hostname of the database server",
+							Computed:            true,
+						},
+						"idle_timeout": schema.Int64Attribute{
+							MarkdownDescription: "Time an idle connection may stay open before the server closes it (sets the MySQL wait_timeout session variable)",
 							Computed:            true,
 						},
 						"max_allowed_packet": schema.Int64Attribute{
@@ -17293,7 +19485,7 @@ var generatedDataSources = []dataSourceDescriptor{
 							Computed:            true,
 						},
 						"pool_max_connections": schema.Int64Attribute{
-							MarkdownDescription: "Maximum number of connections to the store",
+							MarkdownDescription: "Maximum number of connections to the store. When unset, 4 per CPU core, between 16 and 32.",
 							Computed:            true,
 						},
 						"pool_min_connections": schema.Int64Attribute{
@@ -17423,6 +19615,10 @@ var generatedDataSources = []dataSourceDescriptor{
 										MarkdownDescription: "Variant discriminator.",
 										Computed:            true,
 									},
+									"allow_invalid_certs": schema.BoolAttribute{
+										MarkdownDescription: "Allow invalid TLS certificates when connecting to the Redis server",
+										Computed:            true,
+									},
 									"auth_secret": schema.SingleNestedAttribute{
 										MarkdownDescription: "Password to connect to the store",
 										Computed:            true,
@@ -17448,6 +19644,10 @@ var generatedDataSources = []dataSourceDescriptor{
 									},
 									"auth_username": schema.StringAttribute{
 										MarkdownDescription: "Username to connect to the store",
+										Computed:            true,
+									},
+									"connect_timeout": schema.Int64Attribute{
+										MarkdownDescription: "Maximum time to wait for a new connection to the Redis server to be established",
 										Computed:            true,
 									},
 									"max_retries": schema.Int64Attribute{
@@ -17517,10 +19717,6 @@ var generatedDataSources = []dataSourceDescriptor{
 										MarkdownDescription: "Name of the monitored master (service) to query via the Sentinels",
 										Computed:            true,
 									},
-									"timeout": schema.Int64Attribute{
-										MarkdownDescription: "Connection timeout to the database",
-										Computed:            true,
-									},
 									"url": schema.StringAttribute{
 										MarkdownDescription: "URL of the Redis server",
 										Computed:            true,
@@ -17532,10 +19728,6 @@ var generatedDataSources = []dataSourceDescriptor{
 									},
 								},
 							},
-						},
-						"timeout": schema.Int64Attribute{
-							MarkdownDescription: "Connection timeout to the database",
-							Computed:            true,
 						},
 						"url": schema.StringAttribute{
 							MarkdownDescription: "URL of the Redis server",
@@ -17571,11 +19763,74 @@ var generatedDataSources = []dataSourceDescriptor{
 		},
 	},
 	{
+		Name:     "symmetric_key",
+		JMAPType: "x:SymmetricKey",
+		Schema: schema.Schema{
+			MarkdownDescription: "Defines a symmetric key used to encrypt blobs at rest. Blobs encrypted with a key cannot be read without it, so keys can only be deleted by the recovery administrator.",
+			Attributes: map[string]schema.Attribute{
+				"id": schema.StringAttribute{
+					MarkdownDescription: "Identifier of the object.",
+					Required:            true,
+				},
+				"cipher": schema.StringAttribute{
+					MarkdownDescription: "Encryption algorithm, which cannot be changed after the key is created",
+					Computed:            true,
+				},
+				"description": schema.StringAttribute{
+					MarkdownDescription: "Description of the key",
+					Computed:            true,
+				},
+				"fingerprint": schema.StringAttribute{
+					MarkdownDescription: "Fingerprint of the key, used to detect a changed key file or environment variable",
+					Computed:            true,
+				},
+				"key": schema.SingleNestedAttribute{
+					MarkdownDescription: "Base64-encoded 256-bit key (for example, generated with `openssl rand -base64 32`), which cannot be changed after the key is created",
+					Computed:            true,
+					Attributes: map[string]schema.Attribute{
+						"type": schema.StringAttribute{
+							MarkdownDescription: "Variant discriminator.",
+							Computed:            true,
+						},
+						"file_path": schema.StringAttribute{
+							MarkdownDescription: "File path to read the secret from",
+							Computed:            true,
+						},
+						"secret": schema.StringAttribute{
+							MarkdownDescription: "Password or secret value",
+							Computed:            true,
+							Sensitive:           true,
+						},
+						"variable_name": schema.StringAttribute{
+							MarkdownDescription: "Environment variable name to read the secret from",
+							Computed:            true,
+						},
+					},
+				},
+			},
+		},
+	},
+	{
+		Name:     "symmetric_keys",
+		JMAPType: "x:SymmetricKey",
+		Plural:   true,
+		Schema: schema.Schema{
+			MarkdownDescription: "Lists the identifiers of all `x:SymmetricKey` objects on the server.",
+			Attributes: map[string]schema.Attribute{
+				"ids": schema.SetAttribute{
+					MarkdownDescription: "Identifiers of all objects of this type.",
+					Computed:            true,
+					ElementType:         types.StringType,
+				},
+			},
+		},
+	},
+	{
 		Name:      "system_settings",
 		JMAPType:  "x:SystemSettings",
 		Singleton: true,
 		Schema: schema.Schema{
-			MarkdownDescription: "Configures core server settings including hostname, thread pool, and network services. This singleton object always exists: creating the resource adopts the current server settings and destroying it only removes the resource from state.",
+			MarkdownDescription: "Configures core server settings including hostname and network services. This singleton object always exists: creating the resource adopts the current server settings and destroying it only removes the resource from state.",
 			Attributes: map[string]schema.Attribute{
 				"id": schema.StringAttribute{
 					MarkdownDescription: "Always `singleton`.",
@@ -17591,6 +19846,10 @@ var generatedDataSources = []dataSourceDescriptor{
 				},
 				"default_hostname": schema.StringAttribute{
 					MarkdownDescription: "The default hostname to use in SMTP greetings, MTA reports and other places where a hostname is needed but not specified.",
+					Computed:            true,
+				},
+				"include_secrets": schema.BoolAttribute{
+					MarkdownDescription: "Include passwords, keys and other secret values in management API responses instead of hiding them. Enable it only to export the configuration and data for a migration, and disable it again afterwards",
 					Computed:            true,
 				},
 				"mail_exchangers": schema.ListNestedAttribute{
@@ -17609,8 +19868,12 @@ var generatedDataSources = []dataSourceDescriptor{
 						},
 					},
 				},
+				"max_buffered_memory": schema.Int64Attribute{
+					MarkdownDescription: "The maximum amount of memory used for buffering messages and blobs in transit. When unset, one quarter of the memory available to the server (the container memory limit if one is set, otherwise physical memory)",
+					Computed:            true,
+				},
 				"max_connections": schema.Int64Attribute{
-					MarkdownDescription: "The maximum number of concurrent connections the server will accept",
+					MarkdownDescription: "The default maximum number of concurrent connections per listener, used by listeners that do not set their own limit",
 					Computed:            true,
 				},
 				"provider_info": schema.MapAttribute{
@@ -17622,10 +19885,6 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Enable proxy protocol for connections from these networks",
 					Computed:            true,
 					ElementType:         types.StringType,
-				},
-				"thread_pool_size": schema.Int64Attribute{
-					MarkdownDescription: "The number of threads in the global thread pool for CPU intensive tasks. Defaults to the number of CPU cores",
-					Computed:            true,
 				},
 			},
 		},
@@ -17676,16 +19935,16 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Identifier of the archived blob to be restored",
 					Computed:            true,
 				},
+				"compression": schema.StringAttribute{
+					MarkdownDescription: "Compression to apply to each blob",
+					Computed:            true,
+				},
 				"created_at": schema.StringAttribute{
 					MarkdownDescription: "Timestamp when the item was originally created",
 					Computed:            true,
 				},
 				"document_id": schema.StringAttribute{
 					MarkdownDescription: "Identifier of the document associated with this task",
-					Computed:            true,
-				},
-				"document_type": schema.StringAttribute{
-					MarkdownDescription: "Type of document associated with the task",
 					Computed:            true,
 				},
 				"domain_id": schema.StringAttribute{
@@ -17695,6 +19954,20 @@ var generatedDataSources = []dataSourceDescriptor{
 				"due": schema.StringAttribute{
 					MarkdownDescription: "Due date and time for the task",
 					Computed:            true,
+				},
+				"encryption": schema.SingleNestedAttribute{
+					MarkdownDescription: "Encryption to apply to each blob",
+					Computed:            true,
+					Attributes: map[string]schema.Attribute{
+						"type": schema.StringAttribute{
+							MarkdownDescription: "Variant discriminator.",
+							Computed:            true,
+						},
+						"key_id": schema.StringAttribute{
+							MarkdownDescription: "Key used to encrypt each blob",
+							Computed:            true,
+						},
+					},
 				},
 				"event_end": schema.StringAttribute{
 					MarkdownDescription: "End date and time of the calendar event",
@@ -17719,6 +19992,11 @@ var generatedDataSources = []dataSourceDescriptor{
 				"maintenance_type": schema.StringAttribute{
 					MarkdownDescription: "Type of maintenance operation to perform on the account",
 					Computed:            true,
+				},
+				"member_group_ids": schema.SetAttribute{
+					MarkdownDescription: "Groups the deleted account was a member of",
+					Computed:            true,
+					ElementType:         types.StringType,
 				},
 				"message_ids": schema.SetAttribute{
 					MarkdownDescription: "Message-IDs of the email messages to be merged into the thread",
@@ -17754,6 +20032,10 @@ var generatedDataSources = []dataSourceDescriptor{
 						},
 					},
 				},
+				"object_type": schema.StringAttribute{
+					MarkdownDescription: "Type of the shared item",
+					Computed:            true,
+				},
 				"on_success_renew_certificate": schema.BoolAttribute{
 					MarkdownDescription: "Whether to automatically renew the domain's TLS certificate using ACME after successfully updating DNS records",
 					Computed:            true,
@@ -17779,7 +20061,7 @@ var generatedDataSources = []dataSourceDescriptor{
 							Computed:            true,
 						},
 						"attempt_number": schema.Int64Attribute{
-							MarkdownDescription: "Number of attempts made to complete the task",
+							MarkdownDescription: "Number of failed attempts so far",
 							Computed:            true,
 						},
 						"created_at": schema.StringAttribute{
@@ -17802,7 +20084,15 @@ var generatedDataSources = []dataSourceDescriptor{
 							MarkdownDescription: "Reason for the last failure",
 							Computed:            true,
 						},
+						"first_failed_at": schema.StringAttribute{
+							MarkdownDescription: "Date and time of the first failed attempt",
+							Computed:            true,
+						},
 					},
+				},
+				"target_account_id": schema.StringAttribute{
+					MarkdownDescription: "Account that receives the alarm when it is not the owner of the event",
+					Computed:            true,
 				},
 				"tenant_id": schema.StringAttribute{
 					MarkdownDescription: "Identifier of the tenant to be maintained",
@@ -17812,14 +20102,14 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Name of the thread to be merged",
 					Computed:            true,
 				},
-				"trace_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier of the trace associated with this task",
-					Computed:            true,
-				},
 				"update_records": schema.SetAttribute{
 					MarkdownDescription: "Which DNS records should be updated for the domain as part of this task",
 					Computed:            true,
 					ElementType:         types.StringType,
+				},
+				"window_end": schema.StringAttribute{
+					MarkdownDescription: "End of the aggregation window whose reports this task creates",
+					Computed:            true,
 				},
 			},
 		},
@@ -17829,18 +20119,18 @@ var generatedDataSources = []dataSourceDescriptor{
 		JMAPType:  "x:TaskManager",
 		Singleton: true,
 		Schema: schema.Schema{
-			MarkdownDescription: "Configures task execution settings including retry strategies. This singleton object always exists: creating the resource adopts the current server settings and destroying it only removes the resource from state.",
+			MarkdownDescription: "Configures how background tasks are retried after transient failures. This singleton object always exists: creating the resource adopts the current server settings and destroying it only removes the resource from state.",
 			Attributes: map[string]schema.Attribute{
 				"id": schema.StringAttribute{
 					MarkdownDescription: "Always `singleton`.",
 					Computed:            true,
 				},
-				"max_attempts": schema.Int64Attribute{
-					MarkdownDescription: "Maximum number of attempts for retrying a task",
+				"alert_after": schema.Int64Attribute{
+					MarkdownDescription: "Number of failed attempts after which a task is reported as stalled; stalled tasks keep retrying with the configured strategy",
 					Computed:            true,
 				},
 				"strategy": schema.SingleNestedAttribute{
-					MarkdownDescription: "Strategy to use for retrying failed tasks",
+					MarkdownDescription: "Strategy used to compute the delay before a task that failed with a transient error is retried",
 					Computed:            true,
 					Attributes: map[string]schema.Attribute{
 						"type": schema.StringAttribute{
@@ -17868,10 +20158,6 @@ var generatedDataSources = []dataSourceDescriptor{
 							Computed:            true,
 						},
 					},
-				},
-				"total_deadline": schema.Int64Attribute{
-					MarkdownDescription: "Total deadline for retrying a task before it is marked as failed",
-					Computed:            true,
 				},
 			},
 		},
@@ -18479,32 +20765,6 @@ var generatedDataSources = []dataSourceDescriptor{
 						},
 					},
 				},
-				"subject": schema.SingleNestedAttribute{
-					MarkdownDescription: "Subject name that will be used in the TLS aggregate report email",
-					Computed:            true,
-					Attributes: map[string]schema.Attribute{
-						"else": schema.StringAttribute{
-							MarkdownDescription: "Else condition",
-							Computed:            true,
-						},
-						"match": schema.ListNestedAttribute{
-							MarkdownDescription: "List of conditions and their corresponding results",
-							Computed:            true,
-							NestedObject: schema.NestedAttributeObject{
-								Attributes: map[string]schema.Attribute{
-									"if": schema.StringAttribute{
-										MarkdownDescription: "If condition",
-										Computed:            true,
-									},
-									"then": schema.StringAttribute{
-										MarkdownDescription: "Then clause",
-										Computed:            true,
-									},
-								},
-							},
-						},
-					},
-				},
 			},
 		},
 	},
@@ -18584,11 +20844,11 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"path": schema.StringAttribute{
-					MarkdownDescription: "The path to the log file",
+					MarkdownDescription: "Directory in which log files are written",
 					Computed:            true,
 				},
 				"prefix": schema.StringAttribute{
-					MarkdownDescription: "The prefix for the log file",
+					MarkdownDescription: "The prefix for the log file names. When rotation is enabled, the date is appended to it",
 					Computed:            true,
 				},
 				"rotate": schema.StringAttribute{
@@ -18609,6 +20869,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Identifier of the object.",
 					Required:            true,
 				},
+				"allow_invalid_certs": schema.BoolAttribute{
+					MarkdownDescription: "Whether to allow invalid TLS certificates when connecting to the OpenTelemetry collector",
+					Computed:            true,
+				},
 				"enable": schema.BoolAttribute{
 					MarkdownDescription: "Enable or disable the tracer",
 					Computed:            true,
@@ -18619,10 +20883,6 @@ var generatedDataSources = []dataSourceDescriptor{
 				},
 				"enable_span_exporter": schema.BoolAttribute{
 					MarkdownDescription: "Whether to export spans to OpenTelemetry",
-					Computed:            true,
-				},
-				"endpoint": schema.StringAttribute{
-					MarkdownDescription: "The endpoint for Open Telemetry",
 					Computed:            true,
 				},
 				"events": schema.SetAttribute{
@@ -18708,11 +20968,15 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"throttle": schema.Int64Attribute{
-					MarkdownDescription: "The minimum amount of time that must pass between each request to the OpenTelemetry endpoint",
+					MarkdownDescription: "Maximum amount of time that events are held before they are sent to the OpenTelemetry endpoint",
 					Computed:            true,
 				},
 				"timeout": schema.Int64Attribute{
 					MarkdownDescription: "Maximum amount of time that Stalwart will wait for a response from the OpenTelemetry endpoint",
+					Computed:            true,
+				},
+				"url": schema.StringAttribute{
+					MarkdownDescription: "URL of the OpenTelemetry collector; when unset, the collector on localhost port 4317 is used",
 					Computed:            true,
 				},
 			},
@@ -18729,6 +20993,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Identifier of the object.",
 					Required:            true,
 				},
+				"allow_invalid_certs": schema.BoolAttribute{
+					MarkdownDescription: "Whether to allow invalid TLS certificates when connecting to the OpenTelemetry collector",
+					Computed:            true,
+				},
 				"enable": schema.BoolAttribute{
 					MarkdownDescription: "Enable or disable the tracer",
 					Computed:            true,
@@ -18739,10 +21007,6 @@ var generatedDataSources = []dataSourceDescriptor{
 				},
 				"enable_span_exporter": schema.BoolAttribute{
 					MarkdownDescription: "Whether to export spans to OpenTelemetry",
-					Computed:            true,
-				},
-				"endpoint": schema.StringAttribute{
-					MarkdownDescription: "The endpoint for Open Telemetry",
 					Computed:            true,
 				},
 				"events": schema.SetAttribute{
@@ -18828,11 +21092,15 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"throttle": schema.Int64Attribute{
-					MarkdownDescription: "The minimum amount of time that must pass between each request to the OpenTelemetry endpoint",
+					MarkdownDescription: "Maximum amount of time that events are held before they are sent to the OpenTelemetry endpoint",
 					Computed:            true,
 				},
 				"timeout": schema.Int64Attribute{
 					MarkdownDescription: "Maximum amount of time that Stalwart will wait for a response from the OpenTelemetry endpoint",
+					Computed:            true,
+				},
+				"url": schema.StringAttribute{
+					MarkdownDescription: "Base URL of the OpenTelemetry collector; /v1/traces and /v1/logs are appended",
 					Computed:            true,
 				},
 			},
@@ -18950,6 +21218,10 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Path to the cluster file for the FoundationDB cluster",
 					Computed:            true,
 				},
+				"connect_timeout": schema.Int64Attribute{
+					MarkdownDescription: "Maximum time to wait for a connection to the database server to be established",
+					Computed:            true,
+				},
 				"database": schema.StringAttribute{
 					MarkdownDescription: "Name of the database",
 					Computed:            true,
@@ -18960,6 +21232,10 @@ var generatedDataSources = []dataSourceDescriptor{
 				},
 				"host": schema.StringAttribute{
 					MarkdownDescription: "Hostname of the database server",
+					Computed:            true,
+				},
+				"idle_timeout": schema.Int64Attribute{
+					MarkdownDescription: "Time an idle connection may stay open before the server closes it (sets the MySQL wait_timeout session variable)",
 					Computed:            true,
 				},
 				"machine_id": schema.StringAttribute{
@@ -18975,7 +21251,7 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"pool_max_connections": schema.Int64Attribute{
-					MarkdownDescription: "Maximum number of connections to the store",
+					MarkdownDescription: "Maximum number of connections to the store. When unset, 4 per CPU core, between 16 and 32.",
 					Computed:            true,
 				},
 				"pool_min_connections": schema.Int64Attribute{
@@ -19041,10 +21317,6 @@ var generatedDataSources = []dataSourceDescriptor{
 						},
 					},
 				},
-				"timeout": schema.Int64Attribute{
-					MarkdownDescription: "Connection timeout to the database",
-					Computed:            true,
-				},
 				"transaction_retry_delay": schema.Int64Attribute{
 					MarkdownDescription: "Transaction maximum retry delay",
 					Computed:            true,
@@ -19090,7 +21362,7 @@ var generatedDataSources = []dataSourceDescriptor{
 								MarkdownDescription: "Identifier for the domain of the email alias (the part after the @ symbol).",
 								Computed:            true,
 							},
-							"enabled": schema.BoolAttribute{
+							"enable": schema.BoolAttribute{
 								MarkdownDescription: "Whether this email alias is enabled",
 								Computed:            true,
 							},
@@ -19135,7 +21407,7 @@ var generatedDataSources = []dataSourceDescriptor{
 								MarkdownDescription: "Expiration date of the credential",
 								Computed:            true,
 							},
-							"otp_auth": schema.StringAttribute{
+							"otp_url": schema.StringAttribute{
 								MarkdownDescription: "OTP authentication URI for the account",
 								Computed:            true,
 							},
@@ -19190,11 +21462,19 @@ var generatedDataSources = []dataSourceDescriptor{
 							MarkdownDescription: "Whether to encrypt emails when they are appended to mailboxes",
 							Computed:            true,
 						},
+						"header_protection": schema.StringAttribute{
+							MarkdownDescription: "Whether message headers are also protected inside the encrypted part (Subject hiding is not available at rest)",
+							Computed:            true,
+						},
 						"public_key": schema.StringAttribute{
 							MarkdownDescription: "Public key used for encrypting emails",
 							Computed:            true,
 						},
 					},
+				},
+				"external_id": schema.StringAttribute{
+					MarkdownDescription: "Identifier assigned by an external provisioning client such as a SCIM identity provider Requires an Enterprise license.",
+					Computed:            true,
 				},
 				"locale": schema.StringAttribute{
 					MarkdownDescription: "Preferred locale for the account",
@@ -19206,7 +21486,7 @@ var generatedDataSources = []dataSourceDescriptor{
 					ElementType:         types.StringType,
 				},
 				"member_tenant_id": schema.StringAttribute{
-					MarkdownDescription: "Identifier for the tenant this account belongs to",
+					MarkdownDescription: "Identifier for the tenant this account belongs to Requires an Enterprise license.",
 					Computed:            true,
 				},
 				"name": schema.StringAttribute{
@@ -19276,15 +21556,11 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Always `singleton`.",
 					Computed:            true,
 				},
-				"dead_property_max_size": schema.Int64Attribute{
-					MarkdownDescription: "Specifies the maximum size of a WebDAV dead property value that the server will accept",
-					Computed:            true,
-				},
 				"enable_assisted_discovery": schema.BoolAttribute{
-					MarkdownDescription: "Enables assisted discovery of WebDAV shared collections by modifying PROPFIND requests to the root collection. Requests with depth 1 are automatically changed to depth 2, which may cause compatibility issues with some clients that expect the original behavior.",
+					MarkdownDescription: "Enables assisted discovery of shared calendars and address books for clients that do not support multiple home sets. When enabled, a PROPFIND on the user's own calendar or address book home also lists the collections shared with the user by other accounts, and the home set properties contain only the user's own home. When disabled, the home set properties list the home of every account that shares collections with the user.",
 					Computed:            true,
 				},
-				"live_property_max_size": schema.Int64Attribute{
+				"max_live_property_size": schema.Int64Attribute{
 					MarkdownDescription: "Specifies the maximum size of a WebDAV live property value that the server will accept",
 					Computed:            true,
 				},
@@ -19296,12 +21572,12 @@ var generatedDataSources = []dataSourceDescriptor{
 					MarkdownDescription: "Specifies the maximum number of locks that a user can create on a resource",
 					Computed:            true,
 				},
-				"max_results": schema.Int64Attribute{
-					MarkdownDescription: "Specifies the maximum number of results that a WebDAV query can return",
+				"max_request_size": schema.Int64Attribute{
+					MarkdownDescription: "Determines the maximum XML size of a WebDAV request that the server will accept",
 					Computed:            true,
 				},
-				"request_max_size": schema.Int64Attribute{
-					MarkdownDescription: "Determines the maximum XML size of a WebDAV request that the server will accept",
+				"max_results": schema.Int64Attribute{
+					MarkdownDescription: "Specifies the maximum number of results that a WebDAV query can return",
 					Computed:            true,
 				},
 			},
@@ -19318,7 +21594,7 @@ var generatedDataSources = []dataSourceDescriptor{
 					Required:            true,
 				},
 				"allow_invalid_certs": schema.BoolAttribute{
-					MarkdownDescription: "Whether Stalwart should connect to a webhook endpoint that has an invalid TLS certificate",
+					MarkdownDescription: "Whether to allow invalid SSL certificates",
 					Computed:            true,
 				},
 				"discard_after": schema.Int64Attribute{
@@ -19326,7 +21602,7 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"enable": schema.BoolAttribute{
-					MarkdownDescription: "Enable or disable the tracer",
+					MarkdownDescription: "Enable or disable the webhook",
 					Computed:            true,
 				},
 				"events": schema.SetAttribute{
@@ -19404,11 +21680,11 @@ var generatedDataSources = []dataSourceDescriptor{
 					ElementType:         types.StringType,
 				},
 				"level": schema.StringAttribute{
-					MarkdownDescription: "The logging level for this tracer",
+					MarkdownDescription: "The minimum level of the events sent to the webhook",
 					Computed:            true,
 				},
 				"lossy": schema.BoolAttribute{
-					MarkdownDescription: "Whether to drop log entries if there is backlog",
+					MarkdownDescription: "Whether to drop events if there is backlog",
 					Computed:            true,
 				},
 				"signature_key": schema.SingleNestedAttribute{
@@ -19439,7 +21715,7 @@ var generatedDataSources = []dataSourceDescriptor{
 					Computed:            true,
 				},
 				"timeout": schema.Int64Attribute{
-					MarkdownDescription: "Maximum amount of time that Stalwart will wait for a response from this webhook",
+					MarkdownDescription: "Timeout for HTTP requests",
 					Computed:            true,
 				},
 				"url": schema.StringAttribute{

@@ -29,29 +29,42 @@ Represents a background task scheduled for execution.
 - `archived_item_type` (String) Type of the archived item associated with the blob
 - `archived_until` (String) Timestamp until which the archived item will be deleted permanently if not restored
 - `blob_id` (String) Identifier of the archived blob to be restored
+- `compression` (String) Compression to apply to each blob
 - `created_at` (String) Timestamp when the item was originally created
 - `document_id` (String) Identifier of the document associated with this task
-- `document_type` (String) Type of document associated with the task
 - `domain_id` (String) Identifier of the domain associated with this task
 - `due` (String) Due date and time for the task
+- `encryption` (Attributes) Encryption to apply to each blob (see [below for nested schema](#nestedatt--encryption))
 - `event_end` (String) End date and time of the calendar event
 - `event_end_tz` (Number) Timezone identifier for the end date and time
 - `event_id` (Number) Identifier of the calendar event associated with this task
 - `event_start` (String) Start date and time of the calendar event
 - `event_start_tz` (Number) Timezone identifier for the start date and time
 - `maintenance_type` (String) Type of maintenance operation to perform on the account
+- `member_group_ids` (Set of String) Groups the deleted account was a member of
 - `message_ids` (Set of String) Message-IDs of the email messages to be merged into the thread
 - `messages` (Attributes List) List of iTIP messages associated with this task (see [below for nested schema](#nestedatt--messages))
+- `object_type` (String) Type of the shared item
 - `on_success_renew_certificate` (Boolean) Whether to automatically renew the domain's TLS certificate using ACME after successfully updating DNS records
 - `recurrence_id` (Number) Recurrence identifier for the alarm, if applicable
 - `report_id` (String) Identifier for the DMARC aggregate report associated with this task
 - `shard_index` (Number) Index of the shard to perform maintenance on, if applicable for the maintenance type
 - `status` (Attributes) Current status of the task (see [below for nested schema](#nestedatt--status))
+- `target_account_id` (String) Account that receives the alarm when it is not the owner of the event
 - `tenant_id` (String) Identifier of the tenant to be maintained
 - `thread_name` (String) Name of the thread to be merged
-- `trace_id` (String) Identifier of the trace associated with this task
 - `type` (String) Variant discriminator.
 - `update_records` (Set of String) Which DNS records should be updated for the domain as part of this task
+- `window_end` (String) End of the aggregation window whose reports this task creates
+
+<a id="nestedatt--encryption"></a>
+### Nested Schema for `encryption`
+
+Read-Only:
+
+- `key_id` (String) Key used to encrypt each blob
+- `type` (String) Variant discriminator.
+
 
 <a id="nestedatt--messages"></a>
 ### Nested Schema for `messages`
@@ -70,10 +83,11 @@ Read-Only:
 
 Read-Only:
 
-- `attempt_number` (Number) Number of attempts made to complete the task
+- `attempt_number` (Number) Number of failed attempts so far
 - `created_at` (String) Date and time when the task was created
 - `due` (String) Due date and time for the task
 - `failed_at` (String) Date and time when the task failed
 - `failed_attempt_number` (Number) Number of attempts made before the task failed
 - `failure_reason` (String) Reason for the last failure
+- `first_failed_at` (String) Date and time of the first failed attempt
 - `type` (String) Variant discriminator.

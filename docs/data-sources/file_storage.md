@@ -3,12 +3,12 @@
 page_title: "stalwart_file_storage Data Source - stalwart"
 subcategory: ""
 description: |-
-  Configures file storage limits. This singleton object always exists: creating the resource adopts the current server settings and destroying it only removes the resource from state.
+  Configures file storage limits, compression and encryption. This singleton object always exists: creating the resource adopts the current server settings and destroying it only removes the resource from state.
 ---
 
 # stalwart_file_storage (Data Source)
 
-Configures file storage limits. This singleton object always exists: creating the resource adopts the current server settings and destroying it only removes the resource from state.
+Configures file storage limits, compression and encryption. This singleton object always exists: creating the resource adopts the current server settings and destroying it only removes the resource from state.
 
 
 
@@ -17,6 +17,8 @@ Configures file storage limits. This singleton object always exists: creating th
 
 ### Read-Only
 
+- `blob_encryption_key` (String) Key used to encrypt new file blobs; when empty, they are stored unencrypted
+- `compression_algorithm` (String) Algorithm to use to compress file data
 - `id` (String) Always `singleton`.
 - `max_files` (Number) The default maximum number of files a user can create
 - `max_folders` (Number) The default maximum number of file folders a user can create

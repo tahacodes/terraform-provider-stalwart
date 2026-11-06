@@ -51,16 +51,17 @@ resource "stalwart_directory_ldap" "corporate" {
 - `bind_dn` (String) The distinguished name of the account that the server will bind as to connect to the LDAP directory
 - `bind_secret` (Attributes) The password or secret for the bind DN account (see [below for nested schema](#nestedatt--bind_secret))
 - `filter_login` (String) Searches for user accounts by e-mail address during authentication
-- `filter_mailbox` (String) Searches for users or groups matching a recipient e-mail address or alias
 - `filter_member_of` (String) Searches for groups that an account is member of. Use when the group membership is not provided in the account entry. The ? in the filter will be replaced with the account DN.
+- `filter_recipient` (String) Searches for users or groups matching a recipient e-mail address or alias
 - `group_class` (String) LDAP object class used to identify group entries
 - `member_tenant_id` (String) Identifier for the tenant this directory belongs to Requires an Enterprise license.
 - `pool_max_connections` (Number) Maximum number of connections that can be maintained simultaneously in the connection pool
 - `pool_timeout_create` (Number) Maximum amount of time that the connection pool will wait for a new connection to be created
 - `pool_timeout_recycle` (Number) Maximum amount of time that the connection pool manager will wait for a connection to be recycled
 - `pool_timeout_wait` (Number) Maximum amount of time that the connection pool will wait for a connection to become available
-- `timeout` (Number) Connection timeout to the server
+- `timeout` (Number) Timeout for establishing a connection to the LDAP server and for each LDAP operation
 - `url` (String) URL of the LDAP server
+- `url_failover` (Set of String) URLs of backup LDAP servers, tried in order when the primary server is unreachable Requires an Enterprise license.
 - `use_tls` (Boolean) Use TLS to connect to the remote server
 
 ### Read-Only

@@ -36,15 +36,17 @@ Optional:
 - `allow_invalid_certs` (Boolean) Allow invalid TLS certificates when connecting to the store
 - `auth_secret` (Attributes) Password to connect to the store (see [below for nested schema](#nestedatt--store--auth_secret))
 - `auth_username` (String) Username to connect to the store
+- `connect_timeout` (Number) Maximum time to wait for a connection to the database server to be established
 - `database` (String) Name of the database
 - `host` (String) Hostname of the database server
+- `idle_timeout` (Number) Time an idle connection may stay open before the server closes it (sets the MySQL wait_timeout session variable)
 - `max_allowed_packet` (Number) Maximum size of a packet in bytes
 - `max_retries` (Number) Number of retries to connect to the Redis cluster
 - `max_retry_wait` (Number) Maximum time to wait between retries
 - `min_retry_wait` (Number) Minimum time to wait between retries
 - `options` (String) Additional connection options
 - `path` (String) Path to the SQLite data directory
-- `pool_max_connections` (Number) Maximum number of connections to the store
+- `pool_max_connections` (Number) Maximum number of connections to the store. When unset, 4 per CPU core, between 16 and 32.
 - `pool_min_connections` (Number) Minimum number of connections to the store
 - `pool_recycling_method` (String) Method to use when recycling connections in the pool
 - `pool_timeout_create` (Number) Timeout for creating a new connection
@@ -59,7 +61,6 @@ Optional:
 - `sentinel_username` (String) Username to connect to the Sentinel nodes
 - `service_name` (String) Name of the monitored master (service) to query via the Sentinels
 - `stores` (Attributes List) Stores to use for sharding (see [below for nested schema](#nestedatt--store--stores))
-- `timeout` (Number) Connection timeout to the database
 - `url` (String) URL of the Redis server
 - `urls` (Set of String) URL(s) of the Redis server(s)
 - `use_tls` (Boolean) Use TLS to connect to the store
@@ -128,8 +129,10 @@ Required:
 
 Optional:
 
+- `allow_invalid_certs` (Boolean) Allow invalid TLS certificates when connecting to the Redis server
 - `auth_secret` (Attributes) Password to connect to the store (see [below for nested schema](#nestedatt--store--stores--auth_secret))
 - `auth_username` (String) Username to connect to the store
+- `connect_timeout` (Number) Maximum time to wait for a new connection to the Redis server to be established
 - `max_retries` (Number) Number of retries to connect to the Redis cluster
 - `max_retry_wait` (Number) Maximum time to wait between retries
 - `min_retry_wait` (Number) Minimum time to wait between retries
@@ -142,7 +145,6 @@ Optional:
 - `sentinel_secret` (Attributes) Password to connect to the Sentinel nodes (see [below for nested schema](#nestedatt--store--stores--sentinel_secret))
 - `sentinel_username` (String) Username to connect to the Sentinel nodes
 - `service_name` (String) Name of the monitored master (service) to query via the Sentinels
-- `timeout` (Number) Connection timeout to the database
 - `url` (String) URL of the Redis server
 - `urls` (Set of String) URL(s) of the Redis server(s)
 

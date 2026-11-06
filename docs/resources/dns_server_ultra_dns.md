@@ -23,13 +23,13 @@ Defines a DNS server for automatic record management. Manages the UltraDNS varia
 
 ### Optional
 
-- `endpoint` (String) Optional REST API endpoint override
-- `member_tenant_id` (String) Identifier for the tenant this DNS server belongs to
-- `polling_interval` (Number) How often to check for DNS records to propagate
+- `member_tenant_id` (String) Identifier for the tenant this DNS server belongs to Requires an Enterprise license.
+- `poll_interval` (Number) How often to check for DNS records to propagate
 - `propagation_delay` (Number) Initial delay before first propagation check (useful for slow providers)
 - `propagation_timeout` (Number) How long to wait for DNS records to propagate
 - `timeout` (Number) Request timeout for the DNS server
 - `ttl` (Number) The TTL for new DNS record
+- `url` (String) Optional REST API base URL override
 
 ### Read-Only
 

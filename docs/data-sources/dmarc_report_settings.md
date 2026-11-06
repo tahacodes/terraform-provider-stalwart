@@ -21,16 +21,15 @@ Configures DMARC aggregate and failure report generation. This singleton object 
 - `aggregate_dkim_sign_domain` (Attributes) Which domain's DKIM signatures to use when signing the DMARC aggregate report (see [below for nested schema](#nestedatt--aggregate_dkim_sign_domain))
 - `aggregate_from_address` (Attributes) Email address that will be used in the From header of the DMARC aggregate report email (see [below for nested schema](#nestedatt--aggregate_from_address))
 - `aggregate_from_name` (Attributes) Name that will be used in the From header of the DMARC aggregate report email (see [below for nested schema](#nestedatt--aggregate_from_name))
-- `aggregate_max_report_size` (Attributes) Maximum size of the DMARC aggregate report in bytes (see [below for nested schema](#nestedatt--aggregate_max_report_size))
 - `aggregate_org_name` (Attributes) Name of the organization to be included in the report (see [below for nested schema](#nestedatt--aggregate_org_name))
 - `aggregate_send_frequency` (Attributes) Frequency at which the DMARC aggregate reports will be sent. The options are hourly, daily, weekly, or disable to disable reporting (see [below for nested schema](#nestedatt--aggregate_send_frequency))
-- `aggregate_subject` (Attributes) Subject name that will be used in the DMARC aggregate report email (see [below for nested schema](#nestedatt--aggregate_subject))
 - `failure_dkim_sign_domain` (Attributes) Which domain's DKIM signatures to use when signing the DMARC authentication failure report (see [below for nested schema](#nestedatt--failure_dkim_sign_domain))
 - `failure_from_address` (Attributes) Email address that will be used in the From header of the DMARC authentication failure report email (see [below for nested schema](#nestedatt--failure_from_address))
 - `failure_from_name` (Attributes) Name that will be used in the From header of the DMARC report email (see [below for nested schema](#nestedatt--failure_from_name))
 - `failure_send_frequency` (Attributes) Rate at which DMARC reports will be sent to a given email address. When this rate is exceeded, no further DMARC failure reports will be sent to that address (see [below for nested schema](#nestedatt--failure_send_frequency))
 - `failure_subject` (Attributes) Subject name that will be used in the DMARC authentication failure report email (see [below for nested schema](#nestedatt--failure_subject))
 - `id` (String) Always `singleton`.
+- `max_aggregate_report_size` (Attributes) Maximum size of the DMARC aggregate report in bytes (see [below for nested schema](#nestedatt--max_aggregate_report_size))
 
 <a id="nestedatt--aggregate_contact_info"></a>
 ### Nested Schema for `aggregate_contact_info`
@@ -104,24 +103,6 @@ Read-Only:
 
 
 
-<a id="nestedatt--aggregate_max_report_size"></a>
-### Nested Schema for `aggregate_max_report_size`
-
-Read-Only:
-
-- `else` (String) Else condition
-- `match` (Attributes List) List of conditions and their corresponding results (see [below for nested schema](#nestedatt--aggregate_max_report_size--match))
-
-<a id="nestedatt--aggregate_max_report_size--match"></a>
-### Nested Schema for `aggregate_max_report_size.match`
-
-Read-Only:
-
-- `if` (String) If condition
-- `then` (String) Then clause
-
-
-
 <a id="nestedatt--aggregate_org_name"></a>
 ### Nested Schema for `aggregate_org_name`
 
@@ -150,24 +131,6 @@ Read-Only:
 
 <a id="nestedatt--aggregate_send_frequency--match"></a>
 ### Nested Schema for `aggregate_send_frequency.match`
-
-Read-Only:
-
-- `if` (String) If condition
-- `then` (String) Then clause
-
-
-
-<a id="nestedatt--aggregate_subject"></a>
-### Nested Schema for `aggregate_subject`
-
-Read-Only:
-
-- `else` (String) Else condition
-- `match` (Attributes List) List of conditions and their corresponding results (see [below for nested schema](#nestedatt--aggregate_subject--match))
-
-<a id="nestedatt--aggregate_subject--match"></a>
-### Nested Schema for `aggregate_subject.match`
 
 Read-Only:
 
@@ -258,6 +221,24 @@ Read-Only:
 
 <a id="nestedatt--failure_subject--match"></a>
 ### Nested Schema for `failure_subject.match`
+
+Read-Only:
+
+- `if` (String) If condition
+- `then` (String) Then clause
+
+
+
+<a id="nestedatt--max_aggregate_report_size"></a>
+### Nested Schema for `max_aggregate_report_size`
+
+Read-Only:
+
+- `else` (String) Else condition
+- `match` (Attributes List) List of conditions and their corresponding results (see [below for nested schema](#nestedatt--max_aggregate_report_size--match))
+
+<a id="nestedatt--max_aggregate_report_size--match"></a>
+### Nested Schema for `max_aggregate_report_size.match`
 
 Read-Only:
 

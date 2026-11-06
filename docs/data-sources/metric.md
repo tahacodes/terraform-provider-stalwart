@@ -23,6 +23,7 @@ Stores a collected server metric data point.
 
 - `count_value` (Number) Count associated with the metric
 - `metric` (String) Metric event type
-- `sum` (Number) Sum associated with the metric
+- `node_id` (Number) Id of the cluster node that recorded the data point
+- `sum` (Number) Sum of the observations recorded since the previous data point from the same node
 - `timestamp` (String) Timestamp of the metric entry
 - `type` (String) Variant discriminator.

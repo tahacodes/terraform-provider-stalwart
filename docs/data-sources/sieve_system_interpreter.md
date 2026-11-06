@@ -21,7 +21,6 @@ Configures the system-level Sieve script interpreter settings and limits. This s
 - `default_from_name` (Attributes) Default name to use for the from field in email notifications sent from a Sieve script (see [below for nested schema](#nestedatt--default_from_name))
 - `default_return_path` (Attributes) Default return path to use in email notifications sent from a Sieve script (see [below for nested schema](#nestedatt--default_return_path))
 - `dkim_sign_domain` (Attributes) Which domain's DKIM signatures to use when signing the email notifications sent from a Sieve script (see [below for nested schema](#nestedatt--dkim_sign_domain))
-- `duplicate_expiry` (Number) Default expiration time for IDs stored by the duplicate extension from trusted scripts
 - `id` (String) Always `singleton`.
 - `max_cpu_cycles` (Number) Maximum number CPU cycles a script can use
 - `max_nested_includes` (Number) Maximum number of nested includes

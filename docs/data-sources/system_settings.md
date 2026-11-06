@@ -3,12 +3,12 @@
 page_title: "stalwart_system_settings Data Source - stalwart"
 subcategory: ""
 description: |-
-  Configures core server settings including hostname, thread pool, and network services. This singleton object always exists: creating the resource adopts the current server settings and destroying it only removes the resource from state.
+  Configures core server settings including hostname and network services. This singleton object always exists: creating the resource adopts the current server settings and destroying it only removes the resource from state.
 ---
 
 # stalwart_system_settings (Data Source)
 
-Configures core server settings including hostname, thread pool, and network services. This singleton object always exists: creating the resource adopts the current server settings and destroying it only removes the resource from state.
+Configures core server settings including hostname and network services. This singleton object always exists: creating the resource adopts the current server settings and destroying it only removes the resource from state.
 
 
 
@@ -21,11 +21,12 @@ Configures core server settings including hostname, thread pool, and network ser
 - `default_domain_id` (String) Default domain to use for authentication and reports.
 - `default_hostname` (String) The default hostname to use in SMTP greetings, MTA reports and other places where a hostname is needed but not specified.
 - `id` (String) Always `singleton`.
+- `include_secrets` (Boolean) Include passwords, keys and other secret values in management API responses instead of hiding them. Enable it only to export the configuration and data for a migration, and disable it again afterwards
 - `mail_exchangers` (Attributes List) List of mail exchangers to publish in DNS MX records. (see [below for nested schema](#nestedatt--mail_exchangers))
-- `max_connections` (Number) The maximum number of concurrent connections the server will accept
+- `max_buffered_memory` (Number) The maximum amount of memory used for buffering messages and blobs in transit. When unset, one quarter of the memory available to the server (the container memory limit if one is set, otherwise physical memory)
+- `max_connections` (Number) The default maximum number of concurrent connections per listener, used by listeners that do not set their own limit
 - `provider_info` (Map of String) Information about the provider to advertise in auto configuration services.
 - `proxy_trusted_networks` (Set of String) Enable proxy protocol for connections from these networks
-- `thread_pool_size` (Number) The number of threads in the global thread pool for CPU intensive tasks. Defaults to the number of CPU cores
 
 <a id="nestedatt--mail_exchangers"></a>
 ### Nested Schema for `mail_exchangers`

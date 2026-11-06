@@ -18,9 +18,27 @@ Configures inbound SMTP session timeouts and transfer limits. This singleton obj
 ### Read-Only
 
 - `id` (String) Always `singleton`.
+- `idle_timeout` (Attributes) How long to wait for a client to send a command before timing out (see [below for nested schema](#nestedatt--idle_timeout))
 - `max_duration` (Attributes) The maximum duration of a session (see [below for nested schema](#nestedatt--max_duration))
-- `timeout` (Attributes) How long to wait for a client to send a command before timing out (see [below for nested schema](#nestedatt--timeout))
 - `transfer_limit` (Attributes) The maximum number of bytes that can be transferred per session (see [below for nested schema](#nestedatt--transfer_limit))
+
+<a id="nestedatt--idle_timeout"></a>
+### Nested Schema for `idle_timeout`
+
+Read-Only:
+
+- `else` (String) Else condition
+- `match` (Attributes List) List of conditions and their corresponding results (see [below for nested schema](#nestedatt--idle_timeout--match))
+
+<a id="nestedatt--idle_timeout--match"></a>
+### Nested Schema for `idle_timeout.match`
+
+Read-Only:
+
+- `if` (String) If condition
+- `then` (String) Then clause
+
+
 
 <a id="nestedatt--max_duration"></a>
 ### Nested Schema for `max_duration`
@@ -32,24 +50,6 @@ Read-Only:
 
 <a id="nestedatt--max_duration--match"></a>
 ### Nested Schema for `max_duration.match`
-
-Read-Only:
-
-- `if` (String) If condition
-- `then` (String) Then clause
-
-
-
-<a id="nestedatt--timeout"></a>
-### Nested Schema for `timeout`
-
-Read-Only:
-
-- `else` (String) Else condition
-- `match` (Attributes List) List of conditions and their corresponding results (see [below for nested schema](#nestedatt--timeout--match))
-
-<a id="nestedatt--timeout--match"></a>
-### Nested Schema for `timeout.match`
 
 Read-Only:
 

@@ -20,7 +20,7 @@ Configures enterprise licensing and branding settings. This singleton object alw
 - `api_key` (Attributes) API key for license retrieval and automatic renewals. Obtain your API key at https://license.stalw.art. (see [below for nested schema](#nestedatt--api_key))
 - `id` (String) Always `singleton`.
 - `license_key` (Attributes) Upgrade to the enterprise version of Stalwart by entering your license key here. Obtain your license at https://license.stalw.art/buy (see [below for nested schema](#nestedatt--license_key))
-- `logo_url` (String) URL to the default logo to use in the Webadmin interface. Requires an Enterprise license.
+- `logo` (String) URL or base64-encoded image used as the default logo in the Webadmin interface Requires an Enterprise license.
 
 <a id="nestedatt--api_key"></a>
 ### Nested Schema for `api_key`

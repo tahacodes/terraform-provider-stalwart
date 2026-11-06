@@ -17,7 +17,7 @@ Defines a routing rule for outbound message delivery. Manages the Relay Host var
 
 ### Required
 
-- `address` (String) The address of the remote SMTP server, which can be an IP address or a domain name
+- `host` (String) Hostname or IP address of the remote SMTP server
 - `name` (String) Short identifier for the route
 
 ### Optional

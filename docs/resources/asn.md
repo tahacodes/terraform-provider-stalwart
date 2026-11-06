@@ -21,8 +21,8 @@ Configures ASN and geolocation data sources for IP address lookups. This singlet
 
 ### Optional
 
+- `allow_invalid_certs` (Boolean) Whether to allow invalid SSL certificates
 - `asn_urls` (Set of String) URLs to fetch CSV file containing the IP to ASN mappings.
-- `expires` (Number) How often to refresh the ASN/Geo data.
 - `geo_urls` (Set of String) URLs to fetch CSV file containing the IP to country code mappings.
 - `http_auth` (Attributes) The type of HTTP authentication to use (see [below for nested schema](#nestedatt--http_auth))
 - `http_headers` (Map of String) Additional headers to include in HTTP requests
@@ -30,6 +30,7 @@ Configures ASN and geolocation data sources for IP address lookups. This singlet
 - `index_asn_name` (Number) The position of the ASN Name in the DNS TXT record.
 - `index_country` (Number) The position of the country code in the DNS TXT record.
 - `max_size` (Number) Maximum size of the ASN/Geo data file.
+- `refresh_interval` (Number) How often to refresh the ASN/Geo data.
 - `separator` (String) The separator character used in the DNS TXT record.
 - `timeout` (Number) Time after which the ASN/Geo resource fetch is considered failed.
 - `zone_ip_v4` (String) The DNS zone to query for IPv4 ASN and geolocation data.

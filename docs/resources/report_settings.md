@@ -19,7 +19,8 @@ Configures inbound report analysis and outbound report settings. This singleton 
 
 - `inbound_report_addresses` (Set of String) List of addresses (which may include wildcards) from which reports will be intercepted and analyzed
 - `inbound_report_forwarding` (Boolean) Whether reports should be forwarded to their final recipient after analysis
-- `outbound_report_domain` (String) The default domain name used for DSNs and other reports. If left empty, the default domain will be used.
+- `max_inbound_report_size` (Number) Maximum size of inbound reports to be intercepted and analyzed, in bytes. Reports larger than this size will be ignored
+- `outbound_report_domain` (String) Domain name used by default in the sender address and organization name of DSNs and outbound reports, available in expressions as `system('report_domain')`. If left empty, the default domain is used.
 - `outbound_report_submitter` (Attributes) Report submitter address or leave empty to use the default hostname (see [below for nested schema](#nestedatt--outbound_report_submitter))
 
 ### Read-Only

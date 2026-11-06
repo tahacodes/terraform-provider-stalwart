@@ -26,7 +26,7 @@ Defines a mailing list that distributes messages to a group of recipients.
 - `description` (String) Description of the mailing list
 - `domain_id` (String) Identifier for the domain this mailing list belongs to. This is used to determine the email address of the mailing list, which is formed as name@domain.
 - `email_address` (String) The email address of the mailing list, formed as name@domain.
-- `member_tenant_id` (String) Identifier for the tenant this mailing list belongs to
+- `member_tenant_id` (String) Identifier for the tenant this mailing list belongs to Requires an Enterprise license.
 - `recipients` (Set of String) List of email addresses that are members of the mailing list
 
 <a id="nestedatt--aliases"></a>
@@ -36,5 +36,5 @@ Read-Only:
 
 - `description` (String) Description of the email alias
 - `domain_id` (String) Identifier for the domain of the email alias (the part after the @ symbol).
-- `enabled` (Boolean) Whether this email alias is enabled
+- `enable` (Boolean) Whether this email alias is enabled
 - `name` (String) The local part of the email alias (the part before the @ symbol)

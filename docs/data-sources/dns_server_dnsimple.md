@@ -22,29 +22,17 @@ Defines a DNS server for automatic record management. Reads the DNSimple variant
 ### Read-Only
 
 - `account_identifier` (String) The account ID used to authenticate with DNSimple
-- `auth_token` (Attributes) The authentication token used to authenticate with DNSimple (see [below for nested schema](#nestedatt--auth_token))
 - `description` (String) Short description of this DNS server
-- `member_tenant_id` (String) Identifier for the tenant this DNS server belongs to
-- `polling_interval` (Number) How often to check for DNS records to propagate
+- `member_tenant_id` (String) Identifier for the tenant this DNS server belongs to Requires an Enterprise license.
+- `poll_interval` (Number) How often to check for DNS records to propagate
 - `propagation_delay` (Number) Initial delay before first propagation check (useful for slow providers)
 - `propagation_timeout` (Number) How long to wait for DNS records to propagate
-- `secret` (Attributes) Deprecated secret (see [below for nested schema](#nestedatt--secret))
 - `timeout` (Number) Request timeout for the DNS server
+- `token` (Attributes) The API token used to authenticate with DNSimple (see [below for nested schema](#nestedatt--token))
 - `ttl` (Number) The TTL for new DNS record
 
-<a id="nestedatt--auth_token"></a>
-### Nested Schema for `auth_token`
-
-Read-Only:
-
-- `file_path` (String) File path to read the secret from
-- `secret` (String, Sensitive) Password or secret value
-- `type` (String) Variant discriminator.
-- `variable_name` (String) Environment variable name to read the secret from
-
-
-<a id="nestedatt--secret"></a>
-### Nested Schema for `secret`
+<a id="nestedatt--token"></a>
+### Nested Schema for `token`
 
 Read-Only:
 
