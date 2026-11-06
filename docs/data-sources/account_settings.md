@@ -30,5 +30,6 @@ Read-Only:
 
 - `allow_spam_training` (Boolean) Whether to allow training the spam classifier with plaintext emails before encryption
 - `encrypt_on_append` (Boolean) Whether to encrypt emails when they are appended to mailboxes
+- `header_protection` (String) Whether message headers are also protected inside the encrypted part (Subject hiding is not available at rest)
 - `public_key` (String) Public key used for encrypting emails
 - `type` (String) Variant discriminator.

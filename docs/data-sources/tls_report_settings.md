@@ -25,7 +25,6 @@ Configures TLS aggregate report generation. This singleton object always exists:
 - `max_report_size` (Attributes) Maximum size of the TLS aggregate report in bytes (see [below for nested schema](#nestedatt--max_report_size))
 - `org_name` (Attributes) Name of the organization to be included in the report (see [below for nested schema](#nestedatt--org_name))
 - `send_frequency` (Attributes) Frequency at which the TLS aggregate reports will be sent. The options are hourly, daily, weekly, or disable to disable reporting (see [below for nested schema](#nestedatt--send_frequency))
-- `subject` (Attributes) Subject name that will be used in the TLS aggregate report email (see [below for nested schema](#nestedatt--subject))
 
 <a id="nestedatt--contact_info"></a>
 ### Nested Schema for `contact_info`
@@ -145,24 +144,6 @@ Read-Only:
 
 <a id="nestedatt--send_frequency--match"></a>
 ### Nested Schema for `send_frequency.match`
-
-Read-Only:
-
-- `if` (String) If condition
-- `then` (String) Then clause
-
-
-
-<a id="nestedatt--subject"></a>
-### Nested Schema for `subject`
-
-Read-Only:
-
-- `else` (String) Else condition
-- `match` (Attributes List) List of conditions and their corresponding results (see [below for nested schema](#nestedatt--subject--match))
-
-<a id="nestedatt--subject--match"></a>
-### Nested Schema for `subject.match`
 
 Read-Only:
 

@@ -26,7 +26,7 @@ Represents an archived item that can be restored.
 - `archived_at` (String) Timestamp when the item was archived
 - `archived_until` (String) Timestamp until which the archived item will be deleted permanently if not restored
 - `blob_id` (String) Identifier of the archived blob
-- `content` (String) Content of the archived sieve script
+- `contents` (String) Content of the archived sieve script
 - `created_at` (String) Creation date of the archived file
 - `from` (String) Sender of the archived email message
 - `received_at` (String) Received date of the archived email message

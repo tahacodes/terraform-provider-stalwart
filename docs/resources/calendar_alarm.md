@@ -19,7 +19,7 @@ Configures calendar alarm email notifications. This singleton object always exis
 
 - `allow_external_rcpts` (Boolean) Allows calendar alarms to be sent to external recipients, enabling notifications to users outside the server
 - `enable` (Boolean) Enables the calendar alarms feature, allowing users to set alarms for events and receive notifications via e-mail
-- `from_email` (String) Specifies the e-mail address that will appear in the 'From' field of calendar alarm e-mails, ensuring that users can reply to or contact the sender
+- `from_address` (String) Specifies the e-mail address that will appear in the 'From' field of calendar alarm e-mails, ensuring that users can reply to or contact the sender
 - `from_name` (String) Specifies the name that will appear in the 'From' field of calendar alarm e-mails, providing a recognizable sender name for users
 - `min_trigger_interval` (Number) Specifies the minimum interval for calendar alarms, ensuring that alarms are not triggered too frequently
 - `template` (String) Specifies the HTML template used for rendering calendar alarm e-mails, allowing customization of the alarm notification format Requires an Enterprise license.

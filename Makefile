@@ -1,5 +1,5 @@
 OWNER ?=
-STALWART_VERSION ?= v0.16.17
+STALWART_VERSION ?= v1.0.3
 BINARY := terraform-provider-stalwart
 
 default: build
@@ -35,7 +35,7 @@ docs:
 schema:
 	@test -n "$(STALWART_URL)" || (echo "STALWART_URL is required"; exit 1)
 	@test -n "$(STALWART_VERSION)" || (echo "STALWART_VERSION is required"; exit 1)
-	curl -sSf -u "$(STALWART_USER):$(STALWART_PASSWORD)" "$(STALWART_URL)/api/schema" \
+	curl -sSfL --compressed -u "$(STALWART_USER):$(STALWART_PASSWORD)" "$(STALWART_URL)/api/schema" \
 		-o schema/$(STALWART_VERSION).json
 	@echo "wrote schema/$(STALWART_VERSION).json"
 

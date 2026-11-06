@@ -33,7 +33,7 @@ resource "stalwart_mailing_list" "announce" {
 
 - `aliases` (Attributes List) List of email aliases for the mailing list (see [below for nested schema](#nestedatt--aliases))
 - `description` (String) Description of the mailing list
-- `member_tenant_id` (String) Identifier for the tenant this mailing list belongs to
+- `member_tenant_id` (String) Identifier for the tenant this mailing list belongs to Requires an Enterprise license.
 - `recipients` (Set of String) List of email addresses that are members of the mailing list
 
 ### Read-Only
@@ -48,7 +48,7 @@ Optional:
 
 - `description` (String) Description of the email alias
 - `domain_id` (String) Identifier for the domain of the email alias (the part after the @ symbol).
-- `enabled` (Boolean) Whether this email alias is enabled
+- `enable` (Boolean) Whether this email alias is enabled
 - `name` (String) The local part of the email alias (the part before the @ symbol)
 
 ## Import

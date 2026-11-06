@@ -25,18 +25,19 @@ Configures the storage backend for metrics data. This singleton object always ex
 - `auth_secret` (Attributes) Password to connect to the store (see [below for nested schema](#nestedatt--auth_secret))
 - `auth_username` (String) Username to connect to the store
 - `cluster_file` (String) Path to the cluster file for the FoundationDB cluster
+- `connect_timeout` (Number) Maximum time to wait for a connection to the database server to be established
 - `database` (String) Name of the database
 - `datacenter_id` (String) Data center ID (optional)
 - `host` (String) Hostname of the database server
+- `idle_timeout` (Number) Time an idle connection may stay open before the server closes it (sets the MySQL wait_timeout session variable)
 - `machine_id` (String) Machine ID in the FoundationDB cluster (optional)
 - `max_allowed_packet` (Number) Maximum size of a packet in bytes
 - `options` (String) Additional connection options
-- `pool_max_connections` (Number) Maximum number of connections to the store
+- `pool_max_connections` (Number) Maximum number of connections to the store. When unset, 4 per CPU core, between 16 and 32.
 - `pool_min_connections` (Number) Minimum number of connections to the store
 - `pool_recycling_method` (String) Method to use when recycling connections in the pool
 - `port` (Number) Port of the database server
 - `read_replicas` (Attributes List) List of read replicas for the store Requires an Enterprise license. (see [below for nested schema](#nestedatt--read_replicas))
-- `timeout` (Number) Connection timeout to the database
 - `transaction_retry_delay` (Number) Transaction maximum retry delay
 - `transaction_retry_limit` (Number) Transaction retry limit
 - `transaction_timeout` (Number) Transaction timeout

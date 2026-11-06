@@ -24,8 +24,8 @@ Defines a DNS server for automatic record management. Reads the Google Cloud DNS
 - `description` (String) Short description of this DNS server
 - `impersonate_service_account` (String) Optional service account email to impersonate
 - `managed_zone` (String) Managed zone name (resolved automatically by longest suffix match if not set)
-- `member_tenant_id` (String) Identifier for the tenant this DNS server belongs to
-- `polling_interval` (Number) How often to check for DNS records to propagate
+- `member_tenant_id` (String) Identifier for the tenant this DNS server belongs to Requires an Enterprise license.
+- `poll_interval` (Number) How often to check for DNS records to propagate
 - `private_zone` (Boolean) Whether to restrict zone resolution to private zones only
 - `project_id` (String) The Google Cloud project ID that owns the managed zone
 - `propagation_delay` (Number) Initial delay before first propagation check (useful for slow providers)

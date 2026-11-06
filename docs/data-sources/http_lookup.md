@@ -21,16 +21,19 @@ Defines an HTTP-based lookup list.
 
 ### Read-Only
 
+- `allow_invalid_certs` (Boolean) Whether to allow invalid SSL certificates
 - `enable` (Boolean) Whether to enable this HTTP list
 - `format` (Attributes) Format of the list (see [below for nested schema](#nestedatt--format))
+- `http_auth` (Attributes) The type of HTTP authentication to use (see [below for nested schema](#nestedatt--http_auth))
+- `http_headers` (Map of String) Additional headers to include in HTTP requests
 - `is_gzipped` (Boolean) Whether to use gzip compression when downloading the list
 - `max_entries` (Number) Maximum number of entries allowed in the list. The list is truncated if it exceeds this limit.
 - `max_entry_size` (Number) Maximum length of an entry in the list.
-- `max_size` (Number) Maximum size of the list. The list is truncated if it exceeds this size.
+- `max_size` (Number) Maximum size of the downloaded list and of each of its lines. A download exceeding this size is rejected and the previously loaded list is kept; lines exceeding it are skipped.
 - `namespace` (String) Unique identifier for this store when used in lookups
-- `refresh` (Number) How often to refresh the list
+- `refresh_interval` (Number) How often to refresh the list
 - `retry` (Number) How long to wait before retrying to download the list in case of failure.
-- `timeout` (Number) How long to wait for the list to download before timing out
+- `timeout` (Number) Timeout for HTTP requests
 - `url` (String) URL of the list
 
 <a id="nestedatt--format"></a>
@@ -43,3 +46,35 @@ Read-Only:
 - `separator` (String) The separator character used to parse the HTTP list.
 - `skip_first` (Boolean) Whether to skip the first line of the list
 - `type` (String) Variant discriminator.
+
+
+<a id="nestedatt--http_auth"></a>
+### Nested Schema for `http_auth`
+
+Read-Only:
+
+- `bearer_token` (Attributes) Bearer token for HTTP Bearer Authentication (see [below for nested schema](#nestedatt--http_auth--bearer_token))
+- `secret` (Attributes) Password for HTTP Basic Authentication (see [below for nested schema](#nestedatt--http_auth--secret))
+- `type` (String) Variant discriminator.
+- `username` (String) Username for HTTP Basic Authentication
+
+<a id="nestedatt--http_auth--bearer_token"></a>
+### Nested Schema for `http_auth.bearer_token`
+
+Read-Only:
+
+- `file_path` (String) File path to read the secret from
+- `secret` (String, Sensitive) Password or secret value
+- `type` (String) Variant discriminator.
+- `variable_name` (String) Environment variable name to read the secret from
+
+
+<a id="nestedatt--http_auth--secret"></a>
+### Nested Schema for `http_auth.secret`
+
+Read-Only:
+
+- `file_path` (String) File path to read the secret from
+- `secret` (String, Sensitive) Password or secret value
+- `type` (String) Variant discriminator.
+- `variable_name` (String) Environment variable name to read the secret from

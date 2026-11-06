@@ -3,12 +3,12 @@
 page_title: "stalwart_search Resource - stalwart"
 subcategory: ""
 description: |-
-  Configures full-text search indexing for emails, calendars, contacts, and tracing. This singleton object always exists: creating the resource adopts the current server settings and destroying it only removes the resource from state.
+  Configures full-text search indexing for emails, calendars, contacts, files, and tracing. This singleton object always exists: creating the resource adopts the current server settings and destroying it only removes the resource from state.
 ---
 
 # stalwart_search (Resource)
 
-Configures full-text search indexing for emails, calendars, contacts, and tracing. This singleton object always exists: creating the resource adopts the current server settings and destroying it only removes the resource from state.
+Configures full-text search indexing for emails, calendars, contacts, files, and tracing. This singleton object always exists: creating the resource adopts the current server settings and destroying it only removes the resource from state.
 
 
 
@@ -25,8 +25,17 @@ Configures full-text search indexing for emails, calendars, contacts, and tracin
 - `index_contacts` (Boolean) Enable full-text search indexing for contacts data
 - `index_email` (Boolean) Enable full-text search indexing for email content and metadata
 - `index_email_fields` (Set of String) List of email fields to index
+- `index_files` (Boolean) Enable full-text search indexing for file storage content (file names are always searchable)
 - `index_telemetry` (Boolean) Enable full-text search indexing for tracing data Requires an Enterprise license.
-- `index_tracing_fields` (Set of String) List of tracing fields to index Requires an Enterprise license.
+- `max_concurrent_index_tasks` (Number) Maximum number of indexing tasks that run at the same time
+- `max_extract_archive_entries` (Number) Maximum number of ZIP entries accepted in an Office, OpenDocument or EPUB file
+- `max_extract_decompressed_size` (Number) Maximum number of bytes decompressed while extracting text from a single document
+- `max_extract_document_size` (Number) Maximum size in bytes of a document (file or email attachment) from which text is extracted for indexing
+- `max_extract_part_size` (Number) Maximum decompressed size in bytes of a single part (XML part, EPUB chapter or PDF stream) inside a document
+- `max_extract_parts` (Number) Maximum number of parts (XML parts, slides, sheets or chapters) read from a single document
+- `max_extract_pdf_objects` (Number) Maximum number of objects in a PDF cross-reference table
+- `max_extract_rtf_depth` (Number) Maximum group nesting depth of an RTF document
+- `max_extract_text_size` (Number) Maximum amount of text in bytes extracted from a single document for indexing
 - `supported_languages` (Set of String) List of languages to enable for full-text search
 
 ### Read-Only

@@ -3,12 +3,12 @@
 page_title: "stalwart_task_manager Resource - stalwart"
 subcategory: ""
 description: |-
-  Configures task execution settings including retry strategies. This singleton object always exists: creating the resource adopts the current server settings and destroying it only removes the resource from state.
+  Configures how background tasks are retried after transient failures. This singleton object always exists: creating the resource adopts the current server settings and destroying it only removes the resource from state.
 ---
 
 # stalwart_task_manager (Resource)
 
-Configures task execution settings including retry strategies. This singleton object always exists: creating the resource adopts the current server settings and destroying it only removes the resource from state.
+Configures how background tasks are retried after transient failures. This singleton object always exists: creating the resource adopts the current server settings and destroying it only removes the resource from state.
 
 
 
@@ -17,9 +17,8 @@ Configures task execution settings including retry strategies. This singleton ob
 
 ### Optional
 
-- `max_attempts` (Number) Maximum number of attempts for retrying a task
-- `strategy` (Attributes) Strategy to use for retrying failed tasks (see [below for nested schema](#nestedatt--strategy))
-- `total_deadline` (Number) Total deadline for retrying a task before it is marked as failed
+- `alert_after` (Number) Number of failed attempts after which a task is reported as stalled; stalled tasks keep retrying with the configured strategy
+- `strategy` (Attributes) Strategy used to compute the delay before a task that failed with a transient error is retried (see [below for nested schema](#nestedatt--strategy))
 
 ### Read-Only
 

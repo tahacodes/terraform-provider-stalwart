@@ -20,7 +20,7 @@ Configures SMTP authentication requirements and error handling. This singleton o
 - `max_failures` (Attributes) Maximum number of authentication errors allowed before the session is disconnected (see [below for nested schema](#nestedatt--max_failures))
 - `must_match_sender` (Attributes) Specifies whether the authenticated user or any of their associated e-mail addresses must match the sender of the email message (see [below for nested schema](#nestedatt--must_match_sender))
 - `require` (Attributes) Specifies whether authentication is necessary to send email messages (see [below for nested schema](#nestedatt--require))
-- `sasl_mechanisms` (Attributes) A list of SASL authentication mechanisms offered to clients, or an empty list to disable authentication. Stalwart supports PLAIN, LOGIN, and OAUTHBEARER mechanisms (see [below for nested schema](#nestedatt--sasl_mechanisms))
+- `sasl_mechanisms` (Attributes) A list of SASL authentication mechanisms offered to clients, or an empty list to disable authentication. Stalwart supports PLAIN, LOGIN, OAUTHBEARER and XOAUTH2. OAUTHBEARER and XOAUTH2 are never offered on connections without TLS, whatever this expression returns. (see [below for nested schema](#nestedatt--sasl_mechanisms))
 - `wait_on_fail` (Attributes) Time interval to wait after an authentication failure (see [below for nested schema](#nestedatt--wait_on_fail))
 
 ### Read-Only

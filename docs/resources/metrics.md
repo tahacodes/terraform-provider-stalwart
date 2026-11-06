@@ -21,6 +21,9 @@ Configures metrics collection and export via OpenTelemetry and Prometheus. This 
 - `metrics_policy` (String) How to interpret the metrics list
 - `open_telemetry` (Attributes) OpenTelemetry metrics configuration (see [below for nested schema](#nestedatt--open_telemetry))
 - `prometheus` (Attributes) Prometheus metrics endpoint configuration (see [below for nested schema](#nestedatt--prometheus))
+- `resource_attributes` (Map of String) Additional resource attributes reported to OpenTelemetry collectors by the metrics exporter and the OpenTelemetry tracers
+- `service_name` (String) Service name reported to OpenTelemetry collectors by the metrics exporter and the OpenTelemetry tracers
+- `service_namespace` (String) Optional service namespace reported to OpenTelemetry collectors by the metrics exporter and the OpenTelemetry tracers
 
 ### Read-Only
 
@@ -35,11 +38,12 @@ Required:
 
 Optional:
 
-- `endpoint` (String) The endpoint for Open Telemetry
+- `allow_invalid_certs` (Boolean) Whether to allow invalid SSL certificates
 - `http_auth` (Attributes) The type of HTTP authentication to use (see [below for nested schema](#nestedatt--open_telemetry--http_auth))
 - `http_headers` (Map of String) Additional headers to include in HTTP requests
-- `interval` (Number) The minimum amount of time that must pass between each push request to the OpenTelemetry endpoint
-- `timeout` (Number) Maximum amount of time that Stalwart will wait for a response from the OpenTelemetry endpoint
+- `interval` (Number) How often metrics are exported to the OpenTelemetry collector
+- `timeout` (Number) Maximum amount of time that Stalwart will wait for a response from the OpenTelemetry collector
+- `url` (String) Base URL of the OpenTelemetry collector; /v1/metrics is appended
 
 <a id="nestedatt--open_telemetry--http_auth"></a>
 ### Nested Schema for `open_telemetry.http_auth`

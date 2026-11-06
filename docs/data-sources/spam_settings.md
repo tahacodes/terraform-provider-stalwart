@@ -18,11 +18,17 @@ Configures global spam filter thresholds, greylisting, and trust settings. This 
 ### Read-Only
 
 - `enable` (Boolean) Whether to enable the spam filter
-- `greylist_for` (Number) Time to keep an IP address in the grey list. The grey list is used to delay messages from unknown senders.
+- `greylist_for` (Number) How long a sender and recipient pair is remembered after its first delivery attempt was deferred. Retries for the same pair within this period are accepted; once it expires, the pair is greylisted again. Only applies to unauthenticated sessions. Disabled when unset.
 - `id` (String) Always `singleton`.
-- `score_discard` (Number) Discard messages with a score above this threshold
-- `score_reject` (Number) Reject messages with a score above this threshold
-- `score_spam` (Number) Mark as Spam messages with a score above this threshold
+- `max_attachment_text` (Number) Maximum amount of text analysed from each non-body text part, such as text attachments
+- `max_body_text` (Number) Maximum amount of text analysed from each body text part, the rest is ignored
+- `max_message_text` (Number) Maximum amount of text analysed per message across all parts
+- `max_redirect_urls` (Number) Maximum number of URL redirector requests sent per message; cached results do not count towards this limit
+- `redirect_cache_ttl` (Number) Time to cache the destination of a resolved URL redirect
+- `redirect_timeout` (Number) Time after which a URL redirector request is considered failed
+- `score_discard` (Number) Discard messages with a score at or above this threshold. Set to 0 or below to disable; rejection takes precedence
+- `score_reject` (Number) Reject messages with a score at or above this threshold. Set to 0 or below to disable
+- `score_spam` (Number) Mark as Spam messages with a score at or above this threshold
 - `spam_filter_rules_url` (String) URL to download spam filter rules from
 - `trust_contacts` (Boolean) Never classify messages as spam if they are sent from addresses present in the user's address book.
 - `trust_replies` (Boolean) Never classify messages as spam if they are replies to messages sent by the recipient.

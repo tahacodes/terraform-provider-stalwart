@@ -21,14 +21,14 @@ Defines an MTA hook endpoint for message processing.
 
 ### Read-Only
 
-- `allow_invalid_certs` (Boolean) Whether Stalwart should connect to a hook server that has an invalid TLS certificate
+- `allow_invalid_certs` (Boolean) Whether to allow invalid SSL certificates
 - `enable` (Attributes) Expression that determines whether to enable this hook (see [below for nested schema](#nestedatt--enable))
 - `http_auth` (Attributes) The type of HTTP authentication to use (see [below for nested schema](#nestedatt--http_auth))
 - `http_headers` (Map of String) Additional headers to include in HTTP requests
 - `max_response_size` (Number) Maximum size, in bytes, of a response that Stalwart will accept from this MTA Hook server
 - `stages` (Set of String) Which SMTP stages to run this hook on
 - `temp_fail_on_error` (Boolean) Whether to respond with a temporary failure (typically a 4xx SMTP status code) when Stalwart encounters an error while communicating with this MTA Hook server
-- `timeout` (Number) Maximum amount of time that Stalwart will wait for a response from this hook server
+- `timeout` (Number) Timeout for HTTP requests
 - `url` (String) URL of the hook endpoint
 
 <a id="nestedatt--enable"></a>

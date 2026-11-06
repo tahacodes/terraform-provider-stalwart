@@ -21,15 +21,17 @@ Defines an ACME provider for automatic TLS certificate management.
 
 ### Read-Only
 
+- `account_hash_prefix` (String) The prefix for hashed account URIs advertised by the ACME server in its directory, used to build DNS-PERSIST-01 validation records.
 - `account_key` (String, Sensitive) The account key used to authenticate with the ACME provider.
 - `account_uri` (String) The account URI returned by the ACME server after registration. Used for CAA record accounturi binding.
+- `caa_identities` (Set of String) The CAA issuer domain names advertised by the ACME server in its directory, published in CAA issue records.
 - `challenge_type` (String) The ACME challenge type used to validate domain ownership
 - `contact` (Set of String) Contact email address, which is used for important communications regarding your ACME account and certificates
-- `description` (String) Descriptive label for this provider, built from the directory URL and the contact address
+- `description` (String) A name for this provider, used to identify it when selecting it for a domain
 - `directory` (String) The URL of the ACME directory endpoint
 - `eab_hmac_key` (String, Sensitive) The External Account Binding (EAB) HMAC key
 - `eab_key_id` (String) The External Account Binding (EAB) key ID
-- `max_retries` (Number) Maximum number of retry attempts for failed challenges
+- `issuer_domain_names` (Set of String) The issuer domain names advertised by the ACME server in its directory for DNS-PERSIST-01 validation records.
 - `member_tenant_id` (String) Identifier for the tenant this ACME provider belongs to Requires an Enterprise license.
 - `preferred_chain` (String) Preferred certificate chain to use when multiple chains are available
 - `renew_before` (String) How long before expiration the certificate should be renewed

@@ -21,11 +21,11 @@ Defines a DNS server for automatic record management. Reads the Volcano Engine v
 
 ### Read-Only
 
-- `access_key` (String) Volcengine access key
+- `access_key_id` (String) Volcengine access key ID
 - `description` (String) Short description of this DNS server
 - `host` (String) Optional API host override
-- `member_tenant_id` (String) Identifier for the tenant this DNS server belongs to
-- `polling_interval` (Number) How often to check for DNS records to propagate
+- `member_tenant_id` (String) Identifier for the tenant this DNS server belongs to Requires an Enterprise license.
+- `poll_interval` (Number) How often to check for DNS records to propagate
 - `propagation_delay` (Number) Initial delay before first propagation check (useful for slow providers)
 - `propagation_timeout` (Number) How long to wait for DNS records to propagate
 - `region` (String) Optional regional endpoint

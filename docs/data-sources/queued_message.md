@@ -27,7 +27,7 @@ Represents a queued email message pending delivery.
 - `flags` (Set of String) Classification flags for the message
 - `next_notify` (String) When the next DSN notification is scheduled
 - `next_retry` (String) When the next delivery attempt is scheduled
-- `priority` (Number) Message priority (lower values = higher priority)
+- `priority` (Number) Message priority from the MT-PRIORITY parameter (RFC 6710); higher values mean higher priority
 - `received_from_ip` (String) IP address of the client that submitted the message
 - `received_via_port` (Number) Local port on which the message was received
 - `return_path` (String) Envelope sender address (MAIL FROM)

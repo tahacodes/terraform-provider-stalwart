@@ -19,12 +19,12 @@ Defines a DNS server for automatic record management. Manages the EasyDNS varian
 
 - `description` (String) Short description of this DNS server
 - `key` (Attributes) EasyDNS key (see [below for nested schema](#nestedatt--key))
-- `member_tenant_id` (String) Identifier for the tenant this DNS server belongs to
-- `polling_interval` (Number) How often to check for DNS records to propagate
+- `member_tenant_id` (String) Identifier for the tenant this DNS server belongs to Requires an Enterprise license.
+- `poll_interval` (Number) How often to check for DNS records to propagate
 - `propagation_delay` (Number) Initial delay before first propagation check (useful for slow providers)
 - `propagation_timeout` (Number) How long to wait for DNS records to propagate
 - `timeout` (Number) Request timeout for the DNS server
-- `token` (String) EasyDNS token
+- `token` (String) EasyDNS API token (the public half of the credential, paired with the key)
 - `ttl` (Number) The TTL for new DNS record
 
 ### Read-Only

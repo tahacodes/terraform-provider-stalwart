@@ -24,18 +24,18 @@ Defines a DNS server for automatic record management. Reads the AWS Lightsail va
 - `access_key_id` (String) AWS access key ID
 - `description` (String) Short description of this DNS server
 - `domain` (String) Optional Lightsail domain name to scope record operations to
-- `member_tenant_id` (String) Identifier for the tenant this DNS server belongs to
-- `polling_interval` (Number) How often to check for DNS records to propagate
+- `member_tenant_id` (String) Identifier for the tenant this DNS server belongs to Requires an Enterprise license.
+- `poll_interval` (Number) How often to check for DNS records to propagate
 - `propagation_delay` (Number) Initial delay before first propagation check (useful for slow providers)
 - `propagation_timeout` (Number) How long to wait for DNS records to propagate
 - `region` (String) AWS region (defaults to us-east-1)
-- `secret_access_key` (Attributes) AWS secret access key (see [below for nested schema](#nestedatt--secret_access_key))
+- `secret_key` (Attributes) AWS secret access key (see [below for nested schema](#nestedatt--secret_key))
 - `session_token` (Attributes) Optional session token for temporary AWS credentials (see [below for nested schema](#nestedatt--session_token))
 - `timeout` (Number) Request timeout for the DNS server
 - `ttl` (Number) The TTL for new DNS record
 
-<a id="nestedatt--secret_access_key"></a>
-### Nested Schema for `secret_access_key`
+<a id="nestedatt--secret_key"></a>
+### Nested Schema for `secret_key`
 
 Read-Only:
 

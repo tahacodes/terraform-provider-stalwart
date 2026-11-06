@@ -35,6 +35,7 @@ resource "stalwart_user" "info" {
 
 - `aliases` (Set of String) List of additional domain names that are aliases of this domain
 - `allow_relaying` (Boolean) Whether to allow relaying for non-local recipients, useful in split delivery scenarios
+- `allow_scim_provisioning` (Boolean) Whether external SCIM clients may provision accounts in this domain. When enabled, SCIM becomes authoritative for accounts in this domain and just-in-time directory provisioning no longer modifies them Requires an Enterprise license.
 - `catch_all_address` (String) Catch-all email address that receives messages addressed to unknown local recipients
 - `certificate_management` (Attributes) Whether TLS certificates for this domain are managed manually or automatically by an ACME provider (see [below for nested schema](#nestedatt--certificate_management))
 - `created_at` (String) Creation date of the domain
@@ -43,7 +44,7 @@ resource "stalwart_user" "info" {
 - `dkim_management` (Attributes) Whether DKIM keys for this domain are managed manually or automatically by the server (see [below for nested schema](#nestedatt--dkim_management))
 - `dns_management` (Attributes) Whether DNS records for this domain are managed manually or automatically by a DNS provider (see [below for nested schema](#nestedatt--dns_management))
 - `dns_zone_file` (String) Current DNS zone data for the domain
-- `is_enabled` (Boolean) Whether this domain is enabled
+- `enable` (Boolean) Whether this domain is enabled
 - `logo` (String) URL or base64-encoded image representing the domain Requires an Enterprise license.
 - `member_tenant_id` (String) Identifier for the tenant this domain belongs to Requires an Enterprise license.
 - `report_address_uri` (String) Email address to receive DMARC, TLS-RPT and CAA reports for this domain, or null to not receive reports
@@ -68,14 +69,14 @@ Leave empty to request a wildcard certificate when possible, or to use the defau
 Read-Only:
 
 - `algorithms` (Set of String) List of signing algorithms to use when generating new DKIM keys
-- `delete_after` (Number) How long to retain old DKIM keys on the server after rotation before deleting them permanently. Requires automatic DNS management.
+- `delete_after` (Number) How long to retain old DKIM keys on the server after their DNS record has been removed before deleting them permanently. Requires automatic DNS management.
 - `retire_after` (Number) How long to keep the old key's DNS record published after rotation before removing it. Requires automatic DNS management.
 - `rotate_after` (Number) How often to rotate DKIM keys. Requires automatic DNS management to be enabled for the domain.
 - `selector_template` (String) Template for generating DKIM selectors during key rotation. Supported variables:
-- `{algorithm}`: signing algorithm in lowercase (`rsa`, `ed25519`)
-- `{hash}`: hash algorithm (`sha256`)
-- `{version}`: DKIM version number (`1`)
-- `{date-<fmt>}`: current UTC date formatted with chrono strftime (e.g. `{date-%Y%m%d}`)
+- `{algorithm}`: signing algorithm in lowercase (`rsa`, `ed25519`, `mldsa44`)
+- `{hash}`: hash algorithm (`sha256`, or `none` for ML-DSA-44)
+- `{version}`: DKIM version number (`1`, `2`)
+- `{date-<fmt>}`: current UTC date formatted with strftime specifiers (e.g. `{date-%Y%m%d}`)
 - `{epoch}`: current UTC unix timestamp
 - `{random}`: random 8-character alphanumeric string
 - `type` (String) Variant discriminator.

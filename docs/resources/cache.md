@@ -20,13 +20,14 @@ Configures in-memory cache sizes for data, DNS records, and authorization tokens
 - `access_tokens` (Number) Maximum size of the access tokens cache
 - `accounts` (Number) Maximum size of the accounts cache
 - `contacts` (Number) Maximum size of the address books and contacts cache
+- `directory_recipients` (Number) Maximum size of the cache that records which recipients were recently resolved against an external directory
+- `directory_recipients_ttl` (Number) How long a recipient resolved against an external directory is trusted before the directory is queried again
 - `dkim_signatures` (Number) Maximum size of the DKIM signatures cache
 - `dns_ipv4` (Number) Maximum size of the IPv4 record cache
 - `dns_ipv6` (Number) Maximum size of the IPv6 record cache
 - `dns_mta_sts` (Number) Maximum size of the MTA-STS record cache
 - `dns_mx` (Number) Maximum size of the MX record cache
 - `dns_ptr` (Number) Maximum size of the PTR record cache
-- `dns_rbl` (Number) Maximum size of the DNSBl record cache
 - `dns_tlsa` (Number) Maximum size of the TLSA record cache
 - `dns_txt` (Number) Maximum size of the TXT record cache
 - `domain_names` (Number) Maximum size of the domain name lookup cache
@@ -35,15 +36,267 @@ Configures in-memory cache sizes for data, DNS records, and authorization tokens
 - `email_addresses` (Number) Maximum size of the email addresses lookup cache
 - `email_addresses_negative` (Number) Maximum size of the email addresses lookup negative cache
 - `events` (Number) Maximum size of the calendar and events cache
+- `external_public_keys` (Number) Maximum size of the cache of parsed recipient keys used by the encryption gateway
 - `files` (Number) Maximum size of the file storage data cache
+- `groupware_large` (Number) Maximum size of the calendar, contact, file and scheduling caches for accounts too large for their main cache. Set it to zero to disable it, so that these accounts are only shared between the requests using them at the same time
+- `groupware_large_ttl` (Number) Minimum time the calendar, contact, file or scheduling cache of a large account is kept in memory after it was last used. Once it has passed, the cache is released the next time one of these caches is updated. Set it to zero to keep these caches until the space is needed for another large account
 - `http_auth` (Number) Maximum size of the HTTP authorization headers cache
 - `mailing_lists` (Number) Maximum size of the mailing lists cache
 - `messages` (Number) Maximum size of the e-mail data cache
-- `negative_ttl` (Number) Time-to-live for domain and account name lookup negative cache entries
+- `messages_large` (Number) Maximum size of the e-mail data cache for accounts too large for the main e-mail data cache. Set it to zero to disable it, so that these accounts are only shared between the requests using them at the same time
+- `messages_large_ttl` (Number) Minimum time the e-mail data cache of a large account is kept in memory after it was last used. Once it has passed, the cache is released the next time an e-mail data cache is updated. Set it to zero to keep these caches until the space is needed for another large account
+- `negative_ttl` (Number) Time-to-live for negative cache entries of domain and account name lookups, and the maximum time a negative DNS answer is cached
 - `roles` (Number) Maximum size of the roles cache
 - `scheduling` (Number) Maximum size of the scheduling cache
-- `tenants` (Number) Maximum size of the tenants cache
+- `spam_lookup` (Number) Maximum size of the spam filter lookup cache, which holds DNSBL results and resolved URL redirects
+- `swap` (Attributes) Where account cache snapshots are persisted, so a cache miss reloads a snapshot and catches it up from the change log instead of rebuilding the whole cache from the data store (see [below for nested schema](#nestedatt--swap))
+- `tenants` (Number) Maximum size of the tenants cache Requires an Enterprise license.
 
 ### Read-Only
 
 - `id` (String) Server-assigned identifier.
+
+<a id="nestedatt--swap"></a>
+### Nested Schema for `swap`
+
+Required:
+
+- `type` (String) Variant discriminator.
+
+Optional:
+
+- `chunk_size` (Number) Size of each snapshot chunk written to Redis
+- `flush_changes` (Number) Minimum number of changes accumulated against an account cache before its snapshot is rewritten. Large accounts need proportionally more: one sixteenth of the messages or resources in the cache
+- `flush_interval` (Number) Shortest interval between two snapshot writes for the same account
+- `max_account_size` (Number) Largest snapshot that will be persisted. Accounts whose snapshot would exceed this are skipped
+- `min_account_size` (Number) Smallest snapshot worth persisting. Below this the rebuild costs less than the write, so the account is skipped. This is the uncompressed snapshot size, which is close to the account's in-memory cache size and much smaller than its compressed size in the database
+- `path` (String) Directory in which cache snapshots are stored
+- `retention` (Number) How long a snapshot survives in Redis without being rewritten before it expires
+- `store` (Attributes) Redis deployment in which cache snapshots are stored (see [below for nested schema](#nestedatt--swap--store))
+
+<a id="nestedatt--swap--store"></a>
+### Nested Schema for `swap.store`
+
+Required:
+
+- `type` (String) Variant discriminator.
+
+Optional:
+
+- `access_key_id` (Attributes) Access key ID that identifies the S3 account (see [below for nested schema](#nestedatt--swap--store--access_key_id))
+- `allow_invalid_certs` (Boolean) Allow invalid TLS certificates when connecting to the Redis server
+- `auth` (Attributes) Authentication method used to access the Storage Account (see [below for nested schema](#nestedatt--swap--store--auth))
+- `auth_secret` (Attributes) Password to connect to the store (see [below for nested schema](#nestedatt--swap--store--auth_secret))
+- `auth_username` (String) Username to connect to the store
+- `bucket` (String) The S3 bucket where blobs (e-mail messages, Sieve scripts, etc.) will be stored
+- `cluster_file` (String) Path to the cluster file for the FoundationDB cluster
+- `connect_timeout` (Number) Maximum time to wait for a new connection to the Redis server to be established
+- `container` (String) The name of the container in the Storage Account
+- `database` (String) Name of the database
+- `datacenter_id` (String) Data center ID (optional)
+- `depth` (Number) Maximum depth of nested directories
+- `environment` (String) Azure cloud environment, used to derive the default blob service URL and the Microsoft Entra ID authority
+- `host` (String) Hostname of the database server
+- `idle_timeout` (Number) Time an idle connection may stay open before the server closes it (sets the MySQL wait_timeout session variable)
+- `key_prefix` (String) A prefix that will be added to the keys of all objects stored in the blob store
+- `machine_id` (String) Machine ID in the FoundationDB cluster (optional)
+- `max_allowed_packet` (Number) Maximum size of a packet in bytes
+- `max_retries` (Number) Number of retries to connect to the Redis cluster
+- `max_retry_wait` (Number) Maximum time to wait between retries
+- `min_retry_wait` (Number) Minimum time to wait between retries
+- `options` (String) Additional connection options
+- `path` (String) Where to store the data in the server's filesystem
+- `pool_max_connections` (Number) Maximum number of connections to the store
+- `pool_min_connections` (Number) Minimum number of connections to the store
+- `pool_recycling_method` (String) Method to use when recycling connections in the pool
+- `pool_timeout_create` (Number) Timeout for creating a new connection
+- `pool_timeout_recycle` (Number) Timeout for recycling a connection
+- `pool_timeout_wait` (Number) Timeout for waiting for a connection from the pool
+- `port` (Number) Port of the database server
+- `profile` (String) Used when retrieving credentials from a shared credentials file. If specified, the server will use the access key ID, secret access key, and session token (if available) associated with the given profile
+- `protocol_version` (String) Protocol Version
+- `read_from_replicas` (Boolean) Whether to read from replicas
+- `read_replicas` (Attributes List) List of read replicas for the store Requires an Enterprise license. (see [below for nested schema](#nestedatt--swap--store--read_replicas))
+- `region` (Attributes) The S3 region where the bucket resides (see [below for nested schema](#nestedatt--swap--store--region))
+- `secret_key` (Attributes) The secret access key for the S3 account (see [below for nested schema](#nestedatt--swap--store--secret_key))
+- `sentinel_secret` (Attributes) Password to connect to the Sentinel nodes (see [below for nested schema](#nestedatt--swap--store--sentinel_secret))
+- `sentinel_username` (String) Username to connect to the Sentinel nodes
+- `service_name` (String) Name of the monitored master (service) to query via the Sentinels
+- `session_token` (Attributes) Session token for temporary credentials, sent as the x-amz-security-token header (see [below for nested schema](#nestedatt--swap--store--session_token))
+- `storage_account` (String) The Azure Storage Account where blobs (e-mail messages, Sieve scripts, etc.) will be stored
+- `timeout` (Number) Request timeout for S3 operations
+- `transaction_retry_delay` (Number) Transaction maximum retry delay
+- `transaction_retry_limit` (Number) Transaction retry limit
+- `transaction_timeout` (Number) Transaction timeout
+- `url` (String) URL of the Redis server
+- `urls` (Set of String) URL(s) of the Redis server(s)
+- `use_tls` (Boolean) Use TLS to connect to the store
+- `verify_after_write` (Boolean) After each successful write, verify the object is readable on the backend. Defends against the rare case where an S3-compatible backend returns success but does not actually persist the data. Adds one extra request per write.
+
+<a id="nestedatt--swap--store--access_key_id"></a>
+### Nested Schema for `swap.store.access_key_id`
+
+Required:
+
+- `type` (String) Variant discriminator.
+
+Optional:
+
+- `file_path` (String) File path to read the secret from
+- `value` (String) Value
+- `variable_name` (String) Environment variable name to read the secret from
+
+
+<a id="nestedatt--swap--store--auth"></a>
+### Nested Schema for `swap.store.auth`
+
+Required:
+
+- `type` (String) Variant discriminator.
+
+Optional:
+
+- `account_key` (Attributes) The shared key of the Azure Storage Account (see [below for nested schema](#nestedatt--swap--store--auth--account_key))
+- `client_id` (String) Application (client) ID of the service principal
+- `client_secret` (Attributes) Application client secret (see [below for nested schema](#nestedatt--swap--store--auth--client_secret))
+- `sas_token` (Attributes) SAS token granting read, write and delete permissions on the container. The leading '?' is optional (see [below for nested schema](#nestedatt--swap--store--auth--sas_token))
+- `tenant_id` (String) Microsoft Entra ID tenant ID
+- `token_file` (String) Path to the federated token file. When empty, the AZURE_FEDERATED_TOKEN_FILE environment variable is used
+
+<a id="nestedatt--swap--store--auth--account_key"></a>
+### Nested Schema for `swap.store.auth.account_key`
+
+Required:
+
+- `type` (String) Variant discriminator.
+
+Optional:
+
+- `file_path` (String) File path to read the secret from
+- `secret` (String, Sensitive) Password or secret value
+- `variable_name` (String) Environment variable name to read the secret from
+
+
+<a id="nestedatt--swap--store--auth--client_secret"></a>
+### Nested Schema for `swap.store.auth.client_secret`
+
+Required:
+
+- `type` (String) Variant discriminator.
+
+Optional:
+
+- `file_path` (String) File path to read the secret from
+- `secret` (String, Sensitive) Password or secret value
+- `variable_name` (String) Environment variable name to read the secret from
+
+
+<a id="nestedatt--swap--store--auth--sas_token"></a>
+### Nested Schema for `swap.store.auth.sas_token`
+
+Required:
+
+- `type` (String) Variant discriminator.
+
+Optional:
+
+- `file_path` (String) File path to read the secret from
+- `secret` (String, Sensitive) Password or secret value
+- `variable_name` (String) Environment variable name to read the secret from
+
+
+
+<a id="nestedatt--swap--store--auth_secret"></a>
+### Nested Schema for `swap.store.auth_secret`
+
+Required:
+
+- `type` (String) Variant discriminator.
+
+Optional:
+
+- `file_path` (String) File path to read the secret from
+- `secret` (String, Sensitive) Password or secret value
+- `variable_name` (String) Environment variable name to read the secret from
+
+
+<a id="nestedatt--swap--store--read_replicas"></a>
+### Nested Schema for `swap.store.read_replicas`
+
+Optional:
+
+- `auth_secret` (Attributes) Password to connect to the store (see [below for nested schema](#nestedatt--swap--store--read_replicas--auth_secret))
+- `auth_username` (String) Username to connect to the store
+- `database` (String) Name of the database
+- `host` (String) Hostname of the database server
+- `options` (String) Additional connection options
+- `port` (Number) Port of the database server
+
+<a id="nestedatt--swap--store--read_replicas--auth_secret"></a>
+### Nested Schema for `swap.store.read_replicas.auth_secret`
+
+Required:
+
+- `type` (String) Variant discriminator.
+
+Optional:
+
+- `file_path` (String) File path to read the secret from
+- `secret` (String, Sensitive) Password or secret value
+- `variable_name` (String) Environment variable name to read the secret from
+
+
+
+<a id="nestedatt--swap--store--region"></a>
+### Nested Schema for `swap.store.region`
+
+Required:
+
+- `type` (String) Variant discriminator.
+
+Optional:
+
+- `region` (String) Region name
+- `url` (String) Endpoint URL
+
+
+<a id="nestedatt--swap--store--secret_key"></a>
+### Nested Schema for `swap.store.secret_key`
+
+Required:
+
+- `type` (String) Variant discriminator.
+
+Optional:
+
+- `file_path` (String) File path to read the secret from
+- `secret` (String, Sensitive) Password or secret value
+- `variable_name` (String) Environment variable name to read the secret from
+
+
+<a id="nestedatt--swap--store--sentinel_secret"></a>
+### Nested Schema for `swap.store.sentinel_secret`
+
+Required:
+
+- `type` (String) Variant discriminator.
+
+Optional:
+
+- `file_path` (String) File path to read the secret from
+- `secret` (String, Sensitive) Password or secret value
+- `variable_name` (String) Environment variable name to read the secret from
+
+
+<a id="nestedatt--swap--store--session_token"></a>
+### Nested Schema for `swap.store.session_token`
+
+Required:
+
+- `type` (String) Variant discriminator.
+
+Optional:
+
+- `file_path` (String) File path to read the secret from
+- `secret` (String, Sensitive) Password or secret value
+- `variable_name` (String) Environment variable name to read the secret from

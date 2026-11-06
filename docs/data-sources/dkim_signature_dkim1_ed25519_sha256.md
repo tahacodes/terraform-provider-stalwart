@@ -30,7 +30,7 @@ Defines a DKIM signature used to sign outgoing email messages. Reads the DKIM1 (
 - `member_tenant_id` (String) Identifier for the tenant this DKIM signature belongs to Requires an Enterprise license.
 - `next_transition_at` (String) Date when this key will transition to the next rotation stage, or null if no transition is scheduled
 - `private_key` (Attributes) PEM-encoded private key used to sign outgoing messages (see [below for nested schema](#nestedatt--private_key))
-- `public_key` (String) PEM-encoded public key used to verify signatures, derived from the private key
+- `public_key` (String) Base64-encoded public key published in the p= tag of the DNS record, derived from the private key
 - `report` (Boolean) Whether to request failure reports when signature verification fails on the recipient side
 - `selector` (String) Selector used to locate the DKIM public key in DNS
 - `stage` (String) Current stage of the DKIM key in its rotation lifecycle

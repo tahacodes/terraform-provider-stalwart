@@ -17,11 +17,10 @@ Configures WebDAV protocol settings including property limits and locking. This 
 
 ### Read-Only
 
-- `dead_property_max_size` (Number) Specifies the maximum size of a WebDAV dead property value that the server will accept
-- `enable_assisted_discovery` (Boolean) Enables assisted discovery of WebDAV shared collections by modifying PROPFIND requests to the root collection. Requests with depth 1 are automatically changed to depth 2, which may cause compatibility issues with some clients that expect the original behavior.
+- `enable_assisted_discovery` (Boolean) Enables assisted discovery of shared calendars and address books for clients that do not support multiple home sets. When enabled, a PROPFIND on the user's own calendar or address book home also lists the collections shared with the user by other accounts, and the home set properties contain only the user's own home. When disabled, the home set properties list the home of every account that shares collections with the user.
 - `id` (String) Always `singleton`.
-- `live_property_max_size` (Number) Specifies the maximum size of a WebDAV live property value that the server will accept
+- `max_live_property_size` (Number) Specifies the maximum size of a WebDAV live property value that the server will accept
 - `max_lock_timeout` (Number) Specifies the maximum duration for which a lock can be held on a resource
 - `max_locks` (Number) Specifies the maximum number of locks that a user can create on a resource
+- `max_request_size` (Number) Determines the maximum XML size of a WebDAV request that the server will accept
 - `max_results` (Number) Specifies the maximum number of results that a WebDAV query can return
-- `request_max_size` (Number) Determines the maximum XML size of a WebDAV request that the server will accept

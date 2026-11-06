@@ -17,13 +17,13 @@ Defines a DNS server for automatic record management. Manages the Vercel variant
 
 ### Required
 
-- `auth_token` (Attributes) Vercel auth token (see [below for nested schema](#nestedatt--auth_token))
 - `description` (String) Short description of this DNS server
+- `token` (Attributes) Vercel auth token (see [below for nested schema](#nestedatt--token))
 
 ### Optional
 
-- `member_tenant_id` (String) Identifier for the tenant this DNS server belongs to
-- `polling_interval` (Number) How often to check for DNS records to propagate
+- `member_tenant_id` (String) Identifier for the tenant this DNS server belongs to Requires an Enterprise license.
+- `poll_interval` (Number) How often to check for DNS records to propagate
 - `propagation_delay` (Number) Initial delay before first propagation check (useful for slow providers)
 - `propagation_timeout` (Number) How long to wait for DNS records to propagate
 - `team_id` (String) Optional team ID to scope API requests to
@@ -34,8 +34,8 @@ Defines a DNS server for automatic record management. Manages the Vercel variant
 
 - `id` (String) Server-assigned identifier.
 
-<a id="nestedatt--auth_token"></a>
-### Nested Schema for `auth_token`
+<a id="nestedatt--token"></a>
+### Nested Schema for `token`
 
 Required:
 

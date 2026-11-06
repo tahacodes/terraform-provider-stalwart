@@ -21,30 +21,18 @@ Defines a DNS server for automatic record management. Reads the Porkbun variant.
 
 ### Read-Only
 
-- `api_key` (String) The API key used to authenticate with Porkbun
+- `api_key_id` (String) The public API key identifier used to authenticate with Porkbun
 - `description` (String) Short description of this DNS server
-- `member_tenant_id` (String) Identifier for the tenant this DNS server belongs to
-- `polling_interval` (Number) How often to check for DNS records to propagate
+- `member_tenant_id` (String) Identifier for the tenant this DNS server belongs to Requires an Enterprise license.
+- `poll_interval` (Number) How often to check for DNS records to propagate
 - `propagation_delay` (Number) Initial delay before first propagation check (useful for slow providers)
 - `propagation_timeout` (Number) How long to wait for DNS records to propagate
-- `secret` (Attributes) Deprecated secret (see [below for nested schema](#nestedatt--secret))
-- `secret_api_key` (Attributes) The secret API key used to authenticate with Porkbun (see [below for nested schema](#nestedatt--secret_api_key))
+- `secret` (Attributes) The secret API key used to authenticate with Porkbun (see [below for nested schema](#nestedatt--secret))
 - `timeout` (Number) Request timeout for the DNS server
 - `ttl` (Number) The TTL for new DNS record
 
 <a id="nestedatt--secret"></a>
 ### Nested Schema for `secret`
-
-Read-Only:
-
-- `file_path` (String) File path to read the secret from
-- `secret` (String, Sensitive) Password or secret value
-- `type` (String) Variant discriminator.
-- `variable_name` (String) Environment variable name to read the secret from
-
-
-<a id="nestedatt--secret_api_key"></a>
-### Nested Schema for `secret_api_key`
 
 Read-Only:
 

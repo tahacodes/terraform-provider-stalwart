@@ -18,7 +18,6 @@ Configures sender authentication verification including DKIM, SPF, DMARC, and AR
 ### Optional
 
 - `arc_verify` (Attributes) Whether ARC verification is strict, relaxed or disabled. (see [below for nested schema](#nestedatt--arc_verify))
-- `dkim_sign_domain` (Attributes) Domain to use for DKIM signing (see [below for nested schema](#nestedatt--dkim_sign_domain))
 - `dkim_strict` (Boolean) Whether to ignore insecure DKIM signatures such as those containing a length parameter
 - `dkim_verify` (Attributes) Whether DKIM verification is strict, relaxed or disabled (see [below for nested schema](#nestedatt--dkim_verify))
 - `dmarc_verify` (Attributes) Whether DMARC verification is strict, relaxed or disabled (see [below for nested schema](#nestedatt--dmarc_verify))
@@ -40,24 +39,6 @@ Optional:
 
 <a id="nestedatt--arc_verify--match"></a>
 ### Nested Schema for `arc_verify.match`
-
-Optional:
-
-- `if` (String) If condition
-- `then` (String) Then clause
-
-
-
-<a id="nestedatt--dkim_sign_domain"></a>
-### Nested Schema for `dkim_sign_domain`
-
-Optional:
-
-- `else` (String) Else condition
-- `match` (Attributes List) List of conditions and their corresponding results (see [below for nested schema](#nestedatt--dkim_sign_domain--match))
-
-<a id="nestedatt--dkim_sign_domain--match"></a>
-### Nested Schema for `dkim_sign_domain.match`
 
 Optional:
 

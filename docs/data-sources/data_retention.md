@@ -19,7 +19,7 @@ Configures data retention policies, expunge schedules, and archival settings. Th
 
 - `archive_deleted_accounts_for` (Number) How long to keep deleted accounts in the archive before they are permanently deleted. If null, deleted accounts will be permanently deleted immediately. Requires an Enterprise license.
 - `archive_deleted_items_for` (Number) How long to keep deleted items in the archive before they are permanently deleted. If null, deleted items will not be archived and will be permanently deleted immediately. Requires an Enterprise license.
-- `blob_cleanup_schedule` (Attributes) How often to purge the data store. Expects a cron expression. (see [below for nested schema](#nestedatt--blob_cleanup_schedule))
+- `blob_cleanup_schedule` (Attributes) When to delete blobs that are no longer referenced, such as expired uploads and the contents of deleted messages. Expects a cron expression. (see [below for nested schema](#nestedatt--blob_cleanup_schedule))
 - `data_cleanup_schedule` (Attributes) How often to purge the data store. Expects a cron expression. (see [below for nested schema](#nestedatt--data_cleanup_schedule))
 - `expunge_schedule` (Attributes) Specifies when to run the auto-expunge process (see [below for nested schema](#nestedatt--expunge_schedule))
 - `expunge_scheduling_inbox_after` (Number) Sets the duration after which the iTIP inbox will automatically expunge old messages.

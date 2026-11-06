@@ -21,40 +21,43 @@ Configures the blob storage backend for messages and files. This singleton objec
 
 ### Optional
 
-- `access_key` (Attributes) Identifies the S3 account (see [below for nested schema](#nestedatt--access_key))
+- `access_key_id` (Attributes) Access key ID that identifies the S3 account (see [below for nested schema](#nestedatt--access_key_id))
 - `allow_invalid_certs` (Boolean) Allow invalid TLS certificates when connecting to the S3 service
+- `auth` (Attributes) Authentication method used to access the Storage Account (see [below for nested schema](#nestedatt--auth))
 - `auth_secret` (Attributes) Password to connect to the store (see [below for nested schema](#nestedatt--auth_secret))
 - `auth_username` (String) Username to connect to the store
 - `bucket` (String) The S3 bucket where blobs (e-mail messages, Sieve scripts, etc.) will be stored
 - `cluster_file` (String) Path to the cluster file for the FoundationDB cluster
+- `connect_timeout` (Number) Maximum time to wait for a connection to the database server to be established
 - `container` (String) The name of the container in the Storage Account
 - `database` (String) Name of the database
 - `datacenter_id` (String) Data center ID (optional)
 - `depth` (Number) Maximum depth of nested directories
+- `environment` (String) Azure cloud environment, used to derive the default blob service URL and the Microsoft Entra ID authority
 - `host` (String) Hostname of the database server
+- `idle_timeout` (Number) Time an idle connection may stay open before the server closes it (sets the MySQL wait_timeout session variable)
 - `key_prefix` (String) A prefix that will be added to the keys of all objects stored in the blob store
 - `machine_id` (String) Machine ID in the FoundationDB cluster (optional)
 - `max_allowed_packet` (Number) Maximum size of a packet in bytes
 - `max_retries` (Number) The maximum number of times to retry failed requests. Set to 0 to disable retries
 - `options` (String) Additional connection options
 - `path` (String) Where to store the data in the server's filesystem
-- `pool_max_connections` (Number) Maximum number of connections to the store
+- `pool_max_connections` (Number) Maximum number of connections to the store. When unset, 4 per CPU core, between 16 and 32.
 - `pool_min_connections` (Number) Minimum number of connections to the store
 - `pool_recycling_method` (String) Method to use when recycling connections in the pool
 - `port` (Number) Port of the database server
 - `profile` (String) Used when retrieving credentials from a shared credentials file. If specified, the server will use the access key ID, secret access key, and session token (if available) associated with the given profile
 - `read_replicas` (Attributes List) List of read replicas for the store Requires an Enterprise license. (see [below for nested schema](#nestedatt--read_replicas))
 - `region` (Attributes) The S3 region where the bucket resides (see [below for nested schema](#nestedatt--region))
-- `sas_token` (Attributes) SAS Token, when not using accessKey based authentication (see [below for nested schema](#nestedatt--sas_token))
-- `secret_key` (Attributes) The secret key for the S3 account (see [below for nested schema](#nestedatt--secret_key))
-- `security_token` (Attributes) Security token for temporary credentials (see [below for nested schema](#nestedatt--security_token))
-- `session_token` (Attributes) Temporary session token for the S3 account (see [below for nested schema](#nestedatt--session_token))
+- `secret_key` (Attributes) The secret access key for the S3 account (see [below for nested schema](#nestedatt--secret_key))
+- `session_token` (Attributes) Session token for temporary credentials, sent as the x-amz-security-token header (see [below for nested schema](#nestedatt--session_token))
 - `storage_account` (String) The Azure Storage Account where blobs (e-mail messages, Sieve scripts, etc.) will be stored
 - `stores` (Attributes List) Stores to use for sharding (see [below for nested schema](#nestedatt--stores))
-- `timeout` (Number) Connection timeout to the S3 service
+- `timeout` (Number) Request timeout for S3 operations
 - `transaction_retry_delay` (Number) Transaction maximum retry delay
 - `transaction_retry_limit` (Number) Transaction retry limit
 - `transaction_timeout` (Number) Transaction timeout
+- `url` (String) Custom blob service URL, for private endpoints or the Azurite emulator. When empty, it is derived from the storage account and the cloud environment
 - `use_tls` (Boolean) Use TLS to connect to the store
 - `verify_after_write` (Boolean) After each successful write, verify the object is readable on the backend. Defends against the rare case where an S3-compatible backend returns success but does not actually persist the data. Adds one extra request per write.
 
@@ -62,8 +65,38 @@ Configures the blob storage backend for messages and files. This singleton objec
 
 - `id` (String) Server-assigned identifier.
 
-<a id="nestedatt--access_key"></a>
-### Nested Schema for `access_key`
+<a id="nestedatt--access_key_id"></a>
+### Nested Schema for `access_key_id`
+
+Required:
+
+- `type` (String) Variant discriminator.
+
+Optional:
+
+- `file_path` (String) File path to read the secret from
+- `value` (String) Value
+- `variable_name` (String) Environment variable name to read the secret from
+
+
+<a id="nestedatt--auth"></a>
+### Nested Schema for `auth`
+
+Required:
+
+- `type` (String) Variant discriminator.
+
+Optional:
+
+- `account_key` (Attributes) The shared key of the Azure Storage Account (see [below for nested schema](#nestedatt--auth--account_key))
+- `client_id` (String) Application (client) ID of the service principal
+- `client_secret` (Attributes) Application client secret (see [below for nested schema](#nestedatt--auth--client_secret))
+- `sas_token` (Attributes) SAS token granting read, write and delete permissions on the container. The leading '?' is optional (see [below for nested schema](#nestedatt--auth--sas_token))
+- `tenant_id` (String) Microsoft Entra ID tenant ID
+- `token_file` (String) Path to the federated token file. When empty, the AZURE_FEDERATED_TOKEN_FILE environment variable is used
+
+<a id="nestedatt--auth--account_key"></a>
+### Nested Schema for `auth.account_key`
 
 Required:
 
@@ -73,8 +106,36 @@ Optional:
 
 - `file_path` (String) File path to read the secret from
 - `secret` (String, Sensitive) Password or secret value
-- `value` (String) Value
 - `variable_name` (String) Environment variable name to read the secret from
+
+
+<a id="nestedatt--auth--client_secret"></a>
+### Nested Schema for `auth.client_secret`
+
+Required:
+
+- `type` (String) Variant discriminator.
+
+Optional:
+
+- `file_path` (String) File path to read the secret from
+- `secret` (String, Sensitive) Password or secret value
+- `variable_name` (String) Environment variable name to read the secret from
+
+
+<a id="nestedatt--auth--sas_token"></a>
+### Nested Schema for `auth.sas_token`
+
+Required:
+
+- `type` (String) Variant discriminator.
+
+Optional:
+
+- `file_path` (String) File path to read the secret from
+- `secret` (String, Sensitive) Password or secret value
+- `variable_name` (String) Environment variable name to read the secret from
+
 
 
 <a id="nestedatt--auth_secret"></a>
@@ -127,40 +188,12 @@ Required:
 
 Optional:
 
-- `custom_endpoint` (String) Endpoint URL
-- `custom_region` (String) Region name
-
-
-<a id="nestedatt--sas_token"></a>
-### Nested Schema for `sas_token`
-
-Required:
-
-- `type` (String) Variant discriminator.
-
-Optional:
-
-- `file_path` (String) File path to read the secret from
-- `secret` (String, Sensitive) Password or secret value
-- `variable_name` (String) Environment variable name to read the secret from
+- `region` (String) Region name
+- `url` (String) Endpoint URL
 
 
 <a id="nestedatt--secret_key"></a>
 ### Nested Schema for `secret_key`
-
-Required:
-
-- `type` (String) Variant discriminator.
-
-Optional:
-
-- `file_path` (String) File path to read the secret from
-- `secret` (String, Sensitive) Password or secret value
-- `variable_name` (String) Environment variable name to read the secret from
-
-
-<a id="nestedatt--security_token"></a>
-### Nested Schema for `security_token`
 
 Required:
 
@@ -196,44 +229,77 @@ Required:
 
 Optional:
 
-- `access_key` (Attributes) Identifies the S3 account (see [below for nested schema](#nestedatt--stores--access_key))
+- `access_key_id` (Attributes) Access key ID that identifies the S3 account (see [below for nested schema](#nestedatt--stores--access_key_id))
 - `allow_invalid_certs` (Boolean) Allow invalid TLS certificates when connecting to the S3 service
+- `auth` (Attributes) Authentication method used to access the Storage Account (see [below for nested schema](#nestedatt--stores--auth))
 - `auth_secret` (Attributes) Password to connect to the store (see [below for nested schema](#nestedatt--stores--auth_secret))
 - `auth_username` (String) Username to connect to the store
 - `bucket` (String) The S3 bucket where blobs (e-mail messages, Sieve scripts, etc.) will be stored
 - `cluster_file` (String) Path to the cluster file for the FoundationDB cluster
+- `connect_timeout` (Number) Maximum time to wait for a connection to the database server to be established
 - `container` (String) The name of the container in the Storage Account
 - `database` (String) Name of the database
 - `datacenter_id` (String) Data center ID (optional)
 - `depth` (Number) Maximum depth of nested directories
+- `environment` (String) Azure cloud environment, used to derive the default blob service URL and the Microsoft Entra ID authority
 - `host` (String) Hostname of the database server
+- `idle_timeout` (Number) Time an idle connection may stay open before the server closes it (sets the MySQL wait_timeout session variable)
 - `key_prefix` (String) A prefix that will be added to the keys of all objects stored in the blob store
 - `machine_id` (String) Machine ID in the FoundationDB cluster (optional)
 - `max_allowed_packet` (Number) Maximum size of a packet in bytes
 - `max_retries` (Number) The maximum number of times to retry failed requests. Set to 0 to disable retries
 - `options` (String) Additional connection options
 - `path` (String) Where to store the data in the server's filesystem
-- `pool_max_connections` (Number) Maximum number of connections to the store
+- `pool_max_connections` (Number) Maximum number of connections to the store. When unset, 4 per CPU core, between 16 and 32.
 - `pool_min_connections` (Number) Minimum number of connections to the store
 - `pool_recycling_method` (String) Method to use when recycling connections in the pool
 - `port` (Number) Port of the database server
 - `profile` (String) Used when retrieving credentials from a shared credentials file. If specified, the server will use the access key ID, secret access key, and session token (if available) associated with the given profile
 - `read_replicas` (Attributes List) List of read replicas for the store Requires an Enterprise license. (see [below for nested schema](#nestedatt--stores--read_replicas))
 - `region` (Attributes) The S3 region where the bucket resides (see [below for nested schema](#nestedatt--stores--region))
-- `sas_token` (Attributes) SAS Token, when not using accessKey based authentication (see [below for nested schema](#nestedatt--stores--sas_token))
-- `secret_key` (Attributes) The secret key for the S3 account (see [below for nested schema](#nestedatt--stores--secret_key))
-- `security_token` (Attributes) Security token for temporary credentials (see [below for nested schema](#nestedatt--stores--security_token))
-- `session_token` (Attributes) Temporary session token for the S3 account (see [below for nested schema](#nestedatt--stores--session_token))
+- `secret_key` (Attributes) The secret access key for the S3 account (see [below for nested schema](#nestedatt--stores--secret_key))
+- `session_token` (Attributes) Session token for temporary credentials, sent as the x-amz-security-token header (see [below for nested schema](#nestedatt--stores--session_token))
 - `storage_account` (String) The Azure Storage Account where blobs (e-mail messages, Sieve scripts, etc.) will be stored
-- `timeout` (Number) Connection timeout to the S3 service
+- `timeout` (Number) Request timeout for S3 operations
 - `transaction_retry_delay` (Number) Transaction maximum retry delay
 - `transaction_retry_limit` (Number) Transaction retry limit
 - `transaction_timeout` (Number) Transaction timeout
+- `url` (String) Custom blob service URL, for private endpoints or the Azurite emulator. When empty, it is derived from the storage account and the cloud environment
 - `use_tls` (Boolean) Use TLS to connect to the store
 - `verify_after_write` (Boolean) After each successful write, verify the object is readable on the backend. Defends against the rare case where an S3-compatible backend returns success but does not actually persist the data. Adds one extra request per write.
 
-<a id="nestedatt--stores--access_key"></a>
-### Nested Schema for `stores.access_key`
+<a id="nestedatt--stores--access_key_id"></a>
+### Nested Schema for `stores.access_key_id`
+
+Required:
+
+- `type` (String) Variant discriminator.
+
+Optional:
+
+- `file_path` (String) File path to read the secret from
+- `value` (String) Value
+- `variable_name` (String) Environment variable name to read the secret from
+
+
+<a id="nestedatt--stores--auth"></a>
+### Nested Schema for `stores.auth`
+
+Required:
+
+- `type` (String) Variant discriminator.
+
+Optional:
+
+- `account_key` (Attributes) The shared key of the Azure Storage Account (see [below for nested schema](#nestedatt--stores--auth--account_key))
+- `client_id` (String) Application (client) ID of the service principal
+- `client_secret` (Attributes) Application client secret (see [below for nested schema](#nestedatt--stores--auth--client_secret))
+- `sas_token` (Attributes) SAS token granting read, write and delete permissions on the container. The leading '?' is optional (see [below for nested schema](#nestedatt--stores--auth--sas_token))
+- `tenant_id` (String) Microsoft Entra ID tenant ID
+- `token_file` (String) Path to the federated token file. When empty, the AZURE_FEDERATED_TOKEN_FILE environment variable is used
+
+<a id="nestedatt--stores--auth--account_key"></a>
+### Nested Schema for `stores.auth.account_key`
 
 Required:
 
@@ -243,8 +309,36 @@ Optional:
 
 - `file_path` (String) File path to read the secret from
 - `secret` (String, Sensitive) Password or secret value
-- `value` (String) Value
 - `variable_name` (String) Environment variable name to read the secret from
+
+
+<a id="nestedatt--stores--auth--client_secret"></a>
+### Nested Schema for `stores.auth.client_secret`
+
+Required:
+
+- `type` (String) Variant discriminator.
+
+Optional:
+
+- `file_path` (String) File path to read the secret from
+- `secret` (String, Sensitive) Password or secret value
+- `variable_name` (String) Environment variable name to read the secret from
+
+
+<a id="nestedatt--stores--auth--sas_token"></a>
+### Nested Schema for `stores.auth.sas_token`
+
+Required:
+
+- `type` (String) Variant discriminator.
+
+Optional:
+
+- `file_path` (String) File path to read the secret from
+- `secret` (String, Sensitive) Password or secret value
+- `variable_name` (String) Environment variable name to read the secret from
+
 
 
 <a id="nestedatt--stores--auth_secret"></a>
@@ -297,40 +391,12 @@ Required:
 
 Optional:
 
-- `custom_endpoint` (String) Endpoint URL
-- `custom_region` (String) Region name
-
-
-<a id="nestedatt--stores--sas_token"></a>
-### Nested Schema for `stores.sas_token`
-
-Required:
-
-- `type` (String) Variant discriminator.
-
-Optional:
-
-- `file_path` (String) File path to read the secret from
-- `secret` (String, Sensitive) Password or secret value
-- `variable_name` (String) Environment variable name to read the secret from
+- `region` (String) Region name
+- `url` (String) Endpoint URL
 
 
 <a id="nestedatt--stores--secret_key"></a>
 ### Nested Schema for `stores.secret_key`
-
-Required:
-
-- `type` (String) Variant discriminator.
-
-Optional:
-
-- `file_path` (String) File path to read the secret from
-- `secret` (String, Sensitive) Password or secret value
-- `variable_name` (String) Environment variable name to read the secret from
-
-
-<a id="nestedatt--stores--security_token"></a>
-### Nested Schema for `stores.security_token`
 
 Required:
 

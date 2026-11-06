@@ -24,19 +24,19 @@ Defines a DNS server for automatic record management. Reads the AWS Route53 vari
 - `access_key_id` (String) The AWS access key ID
 - `description` (String) Short description of this DNS server
 - `hosted_zone_id` (String) Hosted zone ID to use (resolved automatically by name if not set)
-- `member_tenant_id` (String) Identifier for the tenant this DNS server belongs to
-- `polling_interval` (Number) How often to check for DNS records to propagate
+- `member_tenant_id` (String) Identifier for the tenant this DNS server belongs to Requires an Enterprise license.
+- `poll_interval` (Number) How often to check for DNS records to propagate
 - `private_zone_only` (Boolean) Whether to restrict zone resolution to private zones only
 - `propagation_delay` (Number) Initial delay before first propagation check (useful for slow providers)
 - `propagation_timeout` (Number) How long to wait for DNS records to propagate
 - `region` (String) The AWS region
-- `secret_access_key` (Attributes) The AWS secret access key (see [below for nested schema](#nestedatt--secret_access_key))
+- `secret_key` (Attributes) The AWS secret access key (see [below for nested schema](#nestedatt--secret_key))
 - `session_token` (Attributes) Optional session token for temporary AWS credentials (see [below for nested schema](#nestedatt--session_token))
 - `timeout` (Number) Request timeout for the DNS server
 - `ttl` (Number) The TTL for new DNS record
 
-<a id="nestedatt--secret_access_key"></a>
-### Nested Schema for `secret_access_key`
+<a id="nestedatt--secret_key"></a>
+### Nested Schema for `secret_key`
 
 Read-Only:
 

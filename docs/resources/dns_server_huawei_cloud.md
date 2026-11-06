@@ -17,10 +17,10 @@ Defines a DNS server for automatic record management. Manages the Huawei Cloud D
 
 ### Optional
 
-- `access_key` (String) Huawei Cloud access key
+- `access_key_id` (String) Huawei Cloud access key ID
 - `description` (String) Short description of this DNS server
-- `member_tenant_id` (String) Identifier for the tenant this DNS server belongs to
-- `polling_interval` (Number) How often to check for DNS records to propagate
+- `member_tenant_id` (String) Identifier for the tenant this DNS server belongs to Requires an Enterprise license.
+- `poll_interval` (Number) How often to check for DNS records to propagate
 - `propagation_delay` (Number) Initial delay before first propagation check (useful for slow providers)
 - `propagation_timeout` (Number) How long to wait for DNS records to propagate
 - `region` (String) Huawei Cloud region

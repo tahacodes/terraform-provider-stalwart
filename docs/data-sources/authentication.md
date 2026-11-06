@@ -25,8 +25,8 @@ Configures authentication settings including password policies and default roles
 - `id` (String) Always `singleton`.
 - `max_api_keys` (Number) The default maximum number of API keys a user can create
 - `max_app_passwords` (Number) The default maximum number of app passwords a user can create
+- `max_password_length` (Number) Maximum length for user passwords in the internal directory.
+- `min_password_length` (Number) Minimum length for user passwords in the internal directory.
+- `min_password_strength` (String) Minimum strength for user passwords in the internal directory, calculated using the zxcvbn algorithm.
 - `password_default_expiry` (Number) Default expiration time for user passwords in the internal directory, after which the user will be required to change their password.
 - `password_hash_algorithm` (String) Password hashing algorithm to use for storing user passwords in the internal directory.
-- `password_max_length` (Number) Maximum length for user passwords in the internal directory.
-- `password_min_length` (Number) Minimum length for user passwords in the internal directory.
-- `password_min_strength` (String) Minimum strength for user passwords in the internal directory, calculated using the zxcvbn algorithm.

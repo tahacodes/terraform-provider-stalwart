@@ -20,10 +20,10 @@ Defines a DNS server for automatic record management. Manages the Infoblox NIOS 
 - `description` (String) Short description of this DNS server
 - `dns_view` (String) DNS view name (defaults to External)
 - `host` (String) Infoblox grid master host
-- `member_tenant_id` (String) Identifier for the tenant this DNS server belongs to
+- `member_tenant_id` (String) Identifier for the tenant this DNS server belongs to Requires an Enterprise license.
 - `password` (Attributes) Infoblox account password (see [below for nested schema](#nestedatt--password))
-- `polling_interval` (Number) How often to check for DNS records to propagate
-- `port` (String) Optional port (defaults to 443)
+- `poll_interval` (Number) How often to check for DNS records to propagate
+- `port` (Number) Optional port (defaults to 443)
 - `propagation_delay` (Number) Initial delay before first propagation check (useful for slow providers)
 - `propagation_timeout` (Number) How long to wait for DNS records to propagate
 - `timeout` (Number) Request timeout for the DNS server

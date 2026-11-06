@@ -17,7 +17,7 @@ Configures SMTP protocol extensions offered to clients. This singleton object al
 
 ### Optional
 
-- `chunking` (Attributes) Enables chunking (RFC 1830), an extension that allows large messages to be transferred in chunks which may reduce the load on the network and server. (see [below for nested schema](#nestedatt--chunking))
+- `chunking` (Attributes) Enables chunking (RFC 3030), an extension that allows large messages to be transferred in chunks which may reduce the load on the network and server. (see [below for nested schema](#nestedatt--chunking))
 - `deliver_by` (Attributes) Specifies the maximum delivery time for a message using the DELIVERBY (RFC 2852) extension, which allows the sender to request a specific delivery time for a message (see [below for nested schema](#nestedatt--deliver_by))
 - `dsn` (Attributes) Enables delivery status notifications (RFC 3461), which allows the sender to request a delivery status notification (DSN) from the recipient's mail server (see [below for nested schema](#nestedatt--dsn))
 - `expn` (Attributes) Specifies whether to enable the EXPN command, which allows the sender to request the membership of a mailing list. It is recommended to disable this command to prevent spammers from harvesting email addresses (see [below for nested schema](#nestedatt--expn))

@@ -22,8 +22,15 @@ Defines a public key for email encryption (OpenPGP or S/MIME).
 ### Read-Only
 
 - `account_id` (String) Identifier for the account this public key belongs to
+- `authenticated_encryption` (Boolean) All mail clients holding the private key can read AES-GCM with RSA-OAEP. Applies to S/MIME RSA and elliptic-curve keys. Apple Mail and Thunderbird ESR cannot read it.
+- `capabilities` (Set of String) Encryption features supported by the key
 - `created_at` (String) Creation date of the public key
 - `description` (String) Description of the public key
-- `email_addresses` (Set of String) Email addresses associated with the public key
-- `expires_at` (String) Expiration date of the public key
-- `key` (String) OpenPGP or S/MIME public key data
+- `email_addresses` (Set of String) Email addresses bound to the key, taken from the key itself
+- `expires_at` (String) Expiration date of the key, taken from the key itself
+- `fingerprints` (Set of String) Fingerprints of the keys or certificates used for encryption
+- `key` (String) OpenPGP key or S/MIME certificate, armored, PEM, or binary encoded as base64
+- `key_type` (String) Type of key and its encryption algorithms, taken from the key itself
+- `kind` (String) Type of key, taken from the key itself
+- `strict_key_wrap_encoding` (Boolean) Use the RFC 5753 key wrap encoding for elliptic-curve S/MIME certificates; required by gpgsm and KMail, may not be readable by Microsoft Outlook
+- `warnings` (Set of String) Issues detected in the key that may affect security or compatibility

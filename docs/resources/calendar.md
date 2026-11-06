@@ -17,12 +17,17 @@ Configures calendar settings including iCalendar limits and default names. This 
 
 ### Optional
 
+- `availability_rate_limit` (Attributes) Maximum rate at which an account can query principal availability (see [below for nested schema](#nestedatt--availability_rate_limit))
 - `default_display_name` (String) Specifies the default display name for a calendar when it is created
 - `default_href_name` (String) Specifies the default href name for a calendar when it is created
+- `max_attachments_size` (Number) Maximum total size of the attachments embedded in a single calendar event
 - `max_attendees` (Number) Specifies the maximum number of attendees that can be included in a single iCalendar instance
+- `max_availability_duration` (Number) Maximum time span that can be requested when querying the availability (free/busy) of a principal
 - `max_calendars` (Number) The default maximum number of calendars a user can create
+- `max_calendars_per_event` (Number) Maximum number of calendars a single calendar event can belong to
 - `max_event_notifications` (Number) The default maximum number of notifications a user can create for calendar events
 - `max_events` (Number) The default maximum number of calendar events a user can create
+- `max_expanded_query_duration` (Number) Maximum time span between the after and before arguments of a calendar event query that expands recurrences
 - `max_i_calendar_size` (Number) Specifies the maximum size of an iCalendar file that can be uploaded to the server
 - `max_participant_identities` (Number) The default maximum number of participant identities a user can create
 - `max_recurrence_expansions` (Number) Specifies the maximum number of instances that can be generated from a recurring iCalendar event
@@ -30,3 +35,11 @@ Configures calendar settings including iCalendar limits and default names. This 
 ### Read-Only
 
 - `id` (String) Server-assigned identifier.
+
+<a id="nestedatt--availability_rate_limit"></a>
+### Nested Schema for `availability_rate_limit`
+
+Optional:
+
+- `count` (Number) Count
+- `period` (Number) Period

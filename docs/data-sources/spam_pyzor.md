@@ -19,7 +19,7 @@ Configures the Pyzor collaborative spam detection service. This singleton object
 
 - `allow_count` (Number) The number of times the hash appears in the Pyzor allowlist
 - `block_count` (Number) The number of times the hash appears in the Pyzor blocklist
-- `enable` (Boolean) Whether to enable the Pyzor classifier. Pyzor is a collaborative, networked system to detect and report spam.
+- `enable` (Boolean) Whether to enable the Pyzor classifier. Pyzor is a collaborative, networked system to detect and report spam. Disabled by default.
 - `host` (String) The hostname of the Pyzor server
 - `id` (String) Always `singleton`.
 - `port` (Number) The port to connect to the Pyzor server

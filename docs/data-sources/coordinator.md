@@ -17,20 +17,20 @@ Configures the cluster coordinator for inter-node communication. This singleton 
 
 ### Read-Only
 
-- `addresses` (Set of String) Address of the NATS server
+- `allow_invalid_certs` (Boolean) Allow invalid TLS certificates when connecting to the Kafka brokers
 - `auth_secret` (Attributes) Password to connect to the store (see [below for nested schema](#nestedatt--auth_secret))
 - `auth_username` (String) Username to connect to the store
-- `brokers` (Set of String) List of Kafka brokers
-- `capacity_client` (Number) By default, Client dispatches op's to the Client onto the channel with capacity of 2048. This option enables overriding it
-- `capacity_read_buffer` (Number) Sets the initial capacity of the read buffer. Which is a buffer used to gather partial protocol messages.
-- `capacity_subscription` (Number) Sets the capacity for Subscribers. Exceeding it will trigger slow consumer error callback and drop messages.
+- `client_capacity` (Number) By default, Client dispatches op's to the Client onto the channel with capacity of 2048. This option enables overriding it
 - `config` (String) Zenoh configuration string
+- `connect_timeout` (Number) Timeout for establishing a connection to the server
 - `credentials` (Attributes) String containing the JWT credentials (see [below for nested schema](#nestedatt--credentials))
-- `group_id` (String) Consumer group ID
+- `group_id` (String) Consumer group ID prefix. Each node joins its own consumer group, named after this prefix followed by a dash and the node ID, so that every node receives every notification
+- `hosts` (Set of String) Kafka bootstrap brokers, as host:port pairs
 - `id` (String) Always `singleton`.
 - `max_reconnects` (Number) Maximum number of times to attempt to reconnect to the server
 - `max_retries` (Number) Number of retries to connect to the Redis cluster
 - `max_retry_wait` (Number) Maximum time to wait between retries
+- `message_timeout` (Number) Timeout for message processing
 - `min_retry_wait` (Number) Minimum time to wait between retries
 - `no_echo` (Boolean) Disables delivering messages that were published from the same connection.
 - `ping_interval` (Number) Interval between pings to the server
@@ -39,19 +39,18 @@ Configures the cluster coordinator for inter-node communication. This singleton 
 - `pool_timeout_recycle` (Number) Timeout for recycling a connection
 - `pool_timeout_wait` (Number) Timeout for waiting for a connection from the pool
 - `protocol_version` (String) Protocol Version
+- `read_buffer_capacity` (Number) Sets the initial capacity of the read buffer. Which is a buffer used to gather partial protocol messages.
 - `read_from_replicas` (Boolean) Whether to read from replicas
+- `request_timeout` (Number) Timeout for requests to the server
 - `sentinel_secret` (Attributes) Password to connect to the Sentinel nodes (see [below for nested schema](#nestedatt--sentinel_secret))
 - `sentinel_username` (String) Username to connect to the Sentinel nodes
 - `service_name` (String) Name of the monitored master (service) to query via the Sentinels
-- `timeout` (Number) Connection timeout to the database
-- `timeout_connection` (Number) Timeout for establishing a connection to the server
-- `timeout_message` (Number) Timeout for message processing
-- `timeout_request` (Number) Timeout for requests to the server
-- `timeout_session` (Number) Timeout for session
+- `session_timeout` (Number) Timeout for session
+- `subscription_capacity` (Number) Sets the capacity for Subscribers. Exceeding it will trigger slow consumer error callback and drop messages.
 - `type` (String) Variant discriminator.
 - `url` (String) URL of the Redis server
 - `urls` (Set of String) URL(s) of the Redis server(s)
-- `use_tls` (Boolean) Use TLS to connect to the store
+- `use_tls` (Boolean) Use TLS to connect to the Kafka brokers
 
 <a id="nestedatt--auth_secret"></a>
 ### Nested Schema for `auth_secret`

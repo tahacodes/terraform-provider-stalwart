@@ -17,10 +17,11 @@ Defines a logging and tracing output method. Manages the Open Telemetry (HTTP) v
 
 ### Required
 
-- `endpoint` (String) The endpoint for Open Telemetry
+- `url` (String) Base URL of the OpenTelemetry collector; /v1/traces and /v1/logs are appended
 
 ### Optional
 
+- `allow_invalid_certs` (Boolean) Whether to allow invalid TLS certificates when connecting to the OpenTelemetry collector
 - `enable` (Boolean) Enable or disable the tracer
 - `enable_log_exporter` (Boolean) Whether to export logs to OpenTelemetry
 - `enable_span_exporter` (Boolean) Whether to export spans to OpenTelemetry
@@ -30,7 +31,7 @@ Defines a logging and tracing output method. Manages the Open Telemetry (HTTP) v
 - `http_headers` (Map of String) Additional headers to include in HTTP requests
 - `level` (String) The logging level for this tracer
 - `lossy` (Boolean) Whether to drop log entries if there is backlog
-- `throttle` (Number) The minimum amount of time that must pass between each request to the OpenTelemetry endpoint
+- `throttle` (Number) Maximum amount of time that events are held before they are sent to the OpenTelemetry endpoint
 - `timeout` (Number) Maximum amount of time that Stalwart will wait for a response from the OpenTelemetry endpoint
 
 ### Read-Only

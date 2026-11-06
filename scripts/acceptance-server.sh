@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-IMAGE="${STALWART_IMAGE:-stalwartlabs/stalwart:v0.16.17}"
+IMAGE="${STALWART_IMAGE:-stalwartlabs/stalwart:v1.0.3}"
 NAME="${STALWART_CONTAINER:-stalwart-acc}"
 PORT="${STALWART_PORT:-18080}"
 ADMIN_USER="admin"
@@ -26,10 +26,14 @@ wait_ready() {
 
 wait_ready
 
-curl -sf --max-time 60 -u "${ADMIN_USER}:${ADMIN_PASSWORD}" -X POST \
+resp=$(curl -sf --max-time 60 -u "${ADMIN_USER}:${ADMIN_PASSWORD}" -X POST \
 	-H "Content-Type: application/json" \
-	-d '{"using":["urn:ietf:params:jmap:core"],"methodCalls":[["x:Bootstrap/set",{"accountId":"d333333","update":{"singleton":{"defaultDomain":"example.com","serverHostname":"mail.example.com","generateDkimKeys":false,"requestTlsCertificate":false,"blobStore":{"@type":"Default"},"dataStore":{"@type":"RocksDb","path":"/var/lib/stalwart/"},"directory":{"@type":"Internal"},"dnsServer":{"@type":"Manual"},"inMemoryStore":{"@type":"Default"},"searchStore":{"@type":"Default"},"tracer":{"@type":"Log","path":"/var/log/stalwart/"}}}},"c0"]]}' \
-	"${URL}/jmap" >/dev/null
+	-d '{"using":["urn:ietf:params:jmap:core"],"methodCalls":[["x:Bootstrap/set",{"accountId":"d333333","update":{"singleton":{"defaultDomain":"example.com","defaultHostname":"mail.example.com","generateDkimKeys":false,"requestTlsCertificate":false,"blobStore":{"@type":"Default"},"dataStore":{"@type":"RocksDb","path":"/var/lib/stalwart/"},"directory":{"@type":"Internal"},"dnsServer":{"@type":"Manual"},"inMemoryStore":{"@type":"Default"},"searchStore":{"@type":"Default"},"tracer":{"@type":"Log","path":"/var/log/stalwart/"}}}},"c0"]]}' \
+	"${URL}/jmap")
+if ! grep -q '"updated"' <<<"${resp}"; then
+	echo "bootstrap failed: ${resp}" >&2
+	exit 1
+fi
 
 docker restart "${NAME}" >/dev/null
 wait_ready

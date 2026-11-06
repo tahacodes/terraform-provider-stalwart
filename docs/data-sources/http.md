@@ -26,14 +26,15 @@ output "redirect_root" {
 ### Read-Only
 
 - `allowed_endpoints` (Attributes) An expression that determines whether access to an endpoint is allowed. The expression should an HTTP status code (200, 403, etc.) (see [below for nested schema](#nestedatt--allowed_endpoints))
+- `client_ip_source` (String) Specifies where the client's IP address is obtained from. When a forwarding header is selected, the listener must only be reachable through the trusted proxies, since any client that connects directly can claim an arbitrary address.
 - `enable_hsts` (Boolean) Specifies whether to enable HTTP Strict Transport Security for the HTTP server.
+- `forwarded_hops` (Number) Number of trusted proxy entries appended to the forwarding header; the client address is taken this many entries from the right.
 - `id` (String) Always `singleton`.
 - `rate_limit_anonymous` (Attributes) Specifies the request rate limit for unauthenticated users (see [below for nested schema](#nestedatt--rate_limit_anonymous))
 - `rate_limit_authenticated` (Attributes) Specifies the request rate limit for authenticated users (see [below for nested schema](#nestedatt--rate_limit_authenticated))
 - `redirect_root` (String) The URL to redirect users to when they access the root path of the HTTP server. If not set, the server will return a 404 Not Found response.
 - `response_headers` (Map of String) Additional headers to include in HTTP responses
 - `use_permissive_cors` (Boolean) Specifies whether to allow all origins in the CORS policy for the HTTP server
-- `use_x_forwarded` (Boolean) Specifies whether to use the Forwarded or X-Forwarded-For header to determine the client's IP address
 
 <a id="nestedatt--allowed_endpoints"></a>
 ### Nested Schema for `allowed_endpoints`
